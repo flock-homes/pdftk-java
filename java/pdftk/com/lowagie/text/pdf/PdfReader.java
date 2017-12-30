@@ -114,7 +114,7 @@ public class PdfReader implements PdfViewerPreferences {
     private ArrayList xrefObj = null;
     PdfDictionary rootPages = null;
     protected PdfDictionary trailer = null;
-    protected PdfDictionary catalog = null;
+    public PdfDictionary catalog = null;
     protected PageRefs pageRefs = null;
     protected PRAcroForm acroForm = null;
     protected boolean acroFormParsed = false;

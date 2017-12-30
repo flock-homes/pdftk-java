@@ -4,6 +4,7 @@ public class pdftk {
 
 /* TODO: should read from compiler */
 static final String PDFTK_VER = "3.0";
+static final char PATH_DELIM = '/';
 
 static String
 prompt_for_password( String pass_name, 
@@ -13,13 +14,19 @@ prompt_for_password( String pass_name,
   return password;
 }
 
+static String
+prompt_for_filename( String message) {
+  String fn = "";
+  /* NOT TRANSLATED */
+  return fn;
+}
+  
 static OutputStream
 get_output_stream( String output_filename,
                    boolean ask_about_warnings_b ) {
   /* NOT TRANSLATED */
   return null;
 }
-
   
 public static void main(String[] args) {
   boolean help_b= false;

@@ -276,7 +276,7 @@ public class PdfCopy extends PdfWriter {
      * Translate a PRDictionary to a PdfDictionary. Also translate all of the
      * objects contained in it.
      */
-    protected PdfDictionary copyDictionary(PdfDictionary in)
+    public PdfDictionary copyDictionary(PdfDictionary in)
     throws IOException, BadPdfFormatException {
         PdfDictionary out = new PdfDictionary();
         PdfName type = (PdfName)in.get(PdfName.TYPE);
@@ -375,7 +375,7 @@ public class PdfCopy extends PdfWriter {
     /**
      * convenience method. Given a reader, set our "globals"
      */
-    protected void setFromReader(PdfReader reader) {
+    public void setFromReader(PdfReader reader) {
         this.reader = reader;
         indirects = (HashMap)indirectMap.get(reader);
         if (indirects == null) {

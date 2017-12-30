@@ -79,9 +79,10 @@ public class SimpleXMLParser {
 
     // ssteward
     // Input_UTF8 was being omitted from Windows static builds
-    private static Class c1= gnu.gcj.convert.Input_UTF8.class;
-    private static Class c2= gnu.gcj.convert.Input_8859_1.class;
-    private static Class c3= gnu.gcj.convert.Input_ASCII.class;
+    // TRANSLATOR NOTE
+    // private static Class c1= gnu.gcj.convert.Input_UTF8.class;
+    // private static Class c2= gnu.gcj.convert.Input_8859_1.class;
+    // private static Class c3= gnu.gcj.convert.Input_ASCII.class;
 
     private static final HashMap fIANA2JavaMap = new HashMap();
     private static final HashMap entityMap = new HashMap();

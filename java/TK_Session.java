@@ -6,17 +6,33 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
 
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import pdftk.com.lowagie.text.Document;
+import pdftk.com.lowagie.text.Rectangle;
+
+import pdftk.com.lowagie.text.pdf.AcroFields;
+import pdftk.com.lowagie.text.pdf.FdfReader;
+import pdftk.com.lowagie.text.pdf.FdfWriter;
+import pdftk.com.lowagie.text.pdf.XfdfReader;
+
 import pdftk.com.lowagie.text.pdf.PdfArray;
+import pdftk.com.lowagie.text.pdf.PdfBoolean;
+import pdftk.com.lowagie.text.pdf.PdfContentByte;
 import pdftk.com.lowagie.text.pdf.PdfCopy;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
+import pdftk.com.lowagie.text.pdf.PdfImportedPage;
 import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
 import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
+import pdftk.com.lowagie.text.pdf.PdfStamperImp;
 import pdftk.com.lowagie.text.pdf.PdfWriter;
 
 class TK_Session {
@@ -47,7 +63,7 @@ class TK_Session {
     };
     ArrayList<PagesReader> m_readers = new ArrayList<PagesReader>();
 
-    long m_num_pages = 0;
+    int m_num_pages = 0;
 
   };
   // pack input PDF in the order they're given on the command line
@@ -243,10 +259,71 @@ class TK_Session {
     /* NOT TRANSLATED */
   }
 
-  int create_output_page( PdfCopy writer_p, PageRef page_ref, int output_page_count ) {
-    /* NOT TRANSLATED */
-    return -1;
+////
+// when uncompressing a PDF, we add this marker to every page,
+// so the PDF is easier to navigate; when compressing a PDF,
+// we remove this marker
+
+static final String g_page_marker= "pdftk_PageNum";
+static void
+add_mark_to_page( PdfReader reader_p,
+                  int page_index,
+                  int page_num )
+{
+  PdfName page_marker_p=
+    new PdfName( g_page_marker );
+  PdfDictionary page_p= reader_p.getPageN( page_index );
+  if( page_p != null && page_p.isDictionary() ) {
+    page_p.put( page_marker_p, new PdfNumber( page_num ) );
   }
+}
+static void
+add_marks_to_pages( PdfReader reader_p )
+{
+  int num_pages= reader_p.getNumberOfPages();
+  for( int ii= 1; ii<= num_pages; ++ii ) { // 1-based page ref.s
+    add_mark_to_page( reader_p, ii, ii );
+  }
+}
+static void
+remove_mark_from_page( PdfReader reader_p,
+                       int page_num )
+{
+  PdfName page_marker_p=
+    new PdfName( g_page_marker );
+  PdfDictionary page_p= reader_p.getPageN( page_num );
+  if( page_p != null && page_p.isDictionary() ) {
+    page_p.remove( page_marker_p );
+  }
+}
+static void
+remove_marks_from_pages( PdfReader reader_p )
+{
+  int num_pages= reader_p.getNumberOfPages();
+  for( int ii= 1; ii<= num_pages; ++ii ) { // 1-based page ref.s
+    remove_mark_from_page( reader_p, ii );
+  }
+}
+  
+static void
+apply_rotation_to_page( PdfReader reader_p, int page_num, int rotation, boolean absolute ) {
+  // DF rotate
+  PdfDictionary page_p= reader_p.getPageN( page_num );
+  if( !absolute ) {
+    rotation= reader_p.getPageRotation( page_num )+ rotation;
+  }
+  rotation= rotation % 360;
+  page_p.remove( PdfName.ROTATE );
+  if( rotation!= PageRotate.NORTH.value ) { // default rotation
+    page_p.put( PdfName.ROTATE,
+                new PdfNumber( rotation ) );
+  }
+}
+
+int create_output_page( PdfCopy writer_p, PageRef page_ref, int output_page_count ) {
+  /* NOT TRANSLATED */
+  return -1;
+}
 
 static char GetPdfVersionChar( PdfName version_p ) {
   char version_cc= PdfWriter.VERSION_1_4; // default
@@ -409,8 +486,8 @@ int create_output() {
         // only be added /after/ opening the document;
         //
         // collected extensions information; uses PdfName::hashCode() for key
-        HashMap< PdfName, PdfName > ext_base_versions;
-        HashMap< PdfName, Integer > ext_levels;
+        HashMap< PdfName, PdfName > ext_base_versions = new HashMap< PdfName, PdfName >();
+        HashMap< PdfName, Integer > ext_levels = new HashMap< PdfName, Integer >();
         for( InputPdf it : m_input_pdf)
           {
             PdfReader reader_p= it.m_readers.get(0).second;
@@ -606,22 +683,27 @@ int create_output() {
                       reader_p.getPdfObject( outlines_p.get( PdfName.FIRST ) );
                     if( top_outline_p != null && top_outline_p.isDictionary() ) {
 
-                      vector<PdfBookmark> bookmark_data;
-                      int rr= ReadOutlines( bookmark_data, top_outline_p, 0, reader_p, true );
-                      if( rr== 0 && !bookmark_data.empty() ) {
+                      ArrayList<report.PdfBookmark> bookmark_data= report.ReadOutlines( top_outline_p, 0, reader_p, true );
+                      if( bookmark_data != null && !bookmark_data.isEmpty() ) {
 
                         // passed in by reference, so must use variable:
-                        Iterator<PdfBookmark> vit= bookmark_data.iterator();
-                        BuildBookmarks( writer_p,
-                                        vit,
+                        report.BuildBookmarksState state = new report.BuildBookmarksState();
+                        state.final_child_p = after_child_p;
+                        state.final_child_ref_p = after_child_ref_p;
+                        state.num_bookmarks_total = num_bookmarks_total;
+                        report.BuildBookmarks( writer_p,
+                                        bookmark_data.iterator(),
                                         //item_p, item_ref_p, // used for adding doc bookmarks
                                         output_outlines_p, output_outlines_ref_p,
                                         after_child_p, after_child_ref_p,
-                                        after_child_p, after_child_ref_p,
-                                        0, num_bookmarks_total, 
+                                        0,
                                         page_count- 1, // page offset is 0-based
                                         0,
-                                        true );
+                                        true,
+                                        state);
+                        after_child_p = state.final_child_p;
+                        after_child_ref_p = state.final_child_ref_p;
+                        num_bookmarks_total = state.num_bookmarks_total;
                       }
                       /*
                       else if( rr!= 0 )
@@ -659,10 +741,10 @@ int create_output() {
             }
             */
 
-            if( num_bookmarks_total ) { // we encountered bookmarks
+            if( num_bookmarks_total != 0 ) { // we encountered bookmarks
 
               // necessary for serial appending to outlines
-              if( after_child_p && after_child_ref_p )
+              if( after_child_p != null && after_child_ref_p != null )
                 writer_p.addToBody( after_child_p, after_child_ref_p );
 
               writer_p.addToBody( output_outlines_p, output_outlines_ref_p );
@@ -688,37 +770,36 @@ int create_output() {
 
         // grab the first reader, since there's only one
         PdfReader input_reader_p= 
-          m_input_pdf.begin().m_readers.front().second;
-        jint input_num_pages= 
-          m_input_pdf.begin().m_num_pages;
+          m_input_pdf.get(0).m_readers.get(0).second;
+        int input_num_pages= 
+          m_input_pdf.get(0).m_num_pages;
 
         if( m_output_filename== "PROMPT" ) {
-          prompt_for_filename( "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):",
-                               m_output_filename );
+          m_output_filename = pdftk.prompt_for_filename( "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):");
         }
-        if( m_output_filename.empty() ) {
+        if( m_output_filename.isEmpty() ) {
           m_output_filename= "pg_%04d.pdf";
         }
 
         // locate the input PDF Info dictionary that holds metadata
-        PdfDictionary input_info_p= 0; {
+        PdfDictionary input_info_p= null; {
           PdfDictionary input_trailer_p= input_reader_p.getTrailer();
-          if( input_trailer_p && input_trailer_p.isDictionary() ) {
+          if( input_trailer_p != null && input_trailer_p.isDictionary() ) {
             input_info_p= (PdfDictionary)
               input_reader_p.getPdfObject( input_trailer_p.get( PdfName.INFO ) );
-            if( input_info_p && input_info_p.isDictionary() ) {
+            if( input_info_p != null && input_info_p.isDictionary() ) {
               // success
             }
             else {
-              input_info_p= 0;
+              input_info_p= null;
             }
           }
         }
 
-        for( jint ii= 0; ii< input_num_pages; ++ii ) {
+        for( int ii= 0; ii< input_num_pages; ++ii ) {
 
           // the filename
-          String jv_output_filename_p= m_output_filename.format(ii+ 1);
+          String jv_output_filename_p= String.format(m_output_filename, ii+ 1);
 
           Document output_doc_p= new Document();
           FileOutputStream ofs_p= new FileOutputStream( jv_output_filename_p );
@@ -738,13 +819,13 @@ int create_output() {
           }
 
           // encrypt output?
-          if( m_output_encryption_strength!= none_enc ||
-              !m_output_owner_pw.empty() || 
-              !m_output_user_pw.empty() )
+          if( m_output_encryption_strength!= encryption_strength.none_enc ||
+              !m_output_owner_pw.isEmpty() || 
+              !m_output_user_pw.isEmpty() )
             {
               // if no stregth is given, default to 128 bit,
-              jboolean bit128_b=
-                ( m_output_encryption_strength!= bits40_enc );
+              boolean bit128_b=
+                ( m_output_encryption_strength!= encryption_strength.bits40_enc );
 
               writer_p.setEncryption( output_user_pw_p,
                                        output_owner_pw_p,
@@ -755,22 +836,22 @@ int create_output() {
           output_doc_p.open(); // must open writer before copying (possibly) indirect object
 
           { // copy the Info dictionary metadata
-            if( input_info_p ) {
-              PdfDictionary* writer_info_p= writer_p.getInfo();
-              if( writer_info_p ) {
-                PdfDictionary* info_copy_p= writer_p.copyDictionary( input_info_p );
-                if( info_copy_p ) {
+            if( input_info_p != null ) {
+              PdfDictionary writer_info_p= writer_p.getInfo();
+              if( writer_info_p != null ) {
+                PdfDictionary info_copy_p= writer_p.copyDictionary( input_info_p );
+                if( info_copy_p != null ) {
                   writer_info_p.putAll( info_copy_p );
                 }
               }
             }
-            jbyteArray input_reader_xmp_p= input_reader_p.getMetadata();
-            if( input_reader_xmp_p ) {
+            byte[] input_reader_xmp_p= input_reader_p.getMetadata();
+            if( input_reader_xmp_p != null ) {
               writer_p.setXmpMetadata( input_reader_xmp_p );
             }
           }
 
-          PdfImportedPage* page_p= 
+          PdfImportedPage page_p= 
             writer_p.getImportedPage( input_reader_p, ii+ 1 );
           writer_p.addPage( page_p );
 
@@ -781,21 +862,18 @@ int create_output() {
         ////
         // dump document data
 
-        string doc_data_fn= "doc_data.txt";
-        if( !m_output_filename.empty() ) {
-          char path_delim= PATH_DELIM;
-          long loc= 0;
-          if( (loc=m_output_filename.rfind( path_delim ))!= string::npos ) {
-
-            doc_data_fn= m_output_filename.substr( 0, loc )+ 
-              ((char)PATH_DELIM)+ doc_data_fn;
-          }          
+        String doc_data_fn= "doc_data.txt";
+        if( !m_output_filename.isEmpty() ) {
+          int loc= m_output_filename.lastIndexOf(pdftk.PATH_DELIM);
+          if( loc >= 0 ) {
+            doc_data_fn= m_output_filename.substring( 0, loc )+ pdftk.PATH_DELIM + doc_data_fn;
+          }
         }
-        ofstream ofs = new ofstream( doc_data_fn.c_str() );
-        if( ofs ) {
-          ReportOnPdf( ofs, input_reader_p, m_output_utf8_b );
+        try {
+          FileOutputStream ofs = new FileOutputStream(doc_data_fn);
+          report.ReportOnPdf( ofs, input_reader_p, m_output_utf8_b );
         }
-        else { // error
+        catch (FileNotFoundException e) { // error
           System.err.println("Error: unable to open file for output: doc_data.txt");
           ret_val= 1;
         }
@@ -816,13 +894,12 @@ int create_output() {
 
         // try opening the FDF file before we get too involved;
         // if input is stdin ("-"), don't pass it to both the FDF and XFDF readers
-        FdfReader* fdf_reader_p= 0;
-        XfdfReader* xfdf_reader_p= 0;
+        FdfReader fdf_reader_p= null;
+        XfdfReader xfdf_reader_p= null;
         if( m_form_data_filename== "PROMPT" ) { // handle case where user enters '-' or (empty) at the prompt
-          prompt_for_filename( "Please enter a filename for the form data:", 
-                               m_form_data_filename );
+          m_form_data_filename = pdftk.prompt_for_filename( "Please enter a filename for the form data:");
         }
-        if( !m_form_data_filename.empty() ) { // we have form data to process
+        if( !m_form_data_filename.isEmpty() ) { // we have form data to process
           if( m_form_data_filename== "-" ) { // form data on stdin
             //JArray<jbyte>* in_arr= itext::RandomAccessFileOrArray::InputStreamToArray( java::System::in );
             
@@ -836,7 +913,7 @@ int create_output() {
               try {
                 xfdf_reader_p= new XfdfReader( System.in );
               }
-              catch( IOException ioe_p ) { // file open error
+              catch( IOException ioe2_p ) { // file open error
                 System.err.println("Error: Failed read form data on stdin.");
                 System.err.println("   No output created.");
                 ret_val= 1;
@@ -858,7 +935,7 @@ int create_output() {
                 xfdf_reader_p=
                   new XfdfReader( m_form_data_filename );
               }
-              catch( IOException ioe_p ) { // file open error
+              catch( IOException ioe2_p ) { // file open error
                 System.err.println("Error: Failed to open form data file: ");
                 System.err.println("   " + m_form_data_filename);
                 System.err.println("   No output created.");
@@ -871,17 +948,16 @@ int create_output() {
         }
 
         // try opening the PDF background or stamp before we get too involved
-        PdfReader* mark_p= 0;
-        bool background_b= true; // set false for stamp
+        PdfReader mark_p= null;
+        boolean background_b= true; // set false for stamp
         //
         // background
         if( m_background_filename== "PROMPT" ) {
-          prompt_for_filename( "Please enter a filename for the background PDF:", 
-                               m_background_filename );
+          m_background_filename = pdftk.prompt_for_filename( "Please enter a filename for the background PDF:");
         }
-        if( !m_background_filename.empty() ) {
+        if( !m_background_filename.isEmpty() ) {
           try {
-            mark_p= new PdfReader( JvNewStringUTF( m_background_filename.c_str() ) );
+            mark_p= new PdfReader( m_background_filename );
             mark_p.removeUnusedObjects();
             //reader->shuffleSubsetNames(); // changes the PDF subset names, but not the PostScript font names
           }
@@ -895,12 +971,11 @@ int create_output() {
         }
         //
         // stamp
-        if( !mark_p ) {
+        if( mark_p == null ) {
           if( m_stamp_filename== "PROMPT" ) {
-            prompt_for_filename( "Please enter a filename for the stamp PDF:", 
-                                 m_stamp_filename );
+            m_stamp_filename = pdftk.prompt_for_filename( "Please enter a filename for the stamp PDF:");
           }
-          if( !m_stamp_filename.empty() ) {
+          if( !m_stamp_filename.isEmpty() ) {
             background_b= false;
             try {
               mark_p= new PdfReader( m_stamp_filename );
@@ -918,8 +993,8 @@ int create_output() {
         }
 
         //
-        OutputStream ofs_p= get_output_stream( m_output_filename, m_ask_about_warnings_b );
-        if( !ofs_p ) { // file open error
+        OutputStream ofs_p= pdftk.get_output_stream( m_output_filename, m_ask_about_warnings_b );
+        if( ofs_p == null ) { // file open error
           System.err.println("Error: unable to open file for output: " + m_output_filename);
           ret_val= 1;
           break;
@@ -931,51 +1006,50 @@ int create_output() {
         // drop the xfa?
         if( m_output_drop_xfa_b ) {
           PdfDictionary catalog_p= input_reader_p.catalog;
-          if( catalog_p && catalog_p.isDictionary() ) {
+          if( catalog_p != null && catalog_p.isDictionary() ) {
               
             PdfDictionary acro_form_p= (PdfDictionary)
-              input_reader_p.getPdfObject( catalog_p.get( PdfName::ACROFORM ) );
-            if( acro_form_p && acro_form_p.isDictionary() ) {
+              input_reader_p.getPdfObject( catalog_p.get( PdfName.ACROFORM ) );
+            if( acro_form_p != null && acro_form_p.isDictionary() ) {
 
-              acro_form_p.remove( PdfName::XFA );
+              acro_form_p.remove( PdfName.XFA );
             }
           }
         }
 
         // drop the xmp?
         if( m_output_drop_xmp_b ) {
-          PdfDictionary* catalog_p= input_reader_p.catalog;
-          if( catalog_p && catalog_p.isDictionary() ) {
+          PdfDictionary catalog_p= input_reader_p.catalog;
+          if( catalog_p != null && catalog_p.isDictionary() ) {
               
-            catalog_p.remove( PdfName::METADATA );
+            catalog_p.remove( PdfName.METADATA );
           }
         }
 
         //
-        PdfStamperImp* writer_p=
-          new PdfStamperImp( input_reader_p, ofs_p, 0, false /* append mode */ );
+        PdfStamperImp writer_p=
+          new PdfStamperImp( input_reader_p, ofs_p, '\0', false /* append mode */ );
 
         // update the info?
         if( m_update_info_filename== "PROMPT" ) {
-          prompt_for_filename( "Please enter an Info file filename:",
-                               m_update_info_filename );
+          m_update_info_filename = pdftk.prompt_for_filename( "Please enter an Info file filename:");
         }
-        if( !m_update_info_filename.empty() ) {
+        if( !m_update_info_filename.isEmpty() ) {
           if( m_update_info_filename== "-" ) {
-            if( !UpdateInfo( input_reader_p, cin, m_update_info_utf8_b ) ) {
+            if( !report.UpdateInfo( input_reader_p, System.in, m_update_info_utf8_b ) ) {
               System.err.println("Warning: no Info added to output PDF.");
               ret_val= 3;
             }
           }
           else {
-            ifstream ifs = new ifstream( m_update_info_filename.c_str() );
-            if( ifs ) {
-              if( !UpdateInfo( input_reader_p, ifs, m_update_info_utf8_b ) ) {
+            try {
+              FileInputStream ifs = new FileInputStream( m_update_info_filename );
+              if( !report.UpdateInfo( input_reader_p, ifs, m_update_info_utf8_b ) ) {
                 System.err.println("Warning: no Info added to output PDF.");
                 ret_val= 3;
               }
             }
-            else { // error
+            catch ( FileNotFoundException e ) { // error
               System.err.println("Error: unable to open FDF file for input: " + m_update_info_filename);
               ret_val= 1;
               break;
@@ -1004,11 +1078,11 @@ int create_output() {
         */
 
         // rotate pages?
-        if( !m_page_seq.empty() ) {
+        if( !m_page_seq.isEmpty() ) {
           for( ArrayList< PageRef > jt : m_page_seq ) {
             for ( PageRef kt : jt ) {
               apply_rotation_to_page( input_reader_p, kt.m_page_num,
-                                      kt.m_page_rot, kt.m_page_abs );
+                                      kt.m_page_rot.value, kt.m_page_abs );
             }
           }
         }
@@ -1026,15 +1100,15 @@ int create_output() {
         }
 
         // encrypt output?
-        if( m_output_encryption_strength!= none_enc ||
-            !m_output_owner_pw.empty() ||
-            !m_output_user_pw.empty() )
+        if( m_output_encryption_strength!= encryption_strength.none_enc ||
+            !m_output_owner_pw.isEmpty() ||
+            !m_output_user_pw.isEmpty() )
           {
 
             // if no stregth is given, default to 128 bit,
             // (which is incompatible w/ Acrobat 4)
             boolean bit128_b=
-              ( m_output_encryption_strength!= bits40_enc );
+              ( m_output_encryption_strength!= encryption_strength.bits40_enc );
 
             writer_p.setEncryption( output_user_pw_p,
                                       output_owner_pw_p,
@@ -1043,13 +1117,13 @@ int create_output() {
           }
 
         // fill form fields?
-        if( fdf_reader_p || xfdf_reader_p ) {
-          if( input_reader_p.getAcroForm() ) { // we really have a form to fill
+        if( fdf_reader_p != null || xfdf_reader_p != null ) {
+          if( input_reader_p.getAcroForm() != null ) { // we really have a form to fill
 
-            AcroFields* fields_p= writer_p.getAcroFields();
+            AcroFields fields_p= writer_p.getAcroFields();
             fields_p.setGenerateAppearances( true ); // have iText create field appearances
-            if( ( fdf_reader_p && fields_p.setFields( fdf_reader_p ) ) ||
-                ( xfdf_reader_p && fields_p.setFields( xfdf_reader_p ) ) )
+            if( ( fdf_reader_p != null && fields_p.setFields( fdf_reader_p ) ) ||
+                ( xfdf_reader_p != null && fields_p.setFields( xfdf_reader_p ) ) )
               { // Rich Text input found
 
                 // set the PDF so that Acrobat will create appearances;
@@ -1083,11 +1157,11 @@ int create_output() {
 
         // cue viewer to render form field appearances?
         if( m_output_need_appearances_b ) {
-          PdfDictionary* catalog_p= input_reader_p.catalog;
-          if( catalog_p && catalog_p.isDictionary() ) {
+          PdfDictionary catalog_p= input_reader_p.catalog;
+          if( catalog_p != null && catalog_p.isDictionary() ) {
             PdfDictionary acro_form_p= (PdfDictionary)
               input_reader_p.getPdfObject( catalog_p.get( PdfName.ACROFORM ) );
-            if( acro_form_p && acro_form_p.isDictionary() ) {
+            if( acro_form_p != null && acro_form_p.isDictionary() ) {
               acro_form_p.put( PdfName.NEEDAPPEARANCES, 
                                 PdfBoolean.PDFTRUE );
             }
@@ -1095,31 +1169,31 @@ int create_output() {
         }
 
         // add background/watermark?
-        if( mark_p ) {
+        if( mark_p != null ) {
 
-          jint mark_num_pages= 1; // default: use only the first page of mark
+          int mark_num_pages= 1; // default: use only the first page of mark
           if( m_multistamp_b || m_multibackground_b ) { // use all pages of mark
             mark_num_pages= mark_p.getNumberOfPages();
           }
 
           // the mark information; initialized inside loop
-          PdfImportedPage* mark_page_p= 0;
-          Rectangle* mark_page_size_p= 0;
-          jint mark_page_rotation= 0;
+          PdfImportedPage mark_page_p= null;
+          Rectangle mark_page_size_p= null;
+          int mark_page_rotation= 0;
 
           // iterate over document's pages, adding mark_page as
           // a layer above (stamp) or below (watermark) the page content;
           // scale mark_page and move it so it fits within the document's page;
           //
-          jint num_pages= input_reader_p.getNumberOfPages();
-          for( jint ii= 0; ii< num_pages; ) {
+          int num_pages= input_reader_p.getNumberOfPages();
+          for( int ii= 0; ii< num_pages; ) {
             ++ii; // page refs are 1-based, not 0-based
 
             // the mark page and its geometry
             if( ii<= mark_num_pages ) {
               mark_page_size_p= mark_p.getCropBox( ii );
               mark_page_rotation= mark_p.getPageRotation( ii );
-              for( jint mm= 0; mm< mark_page_rotation; mm+=90 ) {
+              for( int mm= 0; mm< mark_page_rotation; mm+=90 ) {
                 mark_page_size_p= mark_page_size_p.rotate();
               }
 
@@ -1129,25 +1203,25 @@ int create_output() {
             }
 
             // the target page geometry
-            Rectangle* doc_page_size_p= 
+            Rectangle doc_page_size_p= 
               input_reader_p.getCropBox( ii );
-            jint doc_page_rotation= input_reader_p.getPageRotation( ii );
-            for( jint mm= 0; mm< doc_page_rotation; mm+=90 ) {
+            int doc_page_rotation= input_reader_p.getPageRotation( ii );
+            for( int mm= 0; mm< doc_page_rotation; mm+=90 ) {
               doc_page_size_p= doc_page_size_p.rotate();
             }
 
-            jfloat h_scale= doc_page_size_p.width() / mark_page_size_p.width();
-            jfloat v_scale= doc_page_size_p.height() / mark_page_size_p.height();
-            jfloat mark_scale= (h_scale< v_scale) ? h_scale : v_scale;
+            float h_scale= doc_page_size_p.width() / mark_page_size_p.width();
+            float v_scale= doc_page_size_p.height() / mark_page_size_p.height();
+            float mark_scale= (h_scale< v_scale) ? h_scale : v_scale;
 
-            jfloat h_trans= (jfloat)(doc_page_size_p.left()- mark_page_size_p.left()* mark_scale +
+            float h_trans= (float)(doc_page_size_p.left()- mark_page_size_p.left()* mark_scale +
                                      (doc_page_size_p.width()- 
                                       mark_page_size_p.width()* mark_scale) / 2.0);
-            jfloat v_trans= (jfloat)(doc_page_size_p.bottom()- mark_page_size_p.bottom()* mark_scale +
+            float v_trans= (float)(doc_page_size_p.bottom()- mark_page_size_p.bottom()* mark_scale +
                                      (doc_page_size_p.height()- 
                                       mark_page_size_p.height()* mark_scale) / 2.0);
           
-            PdfContentByte* content_byte_p= 
+            PdfContentByte content_byte_p= 
               ( background_b ) ? writer_p.getUnderContent( ii ) : writer_p.getOverContent( ii );
 
             if( mark_page_rotation== 0 ) {
@@ -1181,7 +1255,7 @@ int create_output() {
         }
 
         // attach file to document?
-        if( !m_input_attach_file_filename.empty() ) {
+        if( !m_input_attach_file_filename.isEmpty() ) {
           this.attach_files( input_reader_p,
                               writer_p );
         }
@@ -1209,31 +1283,31 @@ int create_output() {
         PdfReader input_reader_p= 
           m_input_pdf.get(0).m_readers.get(0).second;
 
-        if( m_output_filename.empty() || m_output_filename== "-" ) {
-          if( m_operation== dump_data_k ) {
-            ReportOnPdf( cout, input_reader_p, m_output_utf8_b );
+        if( m_output_filename.isEmpty() || m_output_filename== "-" ) {
+          if( m_operation== keyword.dump_data_k ) {
+            report.ReportOnPdf( System.out, input_reader_p, m_output_utf8_b );
           }
-          else if( m_operation== dump_data_fields_k ) {
-            ReportAcroFormFields( cout, input_reader_p, m_output_utf8_b );
+          else if( m_operation== keyword.dump_data_fields_k ) {
+            report.ReportAcroFormFields( System.out, input_reader_p, m_output_utf8_b );
           }
-          else if( m_operation== dump_data_annots_k ) {
-            ReportAnnots( cout, input_reader_p, m_output_utf8_b );
+          else if( m_operation== keyword.dump_data_annots_k ) {
+            report.ReportAnnots( System.out, input_reader_p, m_output_utf8_b );
           }
         }
         else {
-          ofstream ofs = new ofstream( m_output_filename.c_str() );
-          if( ofs ) {
-            if( m_operation== dump_data_k ) {
-              ReportOnPdf( ofs, input_reader_p, m_output_utf8_b );
+          try {
+            FileOutputStream ofs = new FileOutputStream( m_output_filename );
+            if( m_operation== keyword.dump_data_k ) {
+              report.ReportOnPdf( ofs, input_reader_p, m_output_utf8_b );
             }
-            else if( m_operation== dump_data_fields_k ) {
-              ReportAcroFormFields( ofs, input_reader_p, m_output_utf8_b );
+            else if( m_operation== keyword.dump_data_fields_k ) {
+              report.ReportAcroFormFields( ofs, input_reader_p, m_output_utf8_b );
             }
-            else if( m_operation== dump_data_annots_k ) {
-              ReportAnnots( ofs, input_reader_p, m_output_utf8_b );
+            else if( m_operation== keyword.dump_data_annots_k ) {
+              report.ReportAnnots( ofs, input_reader_p, m_output_utf8_b );
             }
           }
-          else { // error
+          catch (FileNotFoundException e) { // error
             System.err.println("Error: unable to open file for output: " + m_output_filename);
           }
         }
@@ -1253,9 +1327,9 @@ int create_output() {
           m_input_pdf.get(0).m_readers.get(0).second;
 
         OutputStream ofs_p= 
-          get_output_stream( m_output_filename, 
+          pdftk.get_output_stream( m_output_filename, 
                              m_ask_about_warnings_b );
-        if( ofs_p ) {
+        if( ofs_p != null ) {
           FdfWriter writer_p= new FdfWriter();
           input_reader_p.getAcroFields().exportAsFdf( writer_p );
           writer_p.writeTo( ofs_p );

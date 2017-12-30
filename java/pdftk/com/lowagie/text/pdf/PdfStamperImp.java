@@ -66,7 +66,7 @@ import pdftk.com.lowagie.text.Rectangle;
 // import pdftk.com.lowagie.text.Image; ssteward: dropped in 1.44
 import pdftk.com.lowagie.text.ExceptionConverter;
 
-class PdfStamperImp extends PdfWriter {
+public class PdfStamperImp extends PdfWriter {
     HashMap readers2intrefs = new HashMap();
     HashMap readers2file = new HashMap();
     RandomAccessFileOrArray file = null;
@@ -103,7 +103,7 @@ class PdfStamperImp extends PdfWriter {
      * @throws DocumentException on error
      * @throws IOException
      */
-    PdfStamperImp(PdfReader reader, OutputStream os, char pdfVersion, boolean append) throws DocumentException, IOException {
+    public PdfStamperImp(PdfReader reader, OutputStream os, char pdfVersion, boolean append) throws DocumentException, IOException {
         super(/* ssteward omit: new PdfDocument(),*/ os);
 
         this.reader = reader;
@@ -561,7 +561,7 @@ class PdfStamperImp extends PdfWriter {
         return ps;
     }
     
-    PdfContentByte getUnderContent(int pageNum) {
+    public PdfContentByte getUnderContent(int pageNum) {
         if (pageNum < 1 || pageNum > reader.getNumberOfPages())
             return null;
         PageStamp ps = getPageStamp(pageNum);
@@ -570,7 +570,7 @@ class PdfStamperImp extends PdfWriter {
         return ps.under;
     }
     
-    PdfContentByte getOverContent(int pageNum) {
+    public PdfContentByte getOverContent(int pageNum) {
         if (pageNum < 1 || pageNum > reader.getNumberOfPages())
             return null;
         PageStamp ps = getPageStamp(pageNum);
@@ -679,14 +679,14 @@ class PdfStamperImp extends PdfWriter {
         return body.size() > 1;
     }
     
-    AcroFields getAcroFields() {
+    public AcroFields getAcroFields() {
         if (acroFields == null) {
             acroFields = new AcroFields(reader, this);
         }
         return acroFields;
     }
 
-    void setFormFlattening(boolean flat) {
+    public void setFormFlattening(boolean flat) {
         this.flat = flat;
     }
     
