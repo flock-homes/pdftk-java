@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.TreeSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
@@ -14,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import pdftk.com.lowagie.text.Document;
+import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.Rectangle;
 
 import pdftk.com.lowagie.text.pdf.AcroFields;
@@ -58,7 +58,7 @@ class TK_Session {
     // keep track of which pages get output under which readers,
     // because one reader mayn't output the same page twice;
     class PagesReader {
-      TreeSet<Integer> first;
+      HashSet<Integer> first;
       PdfReader second;
     };
     ArrayList<PagesReader> m_readers = new ArrayList<PagesReader>();
@@ -321,8 +321,71 @@ apply_rotation_to_page( PdfReader reader_p, int page_num, int rotation, boolean 
 }
 
 int create_output_page( PdfCopy writer_p, PageRef page_ref, int output_page_count ) {
-  /* NOT TRANSLATED */
-  return -1;
+  int ret_val= 0;
+
+  // get the reader associated with this page ref.
+  if( page_ref.m_input_pdf_index< m_input_pdf.size() ) {
+    InputPdf page_pdf= m_input_pdf.get( page_ref.m_input_pdf_index );
+
+    if( m_verbose_reporting_b ) {
+      System.out.print("   Adding page " + page_ref.m_page_num + " X" + page_ref.m_page_rot + "X "); // DF rotate
+      System.out.println(" from " + page_pdf.m_filename);
+    }
+
+    // take the first, associated reader and then disassociate
+    PdfReader input_reader_p= null;
+    for (InputPdf.PagesReader mt : page_pdf.m_readers) {
+      if( mt.first.contains( page_ref.m_page_num )) { // assoc. found
+        input_reader_p= mt.second;
+        mt.first.remove( page_ref.m_page_num ); // remove this assoc.
+        break;
+      }
+    }
+
+    if( input_reader_p != null) {
+
+      //
+      if( m_output_uncompress_b ) {
+        add_mark_to_page( input_reader_p, page_ref.m_page_num, output_page_count+ 1 );
+      }
+      else if( m_output_compress_b ) {
+        remove_mark_from_page( input_reader_p, page_ref.m_page_num );
+      }
+
+      // DF rotate
+      apply_rotation_to_page( input_reader_p, page_ref.m_page_num, page_ref.m_page_rot.value, page_ref.m_page_abs );
+
+      //
+      try {
+        PdfImportedPage page_p= 
+          writer_p.getImportedPage( input_reader_p, page_ref.m_page_num );
+        try {
+          writer_p.addPage( page_p );
+        }
+        catch (DocumentException e) {
+          System.err.print("Internal Error: addPage() failed for: ");
+          System.err.println(page_ref.m_page_num + " in file: " + page_pdf.m_filename);
+          ret_val= 2;          
+        }
+      }
+      catch (IOException e) { // error
+        System.err.print("Internal Error: getImportedPage() failed for: ");
+        System.err.println(page_ref.m_page_num + " in file: " + page_pdf.m_filename);
+        ret_val= 2;
+      }
+    }
+    else { // error
+      System.err.print("Internal Error: no reader found for page: ");
+      System.err.println(page_ref.m_page_num + " in file: " + page_pdf.m_filename);
+      ret_val= 2;
+    }
+  }
+  else { // error
+    System.err.println("Internal Error: Unable to find handle in m_input_pdf.");
+    ret_val= 2;
+  }
+
+  return ret_val;
 }
 
 static char GetPdfVersionChar( PdfName version_p ) {
