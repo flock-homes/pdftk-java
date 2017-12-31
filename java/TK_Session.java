@@ -184,14 +184,261 @@ class TK_Session {
     rot_right_k,
     rot_upside_down_k
   };
-  static keyword is_keyword( String ss ) {
-    /* NOT TRANSLATED */
-    return keyword.none_k;
+static keyword is_keyword( String ss ) {
+  ss = ss.toLowerCase();
+
+  // operations
+  if( ss.equals( "cat" ) ) {
+    return keyword.cat_k;
   }
-  static keyword is_keyword( StringBuffer ss ) {
-    /* NOT TRANSLATED */
-    return keyword.none_k;
+  else if( ss.equals( "shuffle" ) ) {
+    return keyword.shuffle_k;
   }
+  else if( ss.equals( "burst" ) ) {
+    return keyword.burst_k;
+  }
+  else if( ss.equals( "filter" ) ) {
+    return keyword.filter_k;
+  }
+  else if( ss.equals( "dump_data" ) ||
+           ss.equals( "dumpdata" ) ||
+           ss.equals( "data_dump" ) ||
+           ss.equals( "datadump" ) ) {
+    return keyword.dump_data_k;
+  }
+  else if( ss.equals( "dump_data_utf8" ) ) {
+    return keyword.dump_data_utf8_k;
+  }
+  else if( ss.equals( "dump_data_fields" ) ) {
+    return keyword.dump_data_fields_k;
+  }
+  else if( ss.equals( "dump_data_fields_utf8" ) ) {
+    return keyword.dump_data_fields_utf8_k;
+  }
+  else if( ss.equals( "dump_data_annots" ) ) {
+    return keyword.dump_data_annots_k;
+  }
+  else if( ss.equals( "generate_fdf" ) ||
+           ss.equals( "fdfgen" ) ||
+           ss.equals( "fdfdump" ) ||
+           ss.equals( "dump_data_fields_fdf" ) ) {
+    return keyword.generate_fdf_k;
+  }
+  else if( ss.equals( "fill_form" ) ||
+           ss.equals( "fillform" ) ) {
+    return keyword.fill_form_k;
+  }
+  else if( ss.equals( "attach_file" ) ||
+           ss.equals( "attach_files" ) ||
+           ss.equals( "attachfile" ) ) {
+    return keyword.attach_file_k;
+  }
+  else if( ss.equals( "unpack_file" ) ||
+           ss.equals( "unpack_files" ) ||
+           ss.equals( "unpackfiles" ) ) {
+    return keyword.unpack_files_k;
+  }
+  else if( ss.equals( "update_info" ) ||
+           ss.equals( "undateinfo" ) ) {
+    return keyword.update_info_k;
+  }
+  else if( ss.equals( "update_info_utf8" ) ||
+           ss.equals( "undateinfoutf8" ) ) {
+    return keyword.update_info_utf8_k;
+  }
+  /* requires more testing and work
+  else if( strcmp( ss_copy, "update_xmp" ) ||
+           strcmp( ss_copy, "undatexmp" ) ) {
+    return update_xmp_k;
+  }
+  */
+  else if( ss.equals( "background" ) ) {
+    // pdftk 1.10: making background an operation
+    // (and preserving old behavior for backwards compatibility)
+    return keyword.background_k;
+  }
+  else if( ss.equals( "multibackground" ) ) {
+    return keyword.multibackground_k;
+  }
+  else if( ss.equals( "multistamp" ) ) {
+    return keyword.multistamp_k;
+  }
+  else if( ss.equals( "stamp" ) ) {
+    return keyword.stamp_k;
+  }
+  else if( ss.equals( "rotate" ) ) {
+    return keyword.rotate_k;
+  }
+  
+  // cat range keywords
+  else if( ss.startsWith( "end" ) ) { // note: strncmp
+    return keyword.end_k;
+  }
+  else if( ss.startsWith( "even" ) ) { // note: strncmp
+    return keyword.even_k;
+  }
+  else if( ss.startsWith( "odd" ) ) { // note: strncmp
+    return keyword.odd_k;
+  }
+
+  // file attachment option
+  else if( ss.equals( "to_page" ) ||
+           ss.equals( "topage" ) ) {
+    return keyword.attach_file_to_page_k;
+  }
+
+  else if( ss.equals( "output" ) ) {
+    return keyword.output_k;
+  }
+
+  // encryption & decryption; depends on context
+  else if( ss.equals( "owner_pw" ) ||
+           ss.equals( "ownerpw" ) ) {
+    return keyword.owner_pw_k;
+  }
+  else if( ss.equals( "user_pw" ) ||
+           ss.equals( "userpw" ) ) {
+    return keyword.user_pw_k;
+  }
+  else if( ss.equals( "input_pw" ) ||
+           ss.equals( "inputpw" ) ) {
+    return keyword.input_pw_k;
+  }
+  else if( ss.equals( "allow" ) ) {
+    return keyword.user_perms_k;
+  }
+
+  // expect these only in output section
+  else if( ss.equals( "encrypt_40bit" ) ||
+           ss.equals( "encrypt_40bits" ) ||
+           ss.equals( "encrypt40bit" ) ||
+           ss.equals( "encrypt40bits" ) ||
+           ss.equals( "encrypt40_bit" ) ||
+           ss.equals( "encrypt40_bits" ) ||
+           ss.equals( "encrypt_40_bit" ) ||
+           ss.equals( "encrypt_40_bits" ) ) {
+    return keyword.encrypt_40bit_k;
+  }
+  else if( ss.equals( "encrypt_128bit" ) ||
+           ss.equals( "encrypt_128bits" ) ||
+           ss.equals( "encrypt128bit" ) ||
+           ss.equals( "encrypt128bits" ) ||
+           ss.equals( "encrypt128_bit" ) ||
+           ss.equals( "encrypt128_bits" ) ||
+           ss.equals( "encrypt_128_bit" ) ||
+           ss.equals( "encrypt_128_bits" ) ) {
+    return keyword.encrypt_128bit_k;
+  }
+  
+  // user permissions; must follow user_perms_k;
+  else if( ss.equals( "printing" ) ) {
+    return keyword.perm_printing_k;
+  }
+  else if( ss.equals( "modifycontents" ) ) {
+    return keyword.perm_modify_contents_k;
+  }
+  else if( ss.equals( "copycontents" ) ) {
+    return keyword.perm_copy_contents_k;
+  }
+  else if( ss.equals( "modifyannotations" ) ) {
+    return keyword.perm_modify_annotations_k;
+  }
+  else if( ss.equals( "fillin" ) ) {
+    return keyword.perm_fillin_k;
+  }
+  else if( ss.equals( "screenreaders" ) ) {
+    return keyword.perm_screen_readers_k;
+  }
+  else if( ss.equals( "assembly" ) ) {
+    return keyword.perm_assembly_k;
+  }
+  else if( ss.equals( "degradedprinting" ) ) {
+    return keyword.perm_degraded_printing_k;
+  }
+  else if( ss.equals( "allfeatures" ) ) {
+    return keyword.perm_all_k;
+  }
+  else if( ss.equals( "uncompress" ) ) {
+    return keyword.filt_uncompress_k;
+  }
+  else if( ss.equals( "compress" ) ) {
+    return keyword.filt_compress_k;
+  }
+  else if( ss.equals( "flatten" ) ) {
+    return keyword.flatten_k;
+  }
+  else if( ss.equals( "need_appearances" ) ) {
+    return keyword.need_appearances_k;
+  }
+  else if( ss.equals( "drop_xfa" ) ) {
+    return keyword.drop_xfa_k;
+  }
+  else if( ss.equals( "drop_xmp" ) ) {
+    return keyword.drop_xmp_k;
+  }
+  else if( ss.equals( "keep_first_id" ) ) {
+    return keyword.keep_first_id_k;
+  }
+  else if( ss.equals( "keep_final_id" ) ) {
+    return keyword.keep_final_id_k;
+  }
+  else if( ss.equals( "verbose" ) ) {
+    return keyword.verbose_k;
+  }
+  else if( ss.equals( "dont_ask" ) ||
+           ss.equals( "dontask" ) ) {
+    return keyword.dont_ask_k;
+  }
+  else if( ss.equals( "do_ask" ) ) {
+    return keyword.do_ask_k;
+  }
+
+  // more cat range keywords
+  else if( ss.equals( "north" ) ) {
+    return keyword.rot_north_k;
+  }
+  else if( ss.equals( "south" ) ) {
+    return keyword.rot_south_k;
+  }
+  else if( ss.equals( "east" ) ) {
+    return keyword.rot_east_k;
+  }
+  else if( ss.equals( "west" ) ) {
+    return keyword.rot_west_k;
+  }
+  else if( ss.equals( "left" ) ) {
+    return keyword.rot_left_k;
+  }
+  else if( ss.equals( "right" ) ) {
+    return keyword.rot_right_k;
+  }
+  else if( ss.equals( "down" ) ) {
+    return keyword.rot_upside_down_k;
+  }
+  
+  return keyword.none_k;
+}
+
+static keyword is_keyword( StringBuffer ssb ) {
+  String ss = new String(ssb).toLowerCase();
+  // cat range keywords
+  if( ss.startsWith( "end" ) ) { // note: strncmp
+    ssb.delete(0,3);
+    return keyword.end_k;
+  }
+  else if( ss.startsWith( "even" ) ) { // note: strncmp
+    ssb.delete(0,4);
+    return keyword.even_k;
+  }
+  else if( ss.startsWith( "odd" ) ) { // note: strncmp
+    ssb.delete(0,3);
+    return keyword.odd_k;
+  }
+  else {
+    ssb.setLength(0);
+    return is_keyword( ss );
+  }
+}
 
   keyword m_operation = keyword.none_k;
 
