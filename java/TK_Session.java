@@ -1,3 +1,4 @@
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +12,9 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import pdftk.com.lowagie.text.Document;
 import pdftk.com.lowagie.text.DocumentException;
@@ -37,11 +41,11 @@ import pdftk.com.lowagie.text.pdf.PdfWriter;
 
 class TK_Session {
   
-  boolean m_valid_b;
-  boolean m_authorized_b;
-  boolean m_input_pdf_readers_opened_b; // have m_input_pdf readers been opened?
-  boolean m_verbose_reporting_b;
-  boolean m_ask_about_warnings_b;
+  boolean m_valid_b = false;
+  boolean m_authorized_b = true;
+  boolean m_input_pdf_readers_opened_b = false; // have m_input_pdf readers been opened?
+  boolean m_verbose_reporting_b = false;
+  boolean m_ask_about_warnings_b = pdftk.ASK_ABOUT_WARNINGS; // set default at compile-time
 
   //typedef unsigned long PageNumber;
   enum PageRotate { NORTH(0), EAST(90), SOUTH(180), WEST(270);
@@ -51,8 +55,8 @@ class TK_Session {
   //typedef bool PageRotateAbsolute; // DF absolute / relative rotation
 
   class InputPdf {
-    String m_filename;
-    String m_password;
+    String m_filename = "";
+    String m_password = "";
     boolean m_authorized_b = true;
 
     // keep track of which pages get output under which readers,
@@ -71,11 +75,14 @@ class TK_Session {
   //typedef vector< InputPdf >::size_type InputPdfIndex;
 
   // store input PDF handles here
-  HashMap<String, Long> m_input_pdf_index = new HashMap<String, Long>();
+  HashMap<String, Integer> m_input_pdf_index = new HashMap<String, Integer>();
 
-  boolean add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b ) {
+  InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b ) {
     /* NOT TRANSLATED */
-    return false;
+    return null;
+  }
+  InputPdf.PagesReader add_reader( InputPdf input_pdf_p ) {
+    return add_reader( input_pdf_p, false );
   }
   boolean open_input_pdf_readers() {
     /* NOT TRANSLATED */
@@ -84,11 +91,11 @@ class TK_Session {
 
   
   ArrayList<String> m_input_attach_file_filename = new ArrayList<String>();
-  int m_input_attach_file_pagenum;
+  int m_input_attach_file_pagenum = 0;
 
-  String m_update_info_filename;
-  boolean m_update_info_utf8_b;
-  String m_update_xmp_filename;
+  String m_update_info_filename = "";
+  boolean m_update_info_utf8_b = false;
+  String m_update_xmp_filename = "";
 
   enum keyword {
     none_k,
@@ -179,12 +186,16 @@ class TK_Session {
   };
   final keyword first_operation_k = keyword.cat_k;
   final keyword final_operation_k = keyword.unpack_files_k;
-  static keyword is_keyword( String ss, Integer keyword_len_p ) {
+  static keyword is_keyword( String ss ) {
+    /* NOT TRANSLATED */
+    return keyword.none_k;
+  }
+  static keyword is_keyword( StringBuffer ss ) {
     /* NOT TRANSLATED */
     return keyword.none_k;
   }
 
-  keyword m_operation;
+  keyword m_operation = keyword.none_k;
 
   class PageRef {
     int m_input_pdf_index;
@@ -208,36 +219,1097 @@ class TK_Session {
   };
   ArrayList<ArrayList<PageRef>> m_page_seq = new ArrayList<ArrayList<PageRef>>(); // one vector for each given page range
 
-  String m_form_data_filename;
-  String m_background_filename;
-  String m_stamp_filename;
-  String m_output_filename;
-  boolean m_output_utf8_b;
-  String m_output_owner_pw;
-  String m_output_user_pw;
-  int m_output_user_perms;
-  boolean m_multistamp_b; // use all pages of input stamp PDF, not just the first
-  boolean m_multibackground_b; // use all pages of input background PDF, not just the first
-  boolean m_output_uncompress_b;
-  boolean m_output_compress_b;
-  boolean m_output_flatten_b;
-  boolean m_output_need_appearances_b;
-  boolean m_output_drop_xfa_b;
-  boolean m_output_drop_xmp_b;
-  boolean m_output_keep_first_id_b;
-  boolean m_output_keep_final_id_b;
-  boolean m_cat_full_pdfs_b; // we are merging entire docs, not select pages
+  String m_form_data_filename = "";
+  String m_background_filename = "";
+  String m_stamp_filename = "";
+  String m_output_filename = "";
+  boolean m_output_utf8_b = false;
+  String m_output_owner_pw = "";
+  String m_output_user_pw = "";
+  int m_output_user_perms = 0;
+  boolean m_multistamp_b = false; // use all pages of input stamp PDF, not just the first
+  boolean m_multibackground_b = false; // use all pages of input background PDF, not just the first
+  boolean m_output_uncompress_b = false;
+  boolean m_output_compress_b = false;
+  boolean m_output_flatten_b = false;
+  boolean m_output_need_appearances_b = false;
+  boolean m_output_drop_xfa_b = false;
+  boolean m_output_drop_xmp_b = false;
+  boolean m_output_keep_first_id_b = false;
+  boolean m_output_keep_final_id_b = false;
+  boolean m_cat_full_pdfs_b = true; // we are merging entire docs, not select pages
 
   enum encryption_strength {
     none_enc,
     bits40_enc,
     bits128_enc
   };
-  encryption_strength m_output_encryption_strength;
+  encryption_strength m_output_encryption_strength = encryption_strength.none_enc;
 
-  TK_Session( String[] args ) {
-    /* NOT TRANSLATED */
+  TK_Session( String[] args )
+{
+  ArgState arg_state = ArgState.input_files_e;
+
+  // set one and only one to true when p/w used; use to
+  // enforce rule that either all p/w use handles or no p/w use handles
+  boolean password_using_handles_not_b= false;
+  boolean password_using_handles_b= false;
+
+  int password_input_pdf_index= 0;
+
+  boolean fail_b= false;
+
+  // first, look for our "dont_ask" or "do_ask" keywords, since this
+  // setting must be known before we begin opening documents, etc.
+  for( String argv : args ) {
+    keyword kw= is_keyword( argv );
+    if( kw== keyword.dont_ask_k ) {
+      m_ask_about_warnings_b= false;
+    }
+    else if( kw== keyword.do_ask_k ) {
+      m_ask_about_warnings_b= true;
+    }
   }
+
+  // iterate over cmd line arguments
+  for( String argv : args ) {
+    if (fail_b || arg_state== ArgState.done_e) break;
+    keyword arg_keyword= is_keyword( argv );
+
+    // these keywords can be false hits because of their loose matching requirements;
+    // since they are suffixes to page ranges, their appearance here is most likely a false match;
+    if( arg_keyword== keyword.end_k ||
+        arg_keyword== keyword.even_k ||
+        arg_keyword== keyword.odd_k )
+      {
+        arg_keyword= keyword.none_k;
+      }  
+
+    switch( arg_state ) {
+
+    case input_files_e: 
+    case input_pw_e: {
+      // look for keywords that would advance our state,
+      // and then handle the specifics of the above cases
+
+      if( arg_keyword== keyword.input_pw_k ) { // input PDF passwords keyword
+
+        arg_state= ArgState.input_pw_e;
+      }
+      else if( arg_keyword== keyword.cat_k ) {
+        m_operation= keyword.cat_k;
+        arg_state= ArgState.page_seq_e; // collect page sequeces
+      }
+      else if( arg_keyword== keyword.shuffle_k ) {
+        m_operation= keyword.shuffle_k;
+        arg_state= ArgState.page_seq_e; // collect page sequeces
+      }
+      else if( arg_keyword== keyword.burst_k ) {
+        m_operation= keyword.burst_k;
+        arg_state= ArgState.output_args_e; // makes "output <fn>" bit optional
+      }
+      else if( arg_keyword== keyword.filter_k ) {
+        m_operation= keyword.filter_k;
+        arg_state= ArgState.output_e; // look for an output filename
+      }
+      else if( arg_keyword== keyword.dump_data_k ) {
+        m_operation= keyword.dump_data_k;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.dump_data_utf8_k ) {
+        m_operation= keyword.dump_data_k;
+        m_output_utf8_b= true;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.dump_data_fields_k ) {
+        m_operation= keyword.dump_data_fields_k;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.dump_data_fields_utf8_k ) {
+        m_operation= keyword.dump_data_fields_k;
+        m_output_utf8_b= true;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.dump_data_k ) {
+        m_operation= keyword.dump_data_k;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.dump_data_annots_k ) {
+        m_operation= keyword.dump_data_annots_k;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.generate_fdf_k ) {
+        m_operation= keyword.generate_fdf_k;
+        m_output_utf8_b= true;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.fill_form_k ) {
+        m_operation= keyword.filter_k;
+        arg_state= ArgState.form_data_filename_e; // look for an FDF filename
+      }
+      else if( arg_keyword== keyword.attach_file_k ) {
+        m_operation= keyword.filter_k;
+        arg_state= ArgState.attach_file_filename_e;
+      }
+      else if( arg_keyword== keyword.attach_file_to_page_k ) {
+        arg_state= ArgState.attach_file_pagenum_e;
+      }
+      else if( arg_keyword== keyword.unpack_files_k ) {
+        m_operation= keyword.unpack_files_k;
+        arg_state= ArgState.output_e;
+      }
+      else if( arg_keyword== keyword.update_info_k ) {
+        m_operation= keyword.filter_k;
+        m_update_info_utf8_b= false;
+        arg_state= ArgState.update_info_filename_e;
+      }
+      else if( arg_keyword== keyword.update_info_utf8_k ) {
+        m_operation= keyword.filter_k;
+        m_update_info_utf8_b= true;
+        arg_state= ArgState.update_info_filename_e;
+      }
+      /*
+      else if( arg_keyword== update_xmp_k ) {
+        m_operation= filter_k;
+        arg_state= update_xmp_filename_e;
+      }
+      */
+      else if( arg_keyword== keyword.background_k ) {
+        m_operation= keyword.filter_k;
+        arg_state= ArgState.background_filename_e;
+      }
+      else if( arg_keyword== keyword.multibackground_k ) {
+        m_operation= keyword.filter_k;
+        m_multibackground_b= true;
+        arg_state= ArgState.background_filename_e;
+      }
+      else if( arg_keyword== keyword.stamp_k ) {
+        m_operation= keyword.filter_k;
+        arg_state= ArgState.stamp_filename_e;
+      }
+      else if( arg_keyword== keyword.multistamp_k ) {
+        m_operation= keyword.filter_k;
+        m_multistamp_b= true;
+        arg_state= ArgState.stamp_filename_e;
+      }
+      else if( arg_keyword== keyword.rotate_k ) {
+        m_operation= keyword.filter_k;
+        arg_state= ArgState.page_seq_e; // collect page sequeces
+      }
+      else if( arg_keyword== keyword.output_k ) { // we reached the output section
+        arg_state= ArgState.output_filename_e;
+      }
+      else if( arg_keyword== keyword.none_k ) {
+        // here is where the two cases (input_files_e, input_pw_e) diverge
+
+        String handle, data;
+        {
+          Pattern p = Pattern.compile("([A-Z]*?)=?(.*)");
+          Matcher m = p.matcher(argv);
+          m.matches();
+          handle = m.group(1);
+          data = m.group(2);
+        }
+
+        if( arg_state== ArgState.input_files_e ) {
+          // input_files_e:
+          // expecting input handle=filename pairs, or
+          // an input filename w/o a handle
+          //
+          // treat argv[ii] like an optional input handle and filename
+          // like this: [<handle>=]<filename>
+
+          InputPdf input_pdf = new InputPdf();
+          input_pdf.m_filename= data;
+
+          if( handle.isEmpty() ) { // no handle
+            m_input_pdf.add( input_pdf );
+          }
+          else { // use given handle for filename; test, first
+
+            // look up handle
+            Integer it = m_input_pdf_index.get( handle );
+            if( it!= null ) { // error: alreay in use
+
+              System.err.println("Error: Handle given here: ");
+              System.err.println("      " + argv);
+              System.err.println("   is already associated with: ");
+              System.err.println("      " + m_input_pdf.get(it).m_filename);
+              System.err.println("   Exiting.");
+              fail_b= true;
+            }
+            else { // add handle/filename association
+              m_input_pdf.add( input_pdf );
+              m_input_pdf_index.put(handle, m_input_pdf.size()- 1);
+            }
+          }
+        } // end: arg_state== input_files_e
+
+        else if( arg_state== ArgState.input_pw_e ) {
+          // expecting input handle=password pairs, or
+          // an input PDF password w/o a handle
+          //
+          // treat argv[ii] like an input handle and password
+          // like this <handle>=<password>; if no handle is
+          // given, assign passwords to input in order;
+
+          // if handles not used for input PDFs, then assume
+          // any equals signs found in p/w are part of p/w
+          if( m_input_pdf_index.size()== 0 ) {
+            handle= "";
+            data= argv;
+          }
+
+          if( handle.isEmpty() ) { // no equal sign; try using default handles
+            if( password_using_handles_b ) { // error: expected a handle
+
+              System.err.println("Error: Expected a user-supplied handle for this input");
+              System.err.println("   PDF password: " + argv);
+              System.err.println();
+              System.err.println("   Handles must be supplied with ~all~ input");
+              System.err.println("   PDF passwords, or with ~no~ input PDF passwords.");
+              System.err.println("   If no handles are supplied, then passwords are applied");
+              System.err.println("   according to input PDF order.");
+              System.err.println();
+              System.err.println("   Handles are given like this: <handle>=<password>, and");
+              System.err.println("   they must be single, upper case letters, like: A, B, etc.");
+              fail_b= true;
+            }
+            else {
+              password_using_handles_not_b= true;
+
+              if( password_input_pdf_index< m_input_pdf.size() ) {
+                m_input_pdf.get(password_input_pdf_index).m_password= argv;
+                ++password_input_pdf_index;
+              }
+              else { // error
+                System.err.println("Error: more input passwords than input PDF documents.");
+                System.err.println("   Exiting.");
+                fail_b= true;
+              }
+            }
+          }
+          else { // handle given; use for password
+            if( password_using_handles_not_b ) { // error; remark and set fail_b
+
+              System.err.println("Error: Expected ~no~ user-supplied handle for this input");
+              System.err.println("   PDF password: " + argv);
+              System.err.println();
+              System.err.println("   Handles must be supplied with ~all~ input");
+              System.err.println("   PDF passwords, or with ~no~ input PDF passwords.");
+              System.err.println("   If no handles are supplied, then passwords are applied");
+              System.err.println("   according to input PDF order.");
+              System.err.println();
+              System.err.println("   Handles are given like this: <handle>=<password>, and");
+              System.err.println("   they must be single, upper case letters, like: A, B, etc.");
+              fail_b= true;
+            }
+            else {
+              password_using_handles_b= true;
+
+              // look up this handle
+              Integer it = m_input_pdf_index.get( handle );
+              if( it!= null ) { // found
+
+                if( m_input_pdf.get(it).m_password.isEmpty() ) {
+                  m_input_pdf.get(it).m_password= data; // set
+                }
+                else { // error: password already given
+
+                  System.err.println("Error: Handle given here: ");
+                  System.err.println("      " + argv);
+                  System.err.println("   is already associated with this password: ");
+                  System.err.println("      " + m_input_pdf.get(it).m_password);
+                  System.err.println("   Exiting.");
+                  fail_b= true;
+                }
+              }
+              else { // error: no input file matches this handle
+
+                System.err.println("Error: Password handle: " + argv);
+                System.err.println("   is not associated with an input PDF file.");
+                System.err.println("   Exiting.");
+                fail_b= true;
+              }
+            }
+          }
+        } // end: arg_state== input_pw_e
+        else { // error
+          System.err.println("Error: Internal error: unexpected arg_state.  Exiting.");
+          fail_b= true;
+        }
+      }
+      else { // error: unexpected keyword; remark and set fail_b
+        System.err.println("Error: Unexpected command-line data: ");
+        System.err.println("      " + argv);
+        if( arg_state== ArgState.input_files_e ) {
+          System.err.println("   where we were expecting an input PDF filename,");
+          System.err.println("   operation (e.g. \"cat\") or \"input_pw\".  Exiting.");
+        }
+        else {
+          System.err.println("   where we were expecting an input PDF password");
+          System.err.println("   or operation (e.g. \"cat\").  Exiting.");
+        }
+        fail_b= true;
+      }
+    }
+    break;
+
+    case page_seq_e: {
+      if( m_page_seq.isEmpty() ) {
+        // we just got here; validate input filenames
+
+        if( m_input_pdf.isEmpty() ) { // error; remark and set fail_b
+          System.err.println("Error: No input files.  Exiting.");
+          fail_b= true;
+          break;
+        }
+
+        // try opening input PDF readers
+        if( !open_input_pdf_readers() ) { // failure
+          fail_b= true;
+          break;
+        }
+      } // end: first pass init. pdf files
+
+      if( arg_keyword== keyword.output_k ) {
+        arg_state= ArgState.output_filename_e; // advance state
+      }
+      else if( arg_keyword== keyword.none_k || 
+               arg_keyword== keyword.end_k )
+        { // treat argv[ii] like a page sequence
+
+          boolean even_pages_b= false;
+          boolean odd_pages_b= false;
+
+          Pattern p = Pattern.compile("([A-Z]*)(r?)([0-9]*)([^-]*)(-?)(r?)([0-9]*)(.*)");
+          Matcher m = p.matcher(argv);
+          m.matches();
+          String handle = m.group(1);
+          String pre_reverse = m.group(2);
+          String pre_range = m.group(3);
+          String pre_keywords = m.group(4);
+          String hyphen = m.group(5);
+          String post_reverse = m.group(6);
+          String post_range = m.group(7);
+          String post_keywords = m.group(8);
+
+          int range_pdf_index= 0; { // defaults to first input document
+            if( !handle.isEmpty() ) {
+              // validate handle
+              Integer it = m_input_pdf_index.get( handle );
+              if( it== null ) { // error
+
+                System.err.println("Error: Given handle has no associated file: ");
+                System.err.println("   " + handle + ", used here: " + argv);
+                System.err.println("   Exiting.");
+                fail_b= true;
+                break;
+              }
+              else {
+                range_pdf_index= it;
+              }
+            }
+          }
+
+          // DF declare rotate vars
+          PageRotate page_rotate= PageRotate.NORTH;
+          boolean page_rotate_absolute= false;
+
+          ////
+          // beginning of page range
+
+          boolean reverse_b= ( !pre_reverse.isEmpty() ); // single lc 'r' before page range
+
+          // parse digits
+          int page_num_beg= 0;
+          boolean page_num_beg_out_of_range_b= false;
+          StringBuffer trailing_keywords= new StringBuffer(pre_keywords);
+          if ( !pre_range.isEmpty() ) {
+            page_num_beg= Integer.parseInt(pre_range);
+          }
+          else if( !pre_keywords.isEmpty() ) { // look for usable keyword
+            arg_keyword= is_keyword( trailing_keywords );
+
+            if( arg_keyword== keyword.end_k ) { // may be a single page ref or beg of range
+              page_num_beg= m_input_pdf.get(range_pdf_index).m_num_pages;
+              // consume keyword
+            }
+            else if ( !hyphen.isEmpty() ) {
+              // error: can't have numbers ~and~ a keyword at the beginning of range
+              System.err.println("Error: Unexpected combination of digits and text in");
+              System.err.println("   page range start, here: " + argv);
+              System.err.println("   Exiting.");
+              fail_b= true;
+              break;
+            }
+          }
+
+          if( m_input_pdf.get(range_pdf_index).m_num_pages< page_num_beg ) {
+            // error: page number out of range
+            System.err.println("Error: Range start page number exceeds size of PDF");
+            System.err.println("   here: " + argv);
+            System.err.println("   input PDF has: " + m_input_pdf.get(range_pdf_index).m_num_pages + " pages.");
+            System.err.println("   Exiting.");
+            fail_b= true;
+            break;
+          }
+
+          if( reverse_b ) // above test ensures good value here
+            page_num_beg= m_input_pdf.get(range_pdf_index).m_num_pages- page_num_beg+ 1;
+
+          ////
+          // end of page range
+
+          int page_num_end= page_num_beg; // default value
+          if( !hyphen.isEmpty() ) { // process second half of page range
+
+            trailing_keywords = new StringBuffer(post_keywords);
+            
+            reverse_b= ( !post_reverse.isEmpty() ); // single lc 'r' before page range
+
+            // parse digits
+            if ( !post_range.isEmpty() ) {
+              page_num_end= Integer.parseInt(post_range);
+            }
+            else if( !post_keywords.isEmpty() ) { // look for usable keyword
+              arg_keyword= is_keyword( trailing_keywords );
+              
+              if( arg_keyword== keyword.end_k ) {
+                page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages;
+                // consume keyword
+              }
+              else { // error: hyphen but no range end
+                System.err.println("Error: Unexpected range end; expected a page");
+                System.err.println("   number or legal keyword, here: " + argv);
+                System.err.println("   Exiting.");
+                fail_b= true;
+                break;
+              }
+            }
+
+            if( m_input_pdf.get(range_pdf_index).m_num_pages< page_num_end ) {
+              // error: page number out of range
+              System.err.println("Error: Range end page number exceeds size of PDF");
+              System.err.println("   input PDF has: " + m_input_pdf.get(range_pdf_index).m_num_pages + " pages.");
+              System.err.println("   Exiting.");
+              fail_b= true;
+              break;
+            }
+
+            if( reverse_b ) // above test ensures good value here
+              page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages- page_num_end+ 1;
+
+          }
+
+          // trailing keywords (excluding "end" which should have been handled above)
+          while( trailing_keywords.length() > 0 ) { // possibly more than one keyword, e.g., 3-endevenwest
+
+            // read keyword
+            arg_keyword= is_keyword( trailing_keywords );
+
+            if( arg_keyword== keyword.even_k ) {
+              even_pages_b= true;
+            }
+            else if( arg_keyword== keyword.odd_k ) {
+              odd_pages_b= true;
+            }
+            else if( arg_keyword== keyword.rot_north_k ) {
+              page_rotate= PageRotate.NORTH; // rotate 0
+              page_rotate_absolute= true;
+            }
+            else if( arg_keyword== keyword.rot_east_k ) {
+              page_rotate= PageRotate.EAST; // rotate 90
+              page_rotate_absolute= true;
+            }
+            else if( arg_keyword== keyword.rot_south_k ) {
+              page_rotate= PageRotate.SOUTH; // rotate 180
+              page_rotate_absolute= true;
+            }
+            else if( arg_keyword== keyword.rot_west_k ) {
+              page_rotate= PageRotate.WEST; // rotate 270
+              page_rotate_absolute= true;
+            }
+            else if( arg_keyword== keyword.rot_left_k ) {
+              page_rotate= PageRotate.WEST; // rotate -90
+              page_rotate_absolute= false;
+            }
+            else if( arg_keyword== keyword.rot_right_k ) {
+              page_rotate= PageRotate.EAST; // rotate +90
+              page_rotate_absolute= false;
+            }
+            else if( arg_keyword== keyword.rot_upside_down_k ) {
+              page_rotate= PageRotate.SOUTH; // rotate +180
+              page_rotate_absolute= false;
+            }
+            else { // error
+              System.err.println("Error: Unexpected text in page range end, here: ");
+              System.err.println("   " + argv /*(argv[ii]+ jj)*/);
+              System.err.println("   Exiting.");
+              System.err.println("   Acceptable keywords, for example: \"even\" or \"odd\".");
+              System.err.println("   To rotate pages, use: \"north\" \"south\" \"east\"");
+              System.err.println("       \"west\" \"left\" \"right\" or \"down\"");
+              fail_b= true;
+              break;
+            }
+          }
+
+          ////
+          // pack this range into our m_page_seq; 
+
+          if( page_num_beg== 0 && page_num_end== 0 ) { // ref the entire document
+            page_num_beg= 1;
+            page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages;
+
+            // test that it's a /full/ pdf
+            m_cat_full_pdfs_b= m_cat_full_pdfs_b && ( !even_pages_b && !odd_pages_b );
+          }
+          else if( page_num_beg== 0 || page_num_end== 0 ) { // error
+            System.err.println("Error: Input page numbers include 0 (zero)");
+            System.err.println("   The first PDF page is 1 (one)");
+            System.err.println("   Exiting.");
+            fail_b= true;
+            break;
+          }
+          else // the user specified select pages
+            m_cat_full_pdfs_b= false;
+
+          ArrayList< PageRef > temp_page_seq = new ArrayList< PageRef >();
+          boolean reverse_sequence_b= ( page_num_end< page_num_beg );
+          if( reverse_sequence_b ) { // swap
+            int temp= page_num_end;
+            page_num_end= page_num_beg;
+            page_num_beg= temp;
+          }
+
+          for( int kk= page_num_beg; kk<= page_num_end; ++kk ) {
+            if( (!even_pages_b || ((kk % 2) == 0)) &&
+                (!odd_pages_b || ((kk % 2) == 1)) )
+              {
+                if( kk<= m_input_pdf.get(range_pdf_index).m_num_pages ) {
+
+                  // look to see if this page of this document
+                  // has already been referenced; if it has,
+                  // create a new reader; associate this page
+                  // with a reader;
+                  //
+                  boolean new_association = false;
+                  for( InputPdf.PagesReader it : m_input_pdf.get(range_pdf_index).m_readers) {
+                    if( !it.first.contains( kk ) ) { // kk not assoc. w/ this reader
+                      it.first.add( kk ); // create association
+                      new_association = true;
+                      break;
+                    }
+                  }
+                  //
+                  if( new_association ) {
+                    // need to create a new reader for kk
+                    InputPdf.PagesReader new_reader = add_reader( m_input_pdf.get(range_pdf_index) );
+                    if ( new_reader != null) {
+                      new_reader.first.add( kk );
+                    }
+                    else {
+                      System.err.println("Internal Error: unable to add reader");
+                      fail_b= true;
+                      break;
+                    }
+                  }
+
+                  //
+                  temp_page_seq.add( new PageRef( range_pdf_index, kk, page_rotate, page_rotate_absolute ) ); // DF rotate
+
+                }
+                else { // error; break later to get most feedback
+                  System.err.println("Error: Page number: " + kk);
+                  System.err.println("   does not exist in file: " + m_input_pdf.get(range_pdf_index).m_filename);
+                  fail_b= true;
+                }
+              }
+          }
+          if( fail_b )
+            break;
+
+          if( reverse_sequence_b ) {
+            Collections.reverse ( temp_page_seq );
+          }
+
+          m_page_seq.add( temp_page_seq );
+
+        }
+      else { // error
+        System.err.println("Error: expecting page ranges.  Instead, I got:");
+        System.err.println("   " + argv);
+        fail_b= true;
+        break;
+      }
+    }
+    break;
+
+    case form_data_filename_e: {
+      if( arg_keyword== keyword.none_k )
+        { // treat argv[ii] like an FDF file filename
+          
+          if( m_form_data_filename.isEmpty() ) {
+            m_form_data_filename = argv;
+          }
+          else { // error
+            System.err.println("Error: Multiple fill_form filenames given: ");
+            System.err.println("   " + m_form_data_filename + " and " + argv);
+            System.err.println("Exiting.");
+            fail_b= true;
+            break;
+          }
+
+          // advance state
+          arg_state= ArgState.output_e; // look for an output filename
+        }
+      else { // error
+        System.err.println("Error: expecting a form data filename,");
+        System.err.println("   instead I got this keyword: " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+    } // end: case form_data_filename_e
+    break;
+
+    case attach_file_filename_e: {
+      // keep packing filenames until we reach an expected keyword
+
+      if( arg_keyword== keyword.attach_file_to_page_k ) {
+        arg_state= ArgState.attach_file_pagenum_e; // advance state
+      }
+      else if( arg_keyword== keyword.output_k ) {
+        arg_state= ArgState.output_filename_e; // advance state
+      }
+      else if( arg_keyword== keyword.none_k ) { 
+        // pack argv[ii] into our list of attachment filenames
+        m_input_attach_file_filename.add( argv );
+      }
+      else { // error
+        System.err.println("Error: expecting an attachment filename,");
+        System.err.println("   instead I got this keyword: " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+    }
+    break;
+
+    case attach_file_pagenum_e: {
+      if( argv.equals("PROMPT") ) { // query the user, later
+        m_input_attach_file_pagenum= -1;
+      }
+      else if( argv.equals("end") ) { // attach to the final page
+        m_input_attach_file_pagenum= -2;
+      }
+      else {
+        try {
+          m_input_attach_file_pagenum= Integer.parseInt(argv);
+        }
+        catch (NumberFormatException e) { // error
+          System.err.println("Error: expecting a (1-based) page number.  Instead, I got:");
+          System.err.println("   " + argv);
+          System.err.println("Exiting.");
+          fail_b= true;
+        }
+      }
+
+      // advance state
+      arg_state= ArgState.output_e; // look for an output filename
+
+    } // end: case attach_file_pagenum_e
+    break;
+
+    case update_info_filename_e : {
+      if( arg_keyword== keyword.none_k ) {
+          if( m_update_info_filename.isEmpty() ) {
+            m_update_info_filename = argv;
+          }
+          else { // error
+            System.err.println("Error: Multiple update_info filenames given: ");
+            System.err.println("   " + m_update_info_filename + " and " + argv);
+            System.err.println("Exiting.");
+            fail_b= true;
+            break;
+          }
+        }
+      else { // error
+        System.err.println("Error: expecting an INFO file filename,");
+        System.err.println("   instead I got this keyword: " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      // advance state
+      arg_state= ArgState.output_e; // look for an output filename
+
+    } // end: case update_info_filename_e
+    break;
+
+    /*
+    case update_xmp_filename_e : {
+      if( arg_keyword== none_k ) {
+          if( m_update_xmp_filename.empty() ) {
+            m_update_xmp_filename= argv[ii];
+          }
+          else { // error
+            cerr << "Error: Multiple update_xmp filenames given: " << endl;
+            cerr << "   " << m_update_xmp_filename << " and " << argv[ii] << endl;
+            cerr << "Exiting." << endl;
+            fail_b= true;
+            break;
+          }
+        }
+      else { // error
+        cerr << "Error: expecting an XMP file filename," << endl;
+        cerr << "   instead I got this keyword: " << argv[ii] << endl;
+        cerr << "Exiting." << endl;
+        fail_b= true;
+        break;
+      }
+
+      // advance state
+      arg_state= output_e; // look for an output filename
+
+    } // end: case update_xmp_filename_e
+    break;
+    */
+
+    case output_e: {
+      if( m_input_pdf.isEmpty() ) { // error; remark and set fail_b
+        System.err.println("Error: No input files.  Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      if( arg_keyword== keyword.output_k ) {
+        arg_state= ArgState.output_filename_e; // advance state
+      }
+      else { // error
+        System.err.println("Error: expecting \"output\" keyword.  Instead, I got:");
+        System.err.println("   " + argv);
+        fail_b= true;
+        break;
+      }
+    }
+    break;
+
+    case output_filename_e: {
+      // we have closed all possible input operations and arguments;
+      // see if we should perform any default action based on the input state
+      //
+      if( m_operation== keyword.none_k ) {
+        if( 1< m_input_pdf.size() ) {
+          // no operation given for multiple input PDF, so combine them
+          m_operation= keyword.cat_k;
+        }
+        else {
+          m_operation= keyword.filter_k;
+        }
+      }
+      
+      // try opening input PDF readers (in case they aren't already)
+      if( !open_input_pdf_readers() ) { // failure
+        fail_b= true;
+        break;
+      }
+
+      if( ( m_operation== keyword.cat_k ||
+            m_operation== keyword.shuffle_k ) )
+        {
+          if( m_page_seq.isEmpty() ) {
+            // combining pages, but no sequences given; merge all input PDFs in order
+            for( int ii= 0; ii< m_input_pdf.size(); ++ii ) {
+              InputPdf input_pdf= m_input_pdf.get(ii);
+
+              ArrayList< PageRef > temp_page_seq = new ArrayList< PageRef >();
+              for( int jj= 1; jj<= input_pdf.m_num_pages; ++jj ) {
+                temp_page_seq.add( new PageRef( ii, jj ) ); // DF rotate
+                input_pdf.m_readers.get(input_pdf.m_readers.size()-1).first.add( jj ); // create association
+              }
+              m_page_seq.add( temp_page_seq );
+            }
+          }
+          /* no longer necessary -- are upstream testing is smarter
+          else { // page ranges or docs (e.g. A B A) were given
+            m_cat_full_pdfs_b= false; // TODO: handle cat A B A case for bookmarks
+          }
+          */
+        }
+
+      if( m_output_filename.isEmpty() ) {
+        m_output_filename = argv;
+
+        if( !m_output_filename.equals("-") ) { // input and output may both be "-" (stdin and stdout)
+          // simple-minded test to see if output matches an input filename
+          for( InputPdf it : m_input_pdf )
+            {
+              if( it.m_filename.equals(m_output_filename) ) {
+                System.err.println("Error: The given output filename: " + m_output_filename);
+                System.err.println("   matches an input filename.  Exiting.");
+                fail_b= true;
+                break;
+              }
+            }
+        }
+      }
+      else { // error
+        System.err.println("Error: Multiple output filenames given: ");
+        System.err.println("   " + m_output_filename + " and " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      // advance state
+      arg_state= ArgState.output_args_e;
+    }
+    break;
+
+    case output_args_e: {
+      // output args are order-independent but must follow "output <fn>", if present;
+      // we are expecting any of these keywords:
+      // owner_pw_k, user_pw_k, user_perms_k ...
+      // added output_k case in pdftk 1.10; this permits softer "output <fn>" enforcement
+      //
+
+      ArgStateMutable arg_state_m = new ArgStateMutable();
+      arg_state_m.value = arg_state;
+      if( handle_some_output_options( arg_keyword, arg_state_m ) ) {
+        arg_state = arg_state_m.value;
+      }
+      else {
+        System.err.println("Error: Unexpected data in output section: ");
+        System.err.println("      " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+    }
+    break;
+
+    case output_owner_pw_e: {
+      if( m_output_owner_pw.isEmpty() ) {
+
+        if( argv.equals("PROMPT") || !argv.equals( m_output_user_pw ) ) {
+          m_output_owner_pw= argv;
+        }
+        else { // error: identical user and owner password
+          // are interpreted by Acrobat (per the spec.) that
+          // the doc has no owner password
+          System.err.println("Error: The user and owner passwords are the same.");
+          System.err.println("   PDF Viewers interpret this to mean your PDF has");
+          System.err.println("   no owner password, so they must be different.");
+          System.err.println("   Or, supply no owner password to pdftk if this is");
+          System.err.println("   what you desire.");
+          System.err.println("Exiting.");
+          fail_b= true;
+          break;
+        }
+      }
+      else { // error: we already have an output owner pw
+        System.err.println("Error: Multiple output owner passwords given: ");
+        System.err.println("   " + m_output_owner_pw + " and " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      // revert state
+      arg_state= ArgState.output_args_e;
+    }
+    break;
+
+    case output_user_pw_e: {
+      if( m_output_user_pw.isEmpty() ) {
+        if( argv.equals("PROMPT") || !m_output_owner_pw.equals(argv) ) {
+          m_output_user_pw= argv;
+        }
+        else { // error: identical user and owner password
+          // are interpreted by Acrobat (per the spec.) that
+          // the doc has no owner password
+          System.err.println("Error: The user and owner passwords are the same.");
+          System.err.println("   PDF Viewers interpret this to mean your PDF has");
+          System.err.println("   no owner password, so they must be different.");
+          System.err.println("   Or, supply no owner password to pdftk if this is");
+          System.err.println("   what you desire.");
+          System.err.println("Exiting.");
+          fail_b= true;
+          break;
+        }
+      }
+      else { // error: we already have an output user pw
+        System.err.println("Error: Multiple output user passwords given: ");
+        System.err.println("   " + m_output_user_pw + " and " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      // revert state
+      arg_state= ArgState.output_args_e;
+    }
+    break;
+
+    case output_user_perms_e: {
+
+      // we may be given any number of permission arguments,
+      // so keep an eye out for other, state-altering keywords
+      ArgStateMutable arg_state_m = new ArgStateMutable();
+      arg_state_m.value = arg_state;
+      if( handle_some_output_options( arg_keyword, arg_state_m ) ) {
+        arg_state = arg_state_m.value;
+        break;
+      }
+
+      switch( arg_keyword ) {
+
+        // possible permissions
+      case perm_printing_k:
+        // if both perm_printing_k and perm_degraded_printing_k
+        // are given, then perm_printing_k wins;
+        m_output_user_perms|= 
+          PdfWriter.AllowPrinting;
+        break;
+      case perm_modify_contents_k:
+        // Acrobat 5 and 6 don't set both bits, even though
+        // they both respect AllowModifyContents --> AllowAssembly;
+        // so, no harm in this;
+        m_output_user_perms|= 
+          ( PdfWriter.AllowModifyContents | PdfWriter.AllowAssembly );
+        break;
+      case perm_copy_contents_k:
+        // Acrobat 5 _does_ allow the user to allow copying contents
+        // yet hold back screen reader perms; this is counter-intuitive,
+        // and Acrobat 6 does not allow Copy w/o SceenReaders;
+        m_output_user_perms|= 
+          ( PdfWriter.AllowCopy | PdfWriter.AllowScreenReaders );
+        break;
+      case perm_modify_annotations_k:
+        m_output_user_perms|= 
+          ( PdfWriter.AllowModifyAnnotations | PdfWriter.AllowFillIn );
+        break;
+      case perm_fillin_k:
+        m_output_user_perms|= 
+          PdfWriter.AllowFillIn;
+        break;
+      case perm_screen_readers_k:
+        m_output_user_perms|= 
+          PdfWriter.AllowScreenReaders;
+        break;
+      case perm_assembly_k:
+        m_output_user_perms|= 
+          PdfWriter.AllowAssembly;
+        break;
+      case perm_degraded_printing_k:
+        m_output_user_perms|= 
+          PdfWriter.AllowDegradedPrinting;
+        break;
+      case perm_all_k:
+        m_output_user_perms= 
+          ( PdfWriter.AllowPrinting | // top quality printing
+            PdfWriter.AllowModifyContents |
+            PdfWriter.AllowCopy |
+            PdfWriter.AllowModifyAnnotations |
+            PdfWriter.AllowFillIn |
+            PdfWriter.AllowScreenReaders |
+            PdfWriter.AllowAssembly );
+        break;
+
+      default: // error: unexpected matter
+        System.err.println("Error: Unexpected data in output section: ");
+        System.err.println("      " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+    }
+    break;
+
+    case background_filename_e : {
+      if( arg_keyword== keyword.none_k ) {
+        if( m_background_filename.isEmpty() ) {
+          m_background_filename = argv;
+        }
+        else { // error
+          System.err.println("Error: Multiple background filenames given: ");
+          System.err.println("   " + m_background_filename + " and " + argv);
+          System.err.println("Exiting.");
+          fail_b= true;
+          break;
+        }
+      }
+      else { // error
+        System.err.println("Error: expecting a PDF filename for background operation,");
+        System.err.println("   instead I got this keyword: " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      // revert state
+      // this is more liberal than used with other operations, since we want
+      // to preserve backward-compatibility with pdftk 1.00 where "background"
+      // was documented as an output option; in pdftk 1.10 we changed it to
+      // an operation
+      arg_state= ArgState.output_args_e;
+    }
+    break;
+
+    case stamp_filename_e : {
+      if( arg_keyword== keyword.none_k ) {
+        if( m_stamp_filename.isEmpty() ) {
+          m_stamp_filename = argv;
+        }
+        else { // error
+          System.err.println("Error: Multiple stamp filenames given: ");
+          System.err.println("   " + m_stamp_filename + " and " + argv);
+          System.err.println("Exiting.");
+          fail_b= true;
+          break;
+        }
+      }
+      else { // error
+        System.err.println("Error: expecting a PDF filename for stamp operation,");
+        System.err.println("   instead I got this keyword: " + argv);
+        System.err.println("Exiting.");
+        fail_b= true;
+        break;
+      }
+
+      // advance state
+      arg_state= ArgState.output_e; // look for an output filename
+    }
+    break;
+
+    default: { // error
+      System.err.println("Internal Error: Unexpected arg_state.  Exiting.");
+      fail_b= true;
+      break;
+    }
+
+    } // end: switch(arg_state)
+
+  } // end: iterate over command-line arguments
+
+  if( fail_b ) {
+    System.err.println("Errors encountered.  No output created.");
+    m_valid_b= false;
+
+    m_input_pdf.clear();
+
+    // preserve other data members for diagnostic dump
+  }
+  else {
+    m_valid_b= true;
+
+    if(!m_input_pdf_readers_opened_b ) {
+      open_input_pdf_readers();
+    }
+  }
+}
 
   boolean is_valid() {
     /* NOT TRANSLATED */
@@ -1470,9 +2542,12 @@ int create_output() {
 
     done_e
   };
+  class ArgStateMutable {
+    ArgState value;
+  }
 
   // convenience function; return true iff handled
-  private boolean handle_some_output_options( TK_Session.keyword kw, ArgState arg_state_p ) {
+  private boolean handle_some_output_options( TK_Session.keyword kw, ArgStateMutable arg_state_p ) {
     /* NOT TRANSLATED */
     return false;
   }

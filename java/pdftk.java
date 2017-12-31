@@ -5,6 +5,7 @@ public class pdftk {
 /* TODO: should read from compiler */
 static final String PDFTK_VER = "3.0";
 static final char PATH_DELIM = '/';
+static final boolean ASK_ABOUT_WARNINGS = false;
 
 static String
 prompt_for_password( String pass_name, 
