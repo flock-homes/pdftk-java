@@ -2580,9 +2580,90 @@ int create_output() {
   }
 
   // convenience function; return true iff handled
-  private boolean handle_some_output_options( TK_Session.keyword kw, ArgStateMutable arg_state_p ) {
-    /* NOT TRANSLATED */
+  private boolean handle_some_output_options( TK_Session.keyword kw, ArgStateMutable arg_state_p )
+{
+  switch( kw ) {
+  case output_k:
+    // added this case for the burst operation and "output" support;
+    // also helps with backward compatibility of the "background" feature
+    // change state
+    arg_state_p.value= ArgState.output_filename_e;
+    break;
+
+    // state-altering keywords
+  case owner_pw_k:
+    // change state
+    arg_state_p.value= ArgState.output_owner_pw_e;
+    break;
+  case user_pw_k:
+    // change state
+    arg_state_p.value= ArgState.output_user_pw_e;
+    break;
+  case user_perms_k:
+    // change state
+    arg_state_p.value= ArgState.output_user_perms_e;
+    break;
+
+    ////
+    // no arguments to these keywords, so the state remains unchanged
+  case encrypt_40bit_k:
+    m_output_encryption_strength= encryption_strength.bits40_enc;
+    break;
+  case encrypt_128bit_k:
+    m_output_encryption_strength= encryption_strength.bits128_enc;
+    break;
+  case filt_uncompress_k:
+    m_output_uncompress_b= true;
+    break;
+  case filt_compress_k:
+    m_output_compress_b= true;
+    break;
+  case flatten_k:
+    m_output_flatten_b= true;
+    break;
+  case need_appearances_k:
+    m_output_need_appearances_b= true;
+    break;
+  case drop_xfa_k:
+    m_output_drop_xfa_b= true;
+    break;
+  case drop_xmp_k:
+    m_output_drop_xmp_b= true;
+    break;
+  case keep_first_id_k:
+    m_output_keep_first_id_b= true;
+    break;
+  case keep_final_id_k:
+    m_output_keep_final_id_b= true;
+    break;
+  case verbose_k:
+    m_verbose_reporting_b= true;
+    break;
+  case dont_ask_k:
+    m_ask_about_warnings_b= false;
+    break;
+  case do_ask_k:
+    m_ask_about_warnings_b= true;
+    break;
+
+  case background_k:
+    if( m_operation!= keyword.filter_k ) { // warning
+      System.err.println("Warning: the \"background\" output option works only in filter mode.");
+      System.err.println("  This means it won't work in combination with \"cat\", \"burst\",");
+      System.err.println("  \"attach_file\", etc.  To run pdftk in filter mode, simply omit");
+      System.err.println("  the operation, e.g.: pdftk in.pdf output out.pdf background back.pdf");
+      System.err.println("  Or, use background as an operation; this is the preferred technique:");
+      System.err.println("    pdftk in.pdf background back.pdf output out.pdf");
+    }
+    // change state
+    arg_state_p.value= ArgState.background_filename_e;
+    break;
+
+  default: // not handled here; no change to *arg_state_p
     return false;
   }
+
+  return true;
+}
 
 };
