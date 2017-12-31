@@ -1714,17 +1714,20 @@ boolean is_valid() {
 }
 
   void dump_session_data() {
+    System.err.println( "NOT TRANSLATED: dump_session_data" );
     /* NOT TRANSLATED */
   }
 
   void attach_files
   ( PdfReader input_reader_p,
     PdfWriter writer_p ) {
+    System.err.println( "NOT TRANSLATED: attach_files" );
     /* NOT TRANSLATED */
   }
 
   void unpack_files
     ( PdfReader input_reader_p ) {
+    System.err.println( "NOT TRANSLATED: unpack_files" );
     /* NOT TRANSLATED */
   }
 

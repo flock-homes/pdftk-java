@@ -15,6 +15,7 @@ static void
 ReportAcroFormFields( OutputStream ofs,
                       PdfReader reader_p,
                       boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReportAcroFormFields" );
   /* NOT TRANSLATED */
 }
 
@@ -22,6 +23,7 @@ static void
 ReportAnnots( OutputStream ofs,
               PdfReader reader_p,
               boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReportAnnots" );
   /* NOT TRANSLATED */
 }
 
@@ -29,6 +31,7 @@ static void
 ReportOnPdf( OutputStream ofs,
              PdfReader reader_p,
              boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReportOnPdf" );
   /* NOT TRANSLATED */
 }
 
@@ -36,6 +39,7 @@ static boolean
 UpdateInfo( PdfReader reader_p,
             InputStream ifs,
             boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: UpdateInfo" );
   /* NOT TRANSLATED */
   return false;
 }
@@ -81,6 +85,7 @@ ReadOutlines( PdfDictionary outline_p,
               int level,
               PdfReader reader_p,              
               boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReadOutlines" );
   /* NOT TRANSLATED */
   return null;
 }
@@ -103,6 +108,7 @@ BuildBookmarks(PdfWriter writer_p,
                int level_offset,
                boolean utf8_b,
                BuildBookmarksState state) {
+  System.err.println( "NOT TRANSLATED: BuildBookmarks" );
   /* NOT TRANSLATED */
   return 1;
 }

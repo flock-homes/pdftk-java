@@ -11,6 +11,7 @@ static String
 prompt_for_password( String pass_name, 
                      String pass_app) {
   String password = "";
+  System.err.println( "NOT TRANSLATED: prompt_for_password" );
   /* NOT TRANSLATED */
   return password;
 }
@@ -18,6 +19,7 @@ prompt_for_password( String pass_name,
 static String
 prompt_for_filename( String message) {
   String fn = "";
+  System.err.println( "NOT TRANSLATED: prompt_for_filename" );
   /* NOT TRANSLATED */
   return fn;
 }
@@ -25,6 +27,7 @@ prompt_for_filename( String message) {
 static OutputStream
 get_output_stream( String output_filename,
                    boolean ask_about_warnings_b ) {
+  System.err.println( "NOT TRANSLATED: get_output_stream" );
   /* NOT TRANSLATED */
   return null;
 }
