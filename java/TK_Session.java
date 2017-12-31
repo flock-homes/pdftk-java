@@ -184,8 +184,6 @@ class TK_Session {
     rot_right_k,
     rot_upside_down_k
   };
-  final keyword first_operation_k = keyword.cat_k;
-  final keyword final_operation_k = keyword.unpack_files_k;
   static keyword is_keyword( String ss ) {
     /* NOT TRANSLATED */
     return keyword.none_k;
@@ -273,6 +271,7 @@ class TK_Session {
 
   // iterate over cmd line arguments
   for( String argv : args ) {
+
     if (fail_b || arg_state== ArgState.done_e) break;
     keyword arg_keyword= is_keyword( argv );
 
@@ -1311,10 +1310,44 @@ class TK_Session {
   }
 }
 
-  boolean is_valid() {
-    /* NOT TRANSLATED */
-    return false;
-  }
+boolean is_valid() {
+  return( m_valid_b &&
+
+          ( m_operation== keyword.dump_data_k ||
+            m_operation== keyword.dump_data_fields_k ||
+            m_operation== keyword.dump_data_annots_k ||
+            m_operation== keyword.generate_fdf_k ||
+            m_authorized_b ) &&
+
+          !m_input_pdf.isEmpty() &&
+          m_input_pdf_readers_opened_b &&
+
+          ( m_operation== keyword.cat_k ||
+            m_operation== keyword.shuffle_k ||
+            m_operation== keyword.burst_k ||
+            m_operation== keyword.filter_k ||
+            m_operation== keyword.dump_data_k ||
+            m_operation== keyword.dump_data_utf8_k ||
+            m_operation== keyword.dump_data_fields_k ||
+            m_operation== keyword.dump_data_fields_utf8_k ||
+            m_operation== keyword.dump_data_annots_k ||
+            m_operation== keyword.generate_fdf_k ||
+            m_operation== keyword.unpack_files_k ) &&
+
+          // these op.s require a single input PDF file
+          ( !( m_operation== keyword.burst_k ||
+               m_operation== keyword.filter_k ) ||
+            ( m_input_pdf.size()== 1 ) ) &&
+
+          // these op.s do not require an output filename
+          ( m_operation== keyword.burst_k ||
+            m_operation== keyword.dump_data_k ||
+            m_operation== keyword.dump_data_fields_k ||
+            m_operation== keyword.dump_data_annots_k ||
+            m_operation== keyword.generate_fdf_k ||
+            m_operation== keyword.unpack_files_k ||
+            !m_output_filename.isEmpty() ) );
+}
 
   void dump_session_data() {
     /* NOT TRANSLATED */
