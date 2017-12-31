@@ -54,16 +54,17 @@ class TK_Session {
   }; // DF rotation
   //typedef bool PageRotateAbsolute; // DF absolute / relative rotation
 
-  class InputPdf {
+  static class InputPdf {
     String m_filename = "";
     String m_password = "";
     boolean m_authorized_b = true;
 
     // keep track of which pages get output under which readers,
     // because one reader mayn't output the same page twice;
-    class PagesReader {
-      HashSet<Integer> first;
+    static class PagesReader {
+      HashSet<Integer> first = new HashSet<Integer>();
       PdfReader second;
+      PagesReader ( PdfReader second ) { this.second = second; }
     };
     ArrayList<PagesReader> m_readers = new ArrayList<PagesReader>();
 
@@ -77,17 +78,133 @@ class TK_Session {
   // store input PDF handles here
   HashMap<String, Integer> m_input_pdf_index = new HashMap<String, Integer>();
 
-  InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b ) {
-    /* NOT TRANSLATED */
-    return null;
+InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b ) {
+  boolean open_success_b= true;
+  InputPdf.PagesReader pr= null;
+
+  try {
+    PdfReader reader= null;
+    if( input_pdf_p.m_filename.equals( "PROMPT" ) ) {
+      input_pdf_p.m_filename= pdftk.prompt_for_filename( "Please enter a filename for an input PDF:");
+    }
+    if( input_pdf_p.m_password.isEmpty() ) {
+      reader= new PdfReader( input_pdf_p.m_filename );
+    }
+    else {
+      if( input_pdf_p.m_password.equals( "PROMPT" ) ) {
+        input_pdf_p.m_password = pdftk.prompt_for_password( "open", "the input PDF:\n   "+ input_pdf_p.m_filename );
+      }
+
+      byte[] password= passwords.utf8_password_to_pdfdoc( input_pdf_p.m_password,
+                                         false ); // allow user to enter greatest selection of chars
+
+      if ( password != null ) {
+        reader= new PdfReader( input_pdf_p.m_filename, password );
+        if( reader== null ) {
+          System.err.println( "Error: Unexpected null from open_reader()" );
+          return null; // <--- return
+        }
+      }
+      else { // bad password
+        System.err.println( "Error: Password used to decrypt input PDF:" );
+        System.err.println( "   " + input_pdf_p.m_filename );
+        System.err.println( "   includes invalid characters." );
+        return null; // <--- return
+      }
+    }
+    
+    if( !keep_artifacts_b ) {
+      // generally useful operations
+      reader.consolidateNamedDestinations();
+      reader.removeUnusedObjects();
+      //reader->shuffleSubsetNames(); // changes the PDF subset names, but not the PostScript font names
+    }
+
+    input_pdf_p.m_num_pages= reader.getNumberOfPages();
+
+    // keep tally of which pages have been laid claim to in this reader;
+    // when creating the final PDF, this tally will be decremented
+    pr = new InputPdf.PagesReader( reader );
+    input_pdf_p.m_readers.add( pr );
+
+    input_pdf_p.m_authorized_b= ( !reader.encrypted || reader.ownerPasswordUsed );
+    if( !input_pdf_p.m_authorized_b ) {
+      open_success_b= false;
+    }
   }
+  catch( IOException ioe_p ) { // file open error
+    if( ioe_p.getMessage().equals( "Bad password" ) ) {
+      input_pdf_p.m_authorized_b= false;
+    }
+    else if( ioe_p.getMessage().indexOf( "not found" ) != -1 ) {
+      System.err.println( "Error: Unable to find file." );
+    }
+    else { // unexpected error
+      System.err.println( "Error: Unexpected Exception in open_reader()" );
+      ioe_p.printStackTrace(); // debug
+    }
+    open_success_b= false;
+  }
+  catch( Throwable t_p ) { // unexpected error
+    System.err.println( "Error: Unexpected Exception in open_reader()" );
+    t_p.printStackTrace(); // debug
+
+    open_success_b= false;            
+  }
+
+  if( !input_pdf_p.m_authorized_b && m_ask_about_warnings_b ) {
+    // prompt for a new password
+    System.err.println( "The password you supplied for the input PDF:" );
+    System.err.println( "   " + input_pdf_p.m_filename );
+    System.err.println( "   did not work.  This PDF is encrypted, and you must supply the" );
+    System.err.println( "   owner password to open it.  If it has no owner password, then" );
+    System.err.println( "   enter the user password, instead.  To quit, enter a blank password" );
+    System.err.println( "   at the next prompt." );
+
+    input_pdf_p.m_password = pdftk.prompt_for_password( "open", "the input PDF:\n   "+ input_pdf_p.m_filename );
+    if( !input_pdf_p.m_password.isEmpty() ) { // reset flags try again
+      input_pdf_p.m_authorized_b= true;
+      return( add_reader(input_pdf_p) ); // <--- recurse, return
+    }
+  }
+
+  // report
+  if( !open_success_b ) { // file open error
+    System.err.println( "Error: Failed to open PDF file: " );
+    System.err.println( "   " + input_pdf_p.m_filename );
+    if( !input_pdf_p.m_authorized_b ) {
+      System.err.println( "   OWNER PASSWORD REQUIRED, but not given (or incorrect)" );
+    }
+  }
+
+  // update session state
+  m_authorized_b= m_authorized_b && input_pdf_p.m_authorized_b;
+
+  return open_success_b ? pr : null;
+}
   InputPdf.PagesReader add_reader( InputPdf input_pdf_p ) {
     return add_reader( input_pdf_p, false );
   }
-  boolean open_input_pdf_readers() {
-    /* NOT TRANSLATED */
-    return false;
+
+boolean open_input_pdf_readers() {
+  // try opening the input files and init m_input_pdf readers
+  boolean open_success_b= true;
+
+  if( !m_input_pdf_readers_opened_b ) {
+    if( m_operation== keyword.filter_k && m_input_pdf.size()== 1 ) {
+      // don't touch input pdf -- preserve artifacts
+      open_success_b= ( add_reader( m_input_pdf.get(0), true ) != null );
+    }
+    else {
+      for( InputPdf it : m_input_pdf ) {
+        open_success_b = ( add_reader( it ) != null ) && open_success_b;
+      }
+    }
+    m_input_pdf_readers_opened_b= open_success_b;
   }
+
+  return open_success_b;
+}
 
   
   ArrayList<String> m_input_attach_file_filename = new ArrayList<String>();

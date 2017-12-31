@@ -118,7 +118,7 @@ public class PdfReader implements PdfViewerPreferences {
     protected PageRefs pageRefs = null;
     protected PRAcroForm acroForm = null;
     protected boolean acroFormParsed = false;
-    protected boolean encrypted = false;
+    public boolean encrypted = false;
     protected boolean rebuilt = false;
     protected int freeXref = 0;
     protected boolean tampered = false;
@@ -127,7 +127,7 @@ public class PdfReader implements PdfViewerPreferences {
     protected char pdfVersion = '4';
     protected PdfEncryption decrypt = null;
     protected byte password[] = null; //added by ujihara for decryption
-    protected boolean ownerPasswordUsed= false;
+    public boolean ownerPasswordUsed= false;
     protected ArrayList strings = new ArrayList();
     protected boolean sharedStreams = true;
     protected boolean consolidateNamedDestinations = false;
