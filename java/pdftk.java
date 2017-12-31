@@ -36,12 +36,12 @@ public static void main(String[] args) {
 
   for( String argv : args) {
     version_b = version_b ||
-      (argv == "--version") ||
-      (argv == "-version");
+      (argv.equals("--version")) ||
+      (argv.equals("-version"));
     help_b = help_b ||
-      (argv == "--help") ||
-      (argv == "-help") ||
-      (argv == "-h");
+      (argv.equals("--help")) ||
+      (argv.equals("-help")) ||
+      (argv.equals("-h"));
   }
 
   if( help_b ) {

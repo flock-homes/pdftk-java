@@ -378,10 +378,10 @@ int create_output() {
     String creator= "pdftk " + pdftk.PDFTK_VER + " - www.pdftk.com";
     String jv_creator_p= creator;
 
-    if( m_output_owner_pw== "PROMPT" ) {
+    if( m_output_owner_pw.equals("PROMPT") ) {
       m_output_owner_pw = pdftk.prompt_for_password( "owner", "the output PDF" );
     }
-    if( m_output_user_pw== "PROMPT" ) {
+    if( m_output_user_pw.equals("PROMPT") ) {
       m_output_user_pw= pdftk.prompt_for_password( "user", "the output PDF");
     }
 
@@ -774,7 +774,7 @@ int create_output() {
         int input_num_pages= 
           m_input_pdf.get(0).m_num_pages;
 
-        if( m_output_filename== "PROMPT" ) {
+        if( m_output_filename.equals("PROMPT") ) {
           m_output_filename = pdftk.prompt_for_filename( "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):");
         }
         if( m_output_filename.isEmpty() ) {
@@ -896,11 +896,11 @@ int create_output() {
         // if input is stdin ("-"), don't pass it to both the FDF and XFDF readers
         FdfReader fdf_reader_p= null;
         XfdfReader xfdf_reader_p= null;
-        if( m_form_data_filename== "PROMPT" ) { // handle case where user enters '-' or (empty) at the prompt
+        if( m_form_data_filename.equals("PROMPT") ) { // handle case where user enters '-' or (empty) at the prompt
           m_form_data_filename = pdftk.prompt_for_filename( "Please enter a filename for the form data:");
         }
         if( !m_form_data_filename.isEmpty() ) { // we have form data to process
-          if( m_form_data_filename== "-" ) { // form data on stdin
+          if( m_form_data_filename.equals("-") ) { // form data on stdin
             //JArray<jbyte>* in_arr= itext::RandomAccessFileOrArray::InputStreamToArray( java::System::in );
             
             // first try fdf
@@ -952,7 +952,7 @@ int create_output() {
         boolean background_b= true; // set false for stamp
         //
         // background
-        if( m_background_filename== "PROMPT" ) {
+        if( m_background_filename.equals("PROMPT") ) {
           m_background_filename = pdftk.prompt_for_filename( "Please enter a filename for the background PDF:");
         }
         if( !m_background_filename.isEmpty() ) {
@@ -972,7 +972,7 @@ int create_output() {
         //
         // stamp
         if( mark_p == null ) {
-          if( m_stamp_filename== "PROMPT" ) {
+          if( m_stamp_filename.equals("PROMPT") ) {
             m_stamp_filename = pdftk.prompt_for_filename( "Please enter a filename for the stamp PDF:");
           }
           if( !m_stamp_filename.isEmpty() ) {
@@ -1031,11 +1031,11 @@ int create_output() {
           new PdfStamperImp( input_reader_p, ofs_p, '\0', false /* append mode */ );
 
         // update the info?
-        if( m_update_info_filename== "PROMPT" ) {
+        if( m_update_info_filename.equals("PROMPT") ) {
           m_update_info_filename = pdftk.prompt_for_filename( "Please enter an Info file filename:");
         }
         if( !m_update_info_filename.isEmpty() ) {
-          if( m_update_info_filename== "-" ) {
+          if( m_update_info_filename.equals("-") ) {
             if( !report.UpdateInfo( input_reader_p, System.in, m_update_info_utf8_b ) ) {
               System.err.println("Warning: no Info added to output PDF.");
               ret_val= 3;
@@ -1283,7 +1283,7 @@ int create_output() {
         PdfReader input_reader_p= 
           m_input_pdf.get(0).m_readers.get(0).second;
 
-        if( m_output_filename.isEmpty() || m_output_filename== "-" ) {
+        if( m_output_filename.isEmpty() || m_output_filename.equals("-") ) {
           if( m_operation== keyword.dump_data_k ) {
             report.ReportOnPdf( System.out, input_reader_p, m_output_utf8_b );
           }
