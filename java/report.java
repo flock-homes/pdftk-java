@@ -48,8 +48,6 @@ UpdateInfo( PdfReader reader_p,
 ////
 // created for data import, maybe useful for export, too
 
-static final String g_uninitString= "PdftkEmptyString";
-
 //
 class PdfInfo {
   static final String m_prefix= "Info";
@@ -57,10 +55,10 @@ class PdfInfo {
   static final String m_key_label= "InfoKey:";
   static final String m_value_label= "InfoValue:";
 
-  String m_key = g_uninitString;
-  String m_value = g_uninitString;
+  String m_key = null;
+  String m_value = null;
 
-  boolean valid() { return( m_key!= g_uninitString && m_value!= g_uninitString ); }
+  boolean valid() { return( m_key!= null && m_value!= null ); }
 };
 
 //
@@ -72,10 +70,10 @@ class PdfBookmark {
   static final String m_page_number_label= "BookmarkPageNumber:";
   //static const string m_empty_string;
 
-  String m_title = g_uninitString;
+  String m_title = null;
   int m_level = -1;
   int m_page_num = -1; // zero means no destination
-  boolean valid() { return( 0< m_level && 0<= m_page_num && m_title!= g_uninitString ); }
+  boolean valid() { return( 0< m_level && 0<= m_page_num && m_title!= null ); }
 };
 //
 //ostream& operator<<( ostream& ss, const PdfBookmark& bb );
