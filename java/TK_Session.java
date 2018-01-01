@@ -767,7 +767,7 @@ static keyword is_keyword( StringBuffer ssb ) {
 
         String handle, data;
         {
-          Pattern p = Pattern.compile("([A-Z]*?)=?(.*)");
+          Pattern p = Pattern.compile("([A-Z]*)=?(.*)");
           Matcher m = p.matcher(argv);
           m.matches();
           handle = m.group(1);
