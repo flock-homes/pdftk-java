@@ -1,4 +1,9 @@
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Scanner;
 
 public class pdftk {
 
@@ -27,9 +32,52 @@ prompt_for_filename( String message) {
 static OutputStream
 get_output_stream( String output_filename,
                    boolean ask_about_warnings_b ) {
-  System.err.println( "NOT TRANSLATED: get_output_stream" );
-  /* NOT TRANSLATED */
-  return null;
+  OutputStream os_p= null;
+
+  if( output_filename.isEmpty() || output_filename.equals("PROMPT") ) {
+    output_filename = prompt_for_filename( "Please enter a name for the output:" );
+    // recurse; try again
+    return get_output_stream( output_filename,
+                              ask_about_warnings_b );
+  }
+  if( output_filename.equals("-") ) { // stdout
+    os_p= System.out;
+  }
+  else {
+    if( ask_about_warnings_b ) {
+      // test for existing file by this name
+      boolean output_exists_b= false;
+      try {
+        FileInputStream fp= new FileInputStream( output_filename );
+        output_exists_b= true;
+      }
+      catch ( FileNotFoundException e ) {
+      }
+      if( output_exists_b ) {
+        System.out.println("Warning: the output file: " + output_filename + " already exists.  Overwrite? (y/n)");
+        Scanner s = new Scanner(System.in);
+        String buff= s.nextLine();
+        if( !buff.startsWith("y") && !buff.startsWith("Y") ) {
+          // recurse; try again
+          return get_output_stream( "PROMPT",
+                                    ask_about_warnings_b );
+        }
+      }
+    }
+
+    // attempt to open the stream
+    try {
+      os_p= new FileOutputStream( output_filename );
+    }
+    catch( IOException ioe_p ) { // file open error
+      System.err.println("Error: Failed to open output file: ");
+      System.err.println("   " + output_filename);
+      System.err.println("   No output created.");
+      os_p= null;
+    }
+  }
+
+  return os_p;
 }
   
 public static void main(String[] args) {
