@@ -1713,10 +1713,211 @@ boolean is_valid() {
             !m_output_filename.isEmpty() ) );
 }
 
-  void dump_session_data() {
-    System.err.println( "NOT TRANSLATED: dump_session_data" );
-    /* NOT TRANSLATED */
+void dump_session_data()
+{
+  if( !m_verbose_reporting_b )
+    return;
+
+  if( !m_input_pdf_readers_opened_b ) {
+    System.out.println( "Input PDF Open Errors" );
+    return;
   }
+
+  //
+  if( is_valid() ) {
+    System.out.println( "Command Line Data is valid." );
+  }
+  else { 
+    System.out.println( "Command Line Data is NOT valid." );
+  }
+
+  // input files
+  System.out.println();
+  System.out.println( "Input PDF Filenames & Passwords in Order\n( <filename>[, <password>] ) " );
+  if( m_input_pdf.isEmpty() ) {
+    System.out.println( "   No input PDF filenames have been given." );
+  }
+  else {
+    for( InputPdf it : m_input_pdf )
+      {
+        System.out.print( "   " + it.m_filename );
+        if( !it.m_password.isEmpty() ) {
+          System.out.print( ", " + it.m_password );
+        }
+
+        if( !it.m_authorized_b ) {
+          System.out.print( ", OWNER PASSWORD REQUIRED, but not given (or incorrect)" );
+        }
+
+        System.out.println();
+      }
+  }
+
+  // operation
+  System.out.println();
+  System.out.println( "The operation to be performed: " );
+  switch( m_operation ) {
+  case cat_k:
+    System.out.println( "   cat - Catenate given page ranges into a new PDF." );
+    break;
+  case shuffle_k:
+    System.out.println( "   shuffle - Interleave given page ranges into a new PDF." );
+    break;
+  case burst_k:
+    System.out.println( "   burst - Split a single, input PDF into individual pages." );
+    break;
+  case filter_k:
+    System.out.println( "   filter - Apply 'filters' to a single, input PDF based on output args." );
+    System.out.println( "      (When the operation is omitted, this is the default.)" );
+    break;
+  case dump_data_k:
+    System.out.println( "   dump_data - Report statistics on a single, input PDF." );
+    break;
+  case dump_data_fields_k:
+    System.out.println( "   dump_data_fields - Report form field data on a single, input PDF." );
+    break;
+  case dump_data_annots_k:
+    System.out.println( "   dump_data_annots - Report annotation data on a single, input PDF." );
+    break;
+  case generate_fdf_k:
+    System.out.println( "   generate_fdf - Generate a dummy FDF file from a PDF." );
+    break;
+  case unpack_files_k:
+    System.out.println( "   unpack_files - Copy PDF file attachments into given directory." );
+    break;
+  case none_k:
+    System.out.println( "   NONE - No operation has been given.  See usage instructions." );
+    break;
+  default:
+    System.out.println( "   INTERNAL ERROR - An unexpected operation has been given." );
+    break;
+  }
+
+  // pages
+  /*
+  cout << endl;
+  cout << "The following pages will be operated on, in the given order." << endl;
+  if( m_page_seq.empty() ) {
+    cout << "   No pages or page ranges have been given." << endl;
+  }
+  else {
+    for( vector< PageRef >::const_iterator it= m_page_seq.begin();
+         it!= m_page_seq.end(); ++it )
+      {
+        map< string, InputPdf >::const_iterator jt=
+          m_input_pdf.find( it->m_handle );
+        if( jt!= m_input_pdf.end() ) {
+          cout << "   Handle: " << it->m_handle << "  File: " << jt->second.m_filename;
+          cout << "  Page: " << it->m_page_num << endl;
+        }
+        else { // error
+          cout << "   Internal Error: handle not found in m_input_pdf: " << it->m_handle << endl;
+        }
+      }
+  }
+  */
+
+  // output file; may be PDF or text
+  System.out.println();
+  System.out.println( "The output file will be named:" );
+  if( m_output_filename.isEmpty() ) {
+    System.out.println( "   No output filename has been given." );
+  }
+  else {
+    System.out.println( "   " + m_output_filename );
+  }
+
+  // output encryption
+  System.out.println();
+  boolean output_encrypted_b= 
+    m_output_encryption_strength!= encryption_strength.none_enc ||
+    !m_output_user_pw.isEmpty() ||
+    !m_output_owner_pw.isEmpty();
+
+  System.out.println( "Output PDF encryption settings:" );
+  if( output_encrypted_b ) {
+    System.out.println( "   Output PDF will be encrypted." );
+
+    switch( m_output_encryption_strength ) {
+    case none_enc:
+      System.out.println( "   Encryption strength not given. Defaulting to: 128 bits." );
+      break;
+    case bits40_enc:
+      System.out.println( "   Given output encryption strength: 40 bits" );
+      break;
+    case bits128_enc:
+      System.out.println( "   Given output encryption strength: 128 bits" );
+      break;
+    }
+
+    System.out.println();
+    {
+
+      if( m_output_user_pw.isEmpty() )
+        System.out.println( "   No user password given." );
+      else
+        System.out.println( "   Given user password: " + m_output_user_pw );
+      if( m_output_owner_pw.isEmpty() )
+        System.out.println( "   No owner password given." );
+      else
+        System.out.println( "   Given owner password: " + m_output_owner_pw );
+      //
+      // the printing section: Top Quality or Degraded, but not both;
+      // AllowPrinting is a superset of both flag settings
+      if( (m_output_user_perms & PdfWriter.AllowPrinting)== PdfWriter.AllowPrinting )
+        System.out.println( "   ALLOW Top Quality Printing" );
+      else if( (m_output_user_perms & PdfWriter.AllowPrinting)== PdfWriter.AllowDegradedPrinting )
+        System.out.println( "   ALLOW Degraded Printing (Top-Quality Printing NOT Allowed)" );
+      else
+        System.out.println( "   Printing NOT Allowed" );
+      if( (m_output_user_perms & PdfWriter.AllowModifyContents)== PdfWriter.AllowModifyContents )
+        System.out.println( "   ALLOW Modifying of Contents" );
+      else
+        System.out.println( "   Modifying of Contents NOT Allowed" );
+      if( (m_output_user_perms & PdfWriter.AllowCopy)== PdfWriter.AllowCopy )
+        System.out.println( "   ALLOW Copying of Contents" );
+      else
+        System.out.println( "   Copying of Contents NOT Allowed" );
+      if( (m_output_user_perms & PdfWriter.AllowModifyAnnotations)== PdfWriter.AllowModifyAnnotations )
+        System.out.println( "   ALLOW Modifying of Annotations" );
+      else
+        System.out.println( "   Modifying of Annotations NOT Allowed" );
+      if( (m_output_user_perms & PdfWriter.AllowFillIn)== PdfWriter.AllowFillIn )
+        System.out.println( "   ALLOW Fill-In" );
+      else
+        System.out.println( "   Fill-In NOT Allowed" );
+      if( (m_output_user_perms & PdfWriter.AllowScreenReaders)== PdfWriter.AllowScreenReaders )
+        System.out.println( "   ALLOW Screen Readers" );
+      else
+        System.out.println( "   Screen Readers NOT Allowed" );
+      if( (m_output_user_perms & PdfWriter.AllowAssembly)== PdfWriter.AllowAssembly )
+        System.out.println( "   ALLOW Assembly" );
+      else
+        System.out.println( "   Assembly NOT Allowed" );
+    }
+  }
+  else {
+    System.out.println( "   Output PDF will not be encrypted." );
+  }
+
+  // compression filter
+  System.out.println();
+  if( m_operation!= keyword.filter_k ||
+      output_encrypted_b ||
+      !( m_output_compress_b ||
+         m_output_uncompress_b ) )
+    {
+      System.out.println( "No compression or uncompression being performed on output." );
+    }
+  else {
+    if( m_output_compress_b ) {
+      System.out.println( "Compression will be applied to some PDF streams." );
+    }
+    else {
+      System.out.println( "Some PDF streams will be uncompressed." );
+    }
+  }
+}
 
   void attach_files
   ( PdfReader input_reader_p,
