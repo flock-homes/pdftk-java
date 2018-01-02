@@ -15,18 +15,27 @@ static final boolean ASK_ABOUT_WARNINGS = false;
 static String
 prompt_for_password( String pass_name, 
                      String pass_app) {
-  String password = "";
-  System.err.println( "NOT TRANSLATED: prompt_for_password" );
-  /* NOT TRANSLATED */
+  System.out.println( "Please enter the " + pass_name + " password to use on " + pass_app + "." );
+  System.out.println( "   It can be empty, or have a maximum of 32 characters:" );
+  Scanner s = new Scanner(System.in);
+  String password= s.nextLine();
+  if( 32< password.length() ) { // too long; trim
+    System.out.println( "The password you entered was over 32 characters long," );
+    System.out.println( "   so I am dropping: \"" + password.substring( 32 ) + "\"" );
+    password= password.substring( 0, 32 );
+  }
   return password;
 }
 
 static String
 prompt_for_filename( String message) {
-  String fn = "";
-  System.err.println( "NOT TRANSLATED: prompt_for_filename" );
-  /* NOT TRANSLATED */
-  return fn;
+  // input could be multibyte, so try working
+  // with bytes instead of formatted input features
+
+  System.out.println( message );
+
+  Scanner s = new Scanner(System.in);
+  return s.nextLine();
 }
   
 static OutputStream
