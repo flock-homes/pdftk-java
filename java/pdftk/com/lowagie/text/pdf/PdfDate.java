@@ -61,8 +61,6 @@ import java.util.GregorianCalendar;
 import java.util.Calendar;
 import java.util.SimpleTimeZone;
 
-import gnu.java.locale.*;
-
 /**
  * <CODE>PdfDate</CODE> is the PDF date object.
  * <P>

@@ -1,0 +1,31 @@
+<project>
+
+  <path id="classpath">
+    <fileset dir="/usr/share/java/" includes="bcprov.jar"/>
+  </path>
+
+  <target name="clean">
+    <delete dir="build"/>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="build/classes"/>
+    <javac srcdir="java" destdir="build/classes" classpathref="classpath" />
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="build/jar"/>
+    <jar destfile="build/jar/pdftk.jar" basedir="build/classes">
+      <manifest>
+        <attribute name="Main-Class" value="pdftk"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="run" depends="jar">
+    <java jar="build/jar/pdftk.jar" fork="true"/>
+  </target>
+
+  <target name="main" depends="clean,jar" />
+
+</project>

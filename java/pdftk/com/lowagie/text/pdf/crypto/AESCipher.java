@@ -54,12 +54,12 @@
  */
 package pdftk.com.lowagie.text.pdf.crypto;
 
-import pdftk.org.bouncycastle.crypto.BlockCipher;
-import pdftk.org.bouncycastle.crypto.engines.AESFastEngine;
-import pdftk.org.bouncycastle.crypto.modes.CBCBlockCipher;
-import pdftk.org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import pdftk.org.bouncycastle.crypto.params.KeyParameter;
-import pdftk.org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.crypto.BlockCipher;
+import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 
 /**
  * Creates an AES Cipher with CBC and padding PKCS5/7.
