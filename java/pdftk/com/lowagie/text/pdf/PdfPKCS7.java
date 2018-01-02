@@ -85,28 +85,28 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import pdftk.com.lowagie.text.ExceptionConverter;
 
-import pdftk.org.bouncycastle.asn1.ASN1InputStream;
-import pdftk.org.bouncycastle.asn1.ASN1Primitive;
-import pdftk.org.bouncycastle.asn1.ASN1Sequence;
-import pdftk.org.bouncycastle.asn1.ASN1Set;
-import pdftk.org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import pdftk.org.bouncycastle.asn1.DEROctetString;
-import pdftk.org.bouncycastle.asn1.DERTaggedObject;
-import pdftk.org.bouncycastle.asn1.ASN1Integer;
-import pdftk.org.bouncycastle.asn1.ASN1TaggedObject;
-import pdftk.org.bouncycastle.asn1.DERSet;
-import pdftk.org.bouncycastle.asn1.DERSequence;
-import pdftk.org.bouncycastle.asn1.DERNull;
-import pdftk.org.bouncycastle.asn1.ASN1EncodableVector;
-import pdftk.org.bouncycastle.asn1.ASN1String;
-import pdftk.org.bouncycastle.asn1.DERUTCTime;
-import pdftk.org.bouncycastle.asn1.ASN1OutputStream;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERNull;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1String;
+import org.bouncycastle.asn1.DERUTCTime;
+import org.bouncycastle.asn1.ASN1OutputStream;
 
 /**
  * This class does all the processing related to signing and verifying a PKCS#7
  * signature.
  * <p>
- * It's based in code found at pdftk.org.bouncycastle.
+ * It's based in code found at org.bouncycastle.
  */
 public class PdfPKCS7 {
 
@@ -805,13 +805,14 @@ public class PdfPKCS7 {
             }
             
             // Create the set of Hash algorithms
-            DERSet digestAlgorithms = new DERSet();
+            ASN1EncodableVector digestAlgorithms_ = new ASN1EncodableVector();
             for(Iterator it = digestalgos.iterator(); it.hasNext();) {
                 ASN1EncodableVector algos = new ASN1EncodableVector();
                 algos.add(new ASN1ObjectIdentifier((String)it.next()));
                 algos.add(new DERNull());
-                digestAlgorithms.addObject(new DERSequence(algos));
+                digestAlgorithms_.add(new DERSequence(algos));
             }
+            DERSet digestAlgorithms = new DERSet(digestAlgorithms_);
             
             // Create the contentInfo.
             ASN1EncodableVector v = new ASN1EncodableVector();
