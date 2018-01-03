@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.Scanner;
 
 import java.io.InputStream;
 import java.io.FileInputStream;
@@ -25,14 +26,17 @@ import pdftk.com.lowagie.text.pdf.FdfReader;
 import pdftk.com.lowagie.text.pdf.FdfWriter;
 import pdftk.com.lowagie.text.pdf.XfdfReader;
 
+import pdftk.com.lowagie.text.pdf.PdfAnnotation;
 import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfBoolean;
 import pdftk.com.lowagie.text.pdf.PdfContentByte;
 import pdftk.com.lowagie.text.pdf.PdfCopy;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
+import pdftk.com.lowagie.text.pdf.PdfFileSpecification;
 import pdftk.com.lowagie.text.pdf.PdfImportedPage;
 import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
 import pdftk.com.lowagie.text.pdf.PdfName;
+import pdftk.com.lowagie.text.pdf.PdfNameTree;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
@@ -1921,10 +1925,244 @@ void dump_session_data()
 
   void attach_files
   ( PdfReader input_reader_p,
-    PdfWriter writer_p ) {
-    System.err.println( "NOT TRANSLATED: attach_files" );
-    /* NOT TRANSLATED */
+    PdfWriter writer_p ) throws IOException
+{
+  if( !m_input_attach_file_filename.isEmpty() ) {
+
+    if( m_input_attach_file_pagenum== -1 ) { // our signal to prompt the user for a pagenum
+      System.out.println( "Please enter the page number you want to attach these files to." );
+      System.out.println( "   The first page is 1.  The final page is \"end\"." );
+      System.out.println( "   To attach files at the document level, just press Enter." );
+
+      Scanner s = new Scanner(System.in);
+      String buff= s.nextLine();
+      if ( buff.isEmpty() ) { // attach to document
+        m_input_attach_file_pagenum= 0;
+      }
+      if ( buff.equals( "end" ) ) { // the final page
+        m_input_attach_file_pagenum= input_reader_p.getNumberOfPages();
+      }
+      else {
+        Pattern p = Pattern.compile("([0-9]*).*");
+        Matcher m = p.matcher(buff);
+        m.matches();
+        try {
+          m_input_attach_file_pagenum= Integer.valueOf(m.group(1));
+        }
+        catch (NumberFormatException e) {
+          m_input_attach_file_pagenum= 0;
+        }
+      }
+    }
+    else if( m_input_attach_file_pagenum== -2 ) { // the final page ("end")
+      m_input_attach_file_pagenum= input_reader_p.getNumberOfPages();
+    }
+
+    if( m_input_attach_file_pagenum != 0 ) { // attach to a page using annotations
+      final int trans= 27;
+      final int margin= 18;
+
+      if( 0< m_input_attach_file_pagenum &&
+          m_input_attach_file_pagenum<= input_reader_p.getNumberOfPages() ) {
+
+        PdfDictionary page_p= input_reader_p.getPageN( m_input_attach_file_pagenum );
+        if( page_p != null && page_p.isDictionary() ) {
+
+          Rectangle crop_box_p= 
+            input_reader_p.getCropBox( m_input_attach_file_pagenum );
+          float corner_top= crop_box_p.top()- margin;
+          float corner_left= crop_box_p.left()+ margin;
+
+          PdfArray annots_p= (PdfArray)
+            input_reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
+          boolean annots_new_b= false;
+          if( annots_p == null ) { // create Annots array
+            annots_p= new PdfArray();
+            annots_new_b= true;
+          }
+          else { // grab corner_top and corner_left from the bottom right of the newest annot
+            ArrayList<PdfObject> annots_array_p= annots_p.getArrayList();
+            for( PdfObject ii : annots_array_p ) {
+              PdfDictionary annot_p= (PdfDictionary)
+                input_reader_p.getPdfObject( ii );
+              if( annot_p != null && annot_p.isDictionary() ) {
+                PdfArray annot_bbox_p= (PdfArray)
+                  input_reader_p.getPdfObject( annot_p.get( PdfName.RECT ) );
+                if( annot_bbox_p != null && annot_bbox_p.isArray() ) {
+                  ArrayList<PdfObject> bbox_array_p= annot_bbox_p.getArrayList();
+                  if( bbox_array_p.size()== 4 ) {
+                    corner_top= ((PdfNumber)bbox_array_p.get( 1 )).floatValue();
+                    corner_left= ((PdfNumber)bbox_array_p.get( 2 )).floatValue();
+                  }
+                }
+              }
+            }
+          }
+          if( annots_p != null && annots_p.isArray() ) {
+            for( String vit :  m_input_attach_file_filename )
+              {
+                if( vit.equals("PROMPT") ) {
+                  vit= pdftk.prompt_for_filename( "Please enter a filename for attachment:" );
+                }
+
+                String filename= attachments.drop_path(vit);
+
+                // wrap our location over page bounds, if needed
+                if( crop_box_p.right() < corner_left+ trans ) {
+                  corner_left= crop_box_p.left()+ margin;
+                }
+                if( corner_top- trans< crop_box_p.bottom() ) {
+                  corner_top= crop_box_p.top()- margin;
+                }
+
+                Rectangle annot_bbox_p= 
+                  new Rectangle( corner_left,
+                                        corner_top- trans,
+                                        corner_left+ trans,
+                                        corner_top );
+                                    
+                PdfAnnotation annot_p=
+                  PdfAnnotation.createFileAttachment
+                  ( writer_p,
+                    annot_bbox_p,
+                    filename, // contents
+                    null,
+                    vit, // the file path
+                    filename ); // display name
+
+                PdfIndirectReference ref_p=
+                  writer_p.addToBody( annot_p ).getIndirectReference();
+
+                annots_p.add( ref_p );
+
+                // advance the location of our annotation
+                corner_left+= trans;
+                corner_top-= trans;
+              }
+            if( annots_new_b ) { // add new Annots array to page dict
+              PdfIndirectReference ref_p=
+                writer_p.addToBody( annots_p ).getIndirectReference();
+              page_p.put( PdfName.ANNOTS, ref_p );              
+            }
+          }
+        }
+        else { // error
+          System.err.println( "Internal Error: unable to get page dictionary" );
+        }
+      }
+      else { // error
+        System.err.print( "Error: page number " + m_input_attach_file_pagenum );
+        System.err.println( " is not present in the input PDF." );
+      }
+    }
+    else { // attach to document using the EmbeddedFiles name tree
+      PdfDictionary catalog_p= input_reader_p.catalog; // to top, Root dict
+      if( catalog_p != null && catalog_p.isDictionary() ) {
+
+        // the Names dict
+        PdfDictionary names_p= (PdfDictionary)
+          input_reader_p.getPdfObject( catalog_p.get( PdfName.NAMES ) );
+        boolean names_new_b= false;
+        if( names_p == null ) { // create Names dict
+          names_p= new PdfDictionary();
+          names_new_b= true;
+        }
+        if( names_p != null && names_p.isDictionary() ) {
+
+          // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
+          PdfDictionary emb_files_tree_p= (PdfDictionary)
+            input_reader_p.getPdfObject( names_p.get( PdfName.EMBEDDEDFILES ) );
+          HashMap<String,PdfIndirectReference> emb_files_map_p= null;
+          boolean emb_files_tree_new_b= false;
+          if( emb_files_tree_p != null ) { // read current name tree of attachments into a map
+            emb_files_map_p= PdfNameTree.readTree( emb_files_tree_p );
+          }
+          else { // create material
+            emb_files_map_p= new HashMap<String,PdfIndirectReference>();
+            emb_files_tree_new_b= true;
+          }
+
+          ////
+          // add matter to name tree
+
+          for( String vit :  m_input_attach_file_filename )
+            {
+              if( vit.equals( "PROMPT" ) ) {
+                vit= pdftk.prompt_for_filename( "Please enter a filename for attachment:" );
+              }
+
+              String filename= attachments.drop_path(vit);
+
+              PdfFileSpecification filespec_p= null;
+              try {
+                // create the file spec. from file
+                filespec_p= 
+                  PdfFileSpecification.fileEmbedded
+                  ( writer_p,
+                    vit, // the file path
+                    filename, // the display name
+                    null );
+              }
+              catch( IOException ioe_p ) { // file open error
+                System.err.println( "Error: Failed to open attachment file: " );
+                System.err.println( "   " + vit );
+                System.err.println( "   Skipping this file." );
+                continue;
+              }
+
+              // add file spec. to PDF via indirect ref.
+              PdfIndirectReference ref_p=
+                writer_p.addToBody( filespec_p ).getIndirectReference();
+
+              // contruct a name, if necessary, to prevent possible key collision on the name tree
+              String key_p= vit;
+              for(int counter=1; emb_files_map_p.containsKey( key_p ); ++counter ) { // append a unique suffix
+                key_p = vit + "-" + counter;
+              }
+
+              // add file spec. to map
+              emb_files_map_p.put( key_p, ref_p );
+            }
+
+          if( !emb_files_map_p.isEmpty() ) {
+            // create a name tree from map
+            PdfDictionary emb_files_tree_new_p=
+              PdfNameTree.writeTree( emb_files_map_p, writer_p );
+
+            if( emb_files_tree_new_b && emb_files_tree_new_p != null) {
+              // adding new material
+              PdfIndirectReference ref_p=
+                writer_p.addToBody( emb_files_tree_new_p ).getIndirectReference();
+              names_p.put( PdfName.EMBEDDEDFILES, ref_p );
+            }
+            else if( emb_files_tree_p != null && emb_files_tree_new_p != null ) {
+              // supplementing old material
+              emb_files_tree_p.merge( emb_files_tree_new_p );
+            }
+            else { // error
+              System.err.println( "Internal Error: no valid EmbeddedFiles tree to add to PDF." );
+            }
+
+            if( names_new_b ) {
+              // perform addToBody only after packing new names_p into names_p;
+              // use the resulting ref. to pack our new Names dict. into the catalog (Root)
+              PdfIndirectReference ref_p=
+                writer_p.addToBody( names_p ).getIndirectReference();
+              catalog_p.put( PdfName.NAMES, ref_p );
+            }
+          }
+        }
+        else { // error
+          System.err.println( "Internal Error: couldn't read or create PDF Names dictionary." );
+        }
+      }
+      else { // error
+        System.err.println( "Internal Error: couldn't read input PDF Root dictionary." );
+        System.err.println( "   File attachment failed; no new files attached to output." );
+      }
+    }
   }
+}
 
   void unpack_files
     ( PdfReader input_reader_p ) {
