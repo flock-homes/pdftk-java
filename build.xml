@@ -1,8 +1,4 @@
-<project>
-
-  <path id="classpath">
-    <fileset dir="/usr/share/java/" includes="bcprov.jar"/>
-  </path>
+<project xmlns:ivy="antlib:org.apache.ivy.ant" default="main">
 
   <target name="clean">
     <delete dir="build"/>
@@ -10,7 +6,11 @@
 
   <target name="compile">
     <mkdir dir="build/classes"/>
-    <javac srcdir="java" destdir="build/classes" classpathref="classpath" />
+    <javac srcdir="java" destdir="build/classes" >
+      <classpath>
+        <fileset dir="lib" includes="*.jar"/>
+      </classpath>
+    </javac>
   </target>
 
   <target name="jar" depends="compile">
@@ -22,10 +22,10 @@
     </jar>
   </target>
 
-  <target name="run" depends="jar">
-    <java jar="build/jar/pdftk.jar" fork="true"/>
+  <target name="resolve">
+    <ivy:retrieve />
   </target>
-
-  <target name="main" depends="clean,jar" />
+  
+  <target name="main" depends="clean,resolve,jar" />
 
 </project>
