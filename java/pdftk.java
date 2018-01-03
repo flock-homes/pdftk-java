@@ -28,7 +28,7 @@ prompt_for_password( String pass_name,
 }
 
 static String
-prompt_for_filename( String message) {
+prompt_for_filename( String message ) {
   // input could be multibyte, so try working
   // with bytes instead of formatted input features
 
@@ -36,6 +36,25 @@ prompt_for_filename( String message) {
 
   Scanner s = new Scanner(System.in);
   return s.nextLine();
+}
+
+static boolean
+confirm_overwrite( String filename ) {
+  System.out.println("Warning: the output file: " + filename + " already exists.  Overwrite? (y/n)");
+  Scanner s = new Scanner(System.in);
+  String buff= s.nextLine();
+  return buff.startsWith("y") || buff.startsWith("Y");
+}
+
+static boolean
+file_exists( String filename ) {
+  try {
+    FileInputStream fp= new FileInputStream( filename );
+    return true;
+  }
+  catch ( FileNotFoundException e ) {
+    return false;
+  }
 }
   
 static OutputStream
@@ -56,17 +75,8 @@ get_output_stream( String output_filename,
     if( ask_about_warnings_b ) {
       // test for existing file by this name
       boolean output_exists_b= false;
-      try {
-        FileInputStream fp= new FileInputStream( output_filename );
-        output_exists_b= true;
-      }
-      catch ( FileNotFoundException e ) {
-      }
-      if( output_exists_b ) {
-        System.out.println("Warning: the output file: " + output_filename + " already exists.  Overwrite? (y/n)");
-        Scanner s = new Scanner(System.in);
-        String buff= s.nextLine();
-        if( !buff.startsWith("y") && !buff.startsWith("Y") ) {
+      if( file_exists( output_filename ) ) {
+        if( !confirm_overwrite( output_filename ) ) {
           // recurse; try again
           return get_output_stream( "PROMPT",
                                     ask_about_warnings_b );
