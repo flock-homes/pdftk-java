@@ -2165,10 +2165,84 @@ void dump_session_data()
 }
 
   void unpack_files
-    ( PdfReader input_reader_p ) {
-    System.err.println( "NOT TRANSLATED: unpack_files" );
-    /* NOT TRANSLATED */
+    ( PdfReader input_reader_p )
+{
+  // output pathname; PROMPT if necessary
+  String output_pathname= attachments.normalize_pathname( m_output_filename );
+
+  { // unpack document attachments
+    PdfDictionary catalog_p= input_reader_p.catalog; // to top, Root dict
+    if( catalog_p != null && catalog_p.isDictionary() ) {
+
+      // the Names dict
+      PdfDictionary names_p= (PdfDictionary)
+        input_reader_p.getPdfObject( catalog_p.get( PdfName.NAMES ) );
+      if( names_p != null && names_p.isDictionary() ) {
+
+        // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
+        PdfDictionary emb_files_tree_p= (PdfDictionary)
+          input_reader_p.getPdfObject( names_p.get( PdfName.EMBEDDEDFILES ) );
+        HashMap<Object, PdfObject> emb_files_map_p= null;
+        if( emb_files_tree_p != null && emb_files_tree_p.isDictionary() ) { 
+          // read current name tree of attachments into a map
+          emb_files_map_p= PdfNameTree.readTree( emb_files_tree_p );
+
+          for( PdfObject value_p : emb_files_map_p.values() ) {
+            PdfDictionary filespec_p= (PdfDictionary)
+              input_reader_p.getPdfObject( value_p );
+            if( filespec_p != null && filespec_p.isDictionary() ) {
+
+              attachments.unpack_file( input_reader_p,
+                           filespec_p,
+                           output_pathname,
+                           m_ask_about_warnings_b );
+            }
+          }
+        }
+      }
+    }
   }
+
+  { // unpack page attachments
+    int num_pages= input_reader_p.getNumberOfPages();
+    for( int ii= 1; ii<= num_pages; ++ii ) { // 1-based page ref.s
+
+        PdfDictionary page_p= input_reader_p.getPageN( ii );
+        if( page_p != null && page_p.isDictionary() ) {
+
+          PdfArray annots_p= (PdfArray)
+            input_reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
+          if( annots_p != null && annots_p.isArray() ) {
+
+            ArrayList<PdfObject> annots_array_p = annots_p.getArrayList();
+            for( PdfObject jj : annots_array_p ) {
+              PdfDictionary annot_p= (PdfDictionary)
+                input_reader_p.getPdfObject( jj );
+              if( annot_p != null && annot_p.isDictionary() ) {
+
+                PdfName subtype_p= (PdfName)
+                  input_reader_p.getPdfObject( annot_p.get( PdfName.SUBTYPE ) );
+                if( subtype_p != null && subtype_p.isName() && 
+                    subtype_p.equals(PdfName.FILEATTACHMENT) ) {
+                  
+                  PdfDictionary filespec_p= (PdfDictionary)
+                    input_reader_p.getPdfObject( annot_p.get( PdfName.FS ) );
+                  if( filespec_p != null && filespec_p.isDictionary() ) {
+                    
+                    attachments.unpack_file( input_reader_p,
+                                 filespec_p,
+                                 output_pathname,
+                                 m_ask_about_warnings_b );
+                  }
+                }
+              }
+            }
+          }
+        }
+      
+    }
+  }
+}
 
 ////
 // when uncompressing a PDF, we add this marker to every page,
