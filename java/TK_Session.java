@@ -771,7 +771,7 @@ static keyword is_keyword( StringBuffer ssb ) {
 
         String handle, data;
         {
-          Pattern p = Pattern.compile("([A-Z]*)=?(.*)");
+          Pattern p = Pattern.compile("(?:([A-Z]+)=)?(.*)");
           Matcher m = p.matcher(argv);
           m.matches();
           handle = m.group(1);
@@ -789,7 +789,7 @@ static keyword is_keyword( StringBuffer ssb ) {
           InputPdf input_pdf = new InputPdf();
           input_pdf.m_filename= data;
 
-          if( handle.isEmpty() ) { // no handle
+          if( handle == null ) { // no handle
             m_input_pdf.add( input_pdf );
           }
           else { // use given handle for filename; test, first
