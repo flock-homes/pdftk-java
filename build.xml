@@ -5,6 +5,7 @@
   </target>
 
   <target name="compile">
+    <mkdir dir="lib"/>
     <mkdir dir="build/classes"/>
     <javac srcdir="java" destdir="build/classes" >
       <classpath>
