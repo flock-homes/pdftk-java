@@ -540,7 +540,7 @@ static keyword is_keyword( String ss ) {
   return keyword.none_k;
 }
 
-static keyword is_keyword( StringBuffer ssb ) {
+static keyword is_keyword( StringBuilder ssb ) {
   String ss = new String(ssb).toLowerCase();
   // cat range keywords
   if( ss.startsWith( "end" ) ) { // note: strncmp
@@ -991,7 +991,7 @@ static keyword is_keyword( StringBuffer ssb ) {
           // parse digits
           int page_num_beg= 0;
           boolean page_num_beg_out_of_range_b= false;
-          StringBuffer trailing_keywords= new StringBuffer(pre_keywords);
+          StringBuilder trailing_keywords= new StringBuilder(pre_keywords);
           if ( !pre_range.isEmpty() ) {
             page_num_beg= Integer.parseInt(pre_range);
           }
@@ -1031,7 +1031,7 @@ static keyword is_keyword( StringBuffer ssb ) {
           int page_num_end= page_num_beg; // default value
           if( !hyphen.isEmpty() ) { // process second half of page range
 
-            trailing_keywords = new StringBuffer(post_keywords);
+            trailing_keywords = new StringBuilder(post_keywords);
             
             reverse_b= ( !post_reverse.isEmpty() ); // single lc 'r' before page range
 
@@ -2740,7 +2740,7 @@ int create_output() {
                         state.final_child_ref_p = after_child_ref_p;
                         state.num_bookmarks_total = num_bookmarks_total;
                         report.BuildBookmarks( writer_p,
-                                        bookmark_data.iterator(),
+                                        bookmark_data.listIterator(),
                                         //item_p, item_ref_p, // used for adding doc bookmarks
                                         output_outlines_p, output_outlines_ref_p,
                                         after_child_p, after_child_ref_p,
