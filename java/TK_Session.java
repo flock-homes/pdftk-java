@@ -2731,15 +2731,15 @@ int create_output() {
                       reader_p.getPdfObject( outlines_p.get( PdfName.FIRST ) );
                     if( top_outline_p != null && top_outline_p.isDictionary() ) {
 
-                      ArrayList<report.PdfBookmark> bookmark_data= report.ReadOutlines( top_outline_p, 0, reader_p, true );
+                      ArrayList<bookmarks.PdfBookmark> bookmark_data= bookmarks.ReadOutlines( top_outline_p, 0, reader_p, true );
                       if( bookmark_data != null && !bookmark_data.isEmpty() ) {
 
                         // passed in by reference, so must use variable:
-                        report.BuildBookmarksState state = new report.BuildBookmarksState();
+                        bookmarks.BuildBookmarksState state = new bookmarks.BuildBookmarksState();
                         state.final_child_p = after_child_p;
                         state.final_child_ref_p = after_child_ref_p;
                         state.num_bookmarks_total = num_bookmarks_total;
-                        report.BuildBookmarks( writer_p,
+                        bookmarks.BuildBookmarks( writer_p,
                                         bookmark_data.listIterator(),
                                         //item_p, item_ref_p, // used for adding doc bookmarks
                                         output_outlines_p, output_outlines_ref_p,
