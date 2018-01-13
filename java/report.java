@@ -113,9 +113,7 @@ class PdfInfo {
 static String
 XmlStringToJcharArray( String jvs )
 {
-  System.err.println( "NOT TRANSLATED: XmlStringToJcharArray" );
-  /* NOT TRANSLATED */
-  return null;
+  return StringEscapeUtils.unescapeXml( jvs );
 }
 
 
