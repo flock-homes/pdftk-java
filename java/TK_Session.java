@@ -2731,8 +2731,9 @@ int create_output() {
                       reader_p.getPdfObject( outlines_p.get( PdfName.FIRST ) );
                     if( top_outline_p != null && top_outline_p.isDictionary() ) {
 
-                      ArrayList<bookmarks.PdfBookmark> bookmark_data= bookmarks.ReadOutlines( top_outline_p, 0, reader_p, true );
-                      if( bookmark_data != null && !bookmark_data.isEmpty() ) {
+                      ArrayList<bookmarks.PdfBookmark> bookmark_data = new ArrayList<bookmarks.PdfBookmark>();
+                      int rr= bookmarks.ReadOutlines( bookmark_data, top_outline_p, 0, reader_p, true );
+                      if( rr== 0 && !bookmark_data.isEmpty() ) {
 
                         // passed in by reference, so must use variable:
                         bookmarks.BuildBookmarksState state = new bookmarks.BuildBookmarksState();

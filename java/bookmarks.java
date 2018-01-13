@@ -1,10 +1,12 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ListIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfDestination;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
@@ -18,7 +20,7 @@ import pdftk.com.lowagie.text.pdf.PdfWriter;
 class bookmarks {
 
 //
-class PdfBookmark {
+static class PdfBookmark {
   static final String m_prefix= "Bookmark";
   static final String m_begin_mark= "BookmarkBegin";
   static final String m_title_label= "BookmarkTitle:";
@@ -41,14 +43,247 @@ class PdfBookmark {
 //
 //ostream& operator<<( ostream& ss, const PdfBookmark& bb );
 
-static ArrayList<PdfBookmark>
-ReadOutlines( PdfDictionary outline_p,
+static int
+GetPageNumber( PdfDictionary dict_p,
+               PdfReader reader_p,
+               HashMap<PdfDictionary, Integer> cache )
+// take a PdfPage dictionary and return its page location in the document;
+// recurse our way up the pages tree, counting pages as we go;
+// dict_p may be a page or a page tree object;
+// return value is zero-based;
+{
+  { // consult the cache
+    Integer it = cache.get( dict_p );
+    if ( it != null ) return it;
+  }
+
+  int ret_val= 0;
+
+  if( dict_p != null && dict_p.contains( PdfName.PARENT ) ) {
+    PdfDictionary parent_p= (PdfDictionary)
+      reader_p.getPdfObject( dict_p.get( PdfName.PARENT ) );
+    if( parent_p!= null && parent_p.isDictionary() ) {
+      // a parent is a page tree object and will have Kids
+
+      // recurse up the page tree
+      int sum_pages= GetPageNumber( parent_p, reader_p, cache );
+
+      PdfArray parent_kids_p= (PdfArray)
+        reader_p.getPdfObject( parent_p.get( PdfName.KIDS ) );
+      if( parent_kids_p!= null && parent_kids_p.isArray() ) {
+        // Kids may be Pages or Page Tree Nodes
+
+        // iterate over *dict_p's parent's kids until we run into *dict_p
+        ArrayList<PdfDictionary> kids_p= parent_kids_p.getArrayList();
+        if( kids_p!= null ) {
+          for( PdfDictionary kid_p : kids_p ) {
+            if( kid_p!= null && kid_p.isDictionary() ) {
+
+              if( kid_p== dict_p ) // we have what we were looking for
+                ret_val= sum_pages;
+
+              // is kid a page, or is kid a page tree object? add count to sum;
+              // PdfDictionary::isPage() and PdfDictionary::isPages()
+              // are not reliable, here
+
+              PdfName kid_type_p= (PdfName)
+                reader_p.getPdfObject( kid_p.get( PdfName.TYPE ) );
+              if( kid_type_p!= null && kid_type_p.isName() ) {
+
+                if( kid_type_p.equals( PdfName.PAGE ) ) {
+                  // *kid_p is a Page
+
+                  // store page number in our cache
+                  cache.put( kid_p, sum_pages );
+
+                  //
+                  sum_pages+= 1;
+                }
+                else if( kid_type_p.equals( PdfName.PAGES ) ) {
+                  // *kid_p is a Page Tree Node
+
+                  PdfNumber count_p= (PdfNumber)
+                    reader_p.getPdfObject( kid_p.get( PdfName.COUNT ) );
+                  if( count_p != null && count_p.isNumber() ) {
+
+                    //
+                    sum_pages+= count_p.intValue();
+                  }
+                  else { // error
+                    System.err.println( "pdftk Error in GetPageNumber(): invalid count;" );
+                  }
+                }
+                else { // error
+                  System.err.println( "pdftk Error in GetPageNumber(): unexpected kid type;" );
+                }
+              }
+              else { // error
+                System.err.println( "pdftk Error in GetPageNumber(): invalid kid_type_p;" );
+              }
+            }
+            else { // error
+              System.err.println( "pdftk Error in GetPageNumber(): invalid kid_p;" );
+            }
+          } // done iterating over kids
+
+        }
+        else { // error
+          System.err.println( "pdftk Error in GetPageNumber(): invalid kids_p;" );
+        }
+      }
+      else { // error
+        System.err.println( "pdftk Error in GetPageNumber(): invalid kids array;" );
+      }
+    }
+    else { // error
+      System.err.println( "pdftk Error in GetPageNumber(): invalid parent;" );
+    }
+  }
+  else {
+    // *dict_p has no parent; end recursion
+    ret_val= 0;
+    cache.put( dict_p, ret_val );
+  }
+
+  return ret_val;
+}
+  
+static int 
+ReadOutlines( ArrayList<PdfBookmark> bookmark_data,
+              PdfDictionary outline_p,
               int level,
               PdfReader reader_p,              
               boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReadOutlines" );
-  /* NOT TRANSLATED */
-  return null;
+
+  int ret_val= 0;
+  HashMap<PdfDictionary, Integer> cache = new HashMap<PdfDictionary, Integer>();
+
+  while( outline_p != null ) {
+
+    // load this with collected data, then add to vector
+    PdfBookmark bookmark = new PdfBookmark();
+
+    // the title
+    PdfString title_p= (PdfString)
+      reader_p.getPdfObject( outline_p.get( PdfName.TITLE ) );
+    if( title_p != null && title_p.isString() ) {
+
+      StringBuilder oss = new StringBuilder();
+      report.OutputPdfString( oss, title_p, utf8_b );
+      bookmark.m_title= oss.toString();
+    }
+    else { // error
+      ret_val= 1;
+    }
+
+    // the level; 1-based to jive with HTML heading level concept
+    bookmark.m_level= level+ 1;
+
+    // page number, 1-based; 
+    // a zero value indicates no page destination or an error
+    {
+      boolean fail_b= false;
+
+      // the destination object may take be in a couple different places
+      // and may take a couple, different forms
+
+      PdfObject destination_p= null; {
+        if( outline_p.contains( PdfName.DEST ) ) {
+          destination_p=
+            reader_p.getPdfObject( outline_p.get( PdfName.DEST ) );
+        }
+        else if( outline_p.contains( PdfName.A ) ) {
+
+          PdfDictionary action_p= (PdfDictionary)
+            reader_p.getPdfObject( outline_p.get( PdfName.A ) );
+          if( action_p != null && action_p.isDictionary() ) {
+
+            PdfName s_p= (PdfName)
+              reader_p.getPdfObject( action_p.get( PdfName.S ) );
+            if( s_p != null && s_p.isName() ) {
+
+              if( s_p.equals( PdfName.GOTO ) ) {
+                destination_p=
+                  reader_p.getPdfObject( action_p.get( PdfName.D ) );
+              }
+              else { // immediate action is not a link in this document;
+                // not an error
+                // fail_b= true;
+              }
+            }
+            else { // error
+              fail_b= true;
+            }
+          }
+          else { // error
+            fail_b= true;
+          }
+        }
+        else { // unexpected
+          fail_b= true;
+        }
+      }
+
+      // destination is an array
+      if( destination_p != null && destination_p.isArray() ) {
+
+        ArrayList<PdfObject> array_list_p= ((PdfArray)destination_p).getArrayList();
+        if( array_list_p != null && !array_list_p.isEmpty() ) {
+
+          PdfDictionary page_p= (PdfDictionary)
+            reader_p.getPdfObject( (PdfObject)(array_list_p.get(0)) );
+
+          if( page_p !=null && page_p.isDictionary() ) {
+            bookmark.m_page_num= GetPageNumber(page_p, reader_p, cache)+ 1;
+          }
+          else { // error
+            fail_b= true;
+          }
+        }
+        else { // error
+          fail_b= true;
+        }
+      } // TODO: named destinations handling
+      else { // error
+        fail_b= true;
+      }
+
+      if( fail_b ) { // output our 'null page reference' code
+        bookmark.m_page_num= 0;
+      }
+    }
+
+    // add bookmark to collected data
+    if( 0< bookmark.m_level )
+      bookmark_data.add( bookmark );
+
+    // recurse into any children
+    if( outline_p.contains( PdfName.FIRST ) ) {
+
+      PdfDictionary child_p= (PdfDictionary)
+        reader_p.getPdfObject( outline_p.get( PdfName.FIRST ) );
+      if( child_p != null && child_p.isDictionary() ) {
+
+        ret_val+= ReadOutlines( bookmark_data, child_p, level+ 1, reader_p, utf8_b );
+      }
+    }
+
+    // iterate over siblings
+    if( outline_p.contains( PdfName.NEXT ) ) {
+
+      PdfDictionary sibling_p= (PdfDictionary)
+        reader_p.getPdfObject( outline_p.get( PdfName.NEXT ) );
+      if( sibling_p != null && sibling_p.isDictionary() ) {
+        outline_p= sibling_p;
+      }
+      else // break out of loop
+        outline_p= null;
+    }
+    else // break out of loop
+      outline_p= null;
+  }
+
+  return ret_val;
 }
   
 static void
