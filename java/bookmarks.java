@@ -327,9 +327,106 @@ BuildBookmarks(PdfReader reader_p,
                PRIndirectReference parent_ref_p,
                int parent_level,
                boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: BuildBookmarks" );
-  /* NOT TRANSLATED */
-  return 0;
+  int num_bookmarks_total = 0;
+
+  PdfDictionary bookmark_prev_p= null;
+  PRIndirectReference bookmark_first_ref_p= null;
+  PRIndirectReference bookmark_prev_ref_p= null;
+  int num_bookmarks= 0;
+
+  PdfBookmark it_content = it.next();it.previous();
+  if( parent_level+ 1< it_content.m_level ) { // first child jumping levels
+
+    ////
+    // add missing level
+
+    ++num_bookmarks; ++num_bookmarks_total;
+    PdfDictionary bookmark_p= new PdfDictionary();
+    PRIndirectReference bookmark_ref_p= reader_p.getPRIndirectReference( bookmark_p );
+    bookmark_first_ref_p= bookmark_ref_p;
+
+    bookmark_p.put( PdfName.PARENT, (PdfObject)parent_ref_p );
+
+    PdfString title_p= new PdfString( "" );
+    bookmark_p.put( PdfName.TITLE, title_p );
+
+    bookmark_prev_p= bookmark_p;
+    bookmark_prev_ref_p= bookmark_ref_p;
+
+    // recurse in loop
+  }
+
+  for( ;it_content!=null; it_content = (it.hasNext()?it.next():null) ) {
+  
+    if( parent_level+ 1< it_content.m_level ) { // encountered child; recurse
+      num_bookmarks_total += BuildBookmarks( reader_p,
+                               it,
+                               bookmark_prev_p, // parent
+                               bookmark_prev_ref_p,
+                               parent_level+ 1,
+                               utf8_b );
+      it_content=it.previous();
+      continue;
+    }
+    else if( it_content.m_level< parent_level+ 1 ) {
+      break; // no more children; add children to parent and return
+    }
+
+    ////
+    // create child
+
+    ++num_bookmarks; ++num_bookmarks_total;
+    PdfDictionary bookmark_p= new PdfDictionary();
+    PRIndirectReference bookmark_ref_p= reader_p.getPRIndirectReference( bookmark_p );
+    if( bookmark_first_ref_p==null )
+      bookmark_first_ref_p= bookmark_ref_p;
+
+    bookmark_p.put( PdfName.PARENT, (PdfObject)parent_ref_p );
+
+    if( bookmark_prev_ref_p!=null ) {
+      bookmark_p.put( PdfName.PREV, (PdfObject)bookmark_prev_ref_p );
+      bookmark_prev_p.put( PdfName.NEXT, (PdfObject)bookmark_ref_p );
+    }
+
+    if( utf8_b ) { // UTF-8 encoded input
+      bookmark_p.put( PdfName.TITLE,
+                       new PdfString( it_content.m_title /*,
+                       itext::PdfObject::TEXT_UNICODE*/ ) );
+    }
+    else { // XML entities input
+      String jvs = report.XmlStringToJcharArray( it_content.m_title );
+
+      bookmark_p.put( PdfName.TITLE,
+                       new PdfString( jvs /*,
+                       itext::PdfObject::TEXT_UNICODE*/ ) );
+    }
+
+    if( 0< it_content.m_page_num ) { // destination
+      PdfDestination dest_p= new PdfDestination(PdfDestination.FIT);
+      PRIndirectReference page_ref_p= reader_p.getPageOrigRef( it_content.m_page_num );
+      if( page_ref_p!=null ) {
+        dest_p.addPage( (PdfIndirectReference)page_ref_p );
+      }
+      bookmark_p.put( PdfName.DEST, dest_p );
+    }
+
+    bookmark_prev_p= bookmark_p;
+    bookmark_prev_ref_p= bookmark_ref_p;
+  }
+
+  if( bookmark_first_ref_p!=null && bookmark_prev_ref_p!=null ) {
+    // pack these children into parent before returning
+    parent_p.put( PdfName.FIRST, (PdfObject)bookmark_first_ref_p );
+    parent_p.put( PdfName.LAST, (PdfObject)bookmark_prev_ref_p );
+    if( parent_level== 0 ) {
+      parent_p.put( PdfName.COUNT, new PdfNumber( num_bookmarks_total ) );
+    }
+    else {
+      parent_p.put( PdfName.COUNT, new PdfNumber( num_bookmarks ) );
+    }
+  }
+
+  return num_bookmarks_total;
 }
   
 // for use with writers, e.g. PdfCopy (esp. PdfCopy.setOutlines())
@@ -377,7 +474,7 @@ BuildBookmarks(PdfWriter writer_p,
     // recurse in loop
   }
 
-  for( ;it.hasNext(); it_content = it.next() ) {
+  for( ;it_content!=null; it_content = (it.hasNext()?it.next():null) ) {
   
     if( parent_level+ 1< it_content.m_level ) { // encountered child; recurse
       BuildBookmarks( writer_p,
