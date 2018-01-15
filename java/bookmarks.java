@@ -16,6 +16,7 @@ import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfReader;
 import pdftk.com.lowagie.text.pdf.PdfString;
 import pdftk.com.lowagie.text.pdf.PdfWriter;
+import pdftk.com.lowagie.text.pdf.PRIndirectReference;
 
 class bookmarks {
 
@@ -318,6 +319,20 @@ static class BuildBookmarksState {
   int num_bookmarks_total;
 };
 
+// Translator note: returns num_bookmarks_total
+static int
+BuildBookmarks(PdfReader reader_p,
+               ListIterator<PdfBookmark> it,
+               PdfDictionary parent_p,
+               PRIndirectReference parent_ref_p,
+               int parent_level,
+               boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: BuildBookmarks" );
+  /* NOT TRANSLATED */
+  return 0;
+}
+  
+// for use with writers, e.g. PdfCopy (esp. PdfCopy.setOutlines())
 static void
 BuildBookmarks(PdfWriter writer_p,
                ListIterator<PdfBookmark> it,
