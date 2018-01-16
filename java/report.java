@@ -3,9 +3,11 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfObject;
@@ -16,50 +18,48 @@ import pdftk.com.lowagie.text.pdf.PRIndirectReference;
 
 class report {
 
-static void 
-OutputXmlString( StringBuilder ofs,
-                 String jss_p )
+static String
+OutputXmlString( String jss_p )
 {
-  ofs.append( StringEscapeUtils.escapeXml10( jss_p ) );
+  return StringEscapeUtils.escapeXml10( jss_p );
 }
 
-static void 
-OutputUtf8String( StringBuilder ofs,
-                  String jss_p )
+static String
+OutputUtf8String( String jss_p )
 {
-  ofs.append( jss_p );
+  return jss_p;
 }
   
-static void
-OutputPdfString( StringBuilder ofs,
-                 PdfString pdfss_p,
+static String
+OutputPdfString( PdfString pdfss_p,
                  boolean utf8_b )
 {
   if( pdfss_p != null && pdfss_p.isString() ) {
     String jss_p= pdfss_p.toUnicodeString();
     if( utf8_b ) {
-      OutputUtf8String( ofs, jss_p );
+      return OutputUtf8String( jss_p );
     }
     else {
-      OutputXmlString( ofs, jss_p );
+      return OutputXmlString( jss_p );
     }
   }
+  return "";
 }
 
-static void
-OutputPdfName( StringBuilder ofs,
-               PdfName pdfnn_p )
+static String
+OutputPdfName( PdfName pdfnn_p )
 {
   if( pdfnn_p != null && pdfnn_p.isName() ) {
     String jnn_p= new String( pdfnn_p.getBytes() );
     jnn_p= PdfName.decodeName( jnn_p );
-    OutputXmlString( ofs, jnn_p );
+    return OutputXmlString( jnn_p );
   }
+  return "";
 }
 
   
 static void
-ReportAcroFormFields( OutputStream ofs,
+ReportAcroFormFields( PrintWriter ofs,
                       PdfReader reader_p,
                       boolean utf8_b ) {
   System.err.println( "NOT TRANSLATED: ReportAcroFormFields" );
@@ -67,15 +67,105 @@ ReportAcroFormFields( OutputStream ofs,
 }
 
 static void
-ReportAnnots( OutputStream ofs,
+ReportAction( PrintWriter ofs, 
               PdfReader reader_p,
-              boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReportAnnots" );
+              PdfDictionary action_p,
+              boolean utf8_b,
+              String prefix ) {
+  System.err.println( "NOT TRANSLATED: ReportAction" );
+  /* NOT TRANSLATED */
+}
+  
+static void
+ReportAnnot( PrintWriter ofs,
+             PdfReader reader_p,
+             int page_num,
+             PdfDictionary page_p,
+             PdfDictionary annot_p,
+             boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReportAnnot" );
   /* NOT TRANSLATED */
 }
 
+  
 static void
-ReportOnPdf( OutputStream ofs,
+ReportAnnots( PrintWriter ofs,
+              PdfReader reader_p,
+              boolean utf8_b ) {
+  reader_p.resetReleasePage();
+
+  ////
+  // document information
+
+  // document page count
+  ofs.println("NumberOfPages: " + (int)reader_p.getNumberOfPages());
+
+  // document base url
+  PdfDictionary uri_p= (PdfDictionary)
+    reader_p.getPdfObject( reader_p.catalog.get( PdfName.URI ) );
+  if( uri_p != null && uri_p.isDictionary() ) {
+    
+    PdfString base_p= (PdfString)
+      reader_p.getPdfObject( uri_p.get( PdfName.BASE ) );
+    if( base_p != null && base_p.isString() ) {
+      ofs.println("PdfUriBase: " + OutputPdfString( base_p, utf8_b ));
+    }
+  }
+
+  ////
+  // iterate over pages
+
+  for( int ii= 1; ii<= reader_p.getNumberOfPages(); ++ii ) {
+    PdfDictionary page_p= reader_p.getPageN( ii );
+
+    PdfArray annots_p= (PdfArray)
+      reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
+    if( annots_p != null && annots_p.isArray() ) {
+
+      ArrayList<PdfDictionary> annots_al_p= annots_p.getArrayList();
+      if( annots_al_p != null ) {
+
+        // iterate over annotations
+        for( PdfDictionary annot_p : annots_al_p ) {
+
+          if( annot_p != null && annot_p.isDictionary() ) {
+
+            PdfName type_p= (PdfName)
+              reader_p.getPdfObject( annot_p.get( PdfName.TYPE ) );
+            if( type_p.equals( PdfName.ANNOT ) ) {
+
+              PdfName subtype_p= (PdfName)
+                reader_p.getPdfObject( annot_p.get( PdfName.SUBTYPE ) );
+            
+              // link annotation
+              if( subtype_p.equals( PdfName.LINK ) ) {
+
+                ofs.println("---"); // delim
+                ReportAnnot( ofs, reader_p, ii, page_p, annot_p, utf8_b ); // base annot items
+                ofs.println("AnnotPageNumber: " + ii);
+
+                // link-specific items
+                if( annot_p.contains( PdfName.A ) ) { // action
+                  PdfDictionary action_p= (PdfDictionary)
+                    reader_p.getPdfObject( annot_p.get( PdfName.A ) );
+                  if( action_p != null && action_p.isDictionary() ) {
+
+                    ReportAction( ofs, reader_p, action_p, utf8_b, "Annot" );
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    reader_p.releasePage( ii );
+  }
+  reader_p.resetReleasePage();
+}
+
+static void
+ReportOnPdf( PrintWriter ofs,
              PdfReader reader_p,
              boolean utf8_b ) {
   System.err.println( "NOT TRANSLATED: ReportOnPdf" );

@@ -169,9 +169,7 @@ ReadOutlines( ArrayList<PdfBookmark> bookmark_data,
       reader_p.getPdfObject( outline_p.get( PdfName.TITLE ) );
     if( title_p != null && title_p.isString() ) {
 
-      StringBuilder oss = new StringBuilder();
-      report.OutputPdfString( oss, title_p, utf8_b );
-      bookmark.m_title= oss.toString();
+      bookmark.m_title= report.OutputPdfString( title_p, utf8_b );
     }
     else { // error
       ret_val= 1;
