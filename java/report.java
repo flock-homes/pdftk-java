@@ -7,9 +7,11 @@ import java.io.PrintWriter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import pdftk.com.lowagie.text.Rectangle;
 import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfName;
+import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
 import pdftk.com.lowagie.text.pdf.PdfString;
@@ -76,18 +78,105 @@ ReportAction( PrintWriter ofs,
   /* NOT TRANSLATED */
 }
   
+static final int LLx= 0;
+static final int LLy= 1;
+static final int URx= 2;
+static final int URy= 3;
+  
 static void
 ReportAnnot( PrintWriter ofs,
              PdfReader reader_p,
              int page_num,
              PdfDictionary page_p,
              PdfDictionary annot_p,
-             boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReportAnnot" );
-  /* NOT TRANSLATED */
+             boolean utf8_b )
+{
+  // report things common to all annots
+
+  // subtype
+  PdfName subtype_p= (PdfName)
+    reader_p.getPdfObject( annot_p.get( PdfName.SUBTYPE ) );
+  if( subtype_p != null && subtype_p.isName() ) {
+    ofs.println( "AnnotSubtype: " + OutputPdfName( subtype_p ) );
+  }
+
+  ////
+  // rect
+
+  // get raw rect from annot
+  float[] rect = { 0.0f, 0.0f, 0.0f, 0.0f };
+  PdfArray rect_p= (PdfArray)
+    reader_p.getPdfObject( annot_p.get( PdfName.RECT ) );
+  if( rect_p != null && rect_p.isArray() ) {
+    ArrayList<PdfObject> rect_al_p= rect_p.getArrayList();
+    if( rect_al_p != null && rect_al_p.size()== 4 ) {
+
+      for( int ii= 0; ii< 4; ++ii ) {
+        PdfNumber coord_p= (PdfNumber)
+          reader_p.getPdfObject( rect_al_p.get( ii ) );
+        if( coord_p != null && coord_p.isNumber() )
+          rect[ ii ]= (float)coord_p.floatValue();
+        else
+          rect[ ii ]= -1; // error value
+      }
+    }
+  }
+  
+  // transform rect according to page crop box
+  // grab width and height for later xform
+  float page_crop_width= 0;
+  float page_crop_height= 0;
+  {
+    Rectangle page_crop_p= reader_p.getCropBox( page_num );
+    rect[0]= rect[0]- page_crop_p.left();
+    rect[1]= rect[1]- page_crop_p.bottom();
+    rect[2]= rect[2]- page_crop_p.left();
+    rect[3]= rect[3]- page_crop_p.bottom();
+
+    page_crop_width= (float)(page_crop_p.right()- page_crop_p.left());
+    page_crop_height= (float)(page_crop_p.top()- page_crop_p.bottom());
+  }
+
+  // create new rect based on page rotation
+  int page_rot= (int)(reader_p.getPageRotation( page_num )) % 360;
+  float[] rot_rect = { 0.0f, 0.0f, 0.0f, 0.0f };
+  switch( page_rot ) {
+
+  case 90:
+    rot_rect[0]= rect[LLy];
+    rot_rect[1]= page_crop_width- rect[URx];
+    rot_rect[2]= rect[URy];
+    rot_rect[3]= page_crop_width- rect[LLx];
+    break;
+
+  case 180:
+    rot_rect[0]= page_crop_width- rect[URx];
+    rot_rect[1]= page_crop_height- rect[URy];
+    rot_rect[2]= page_crop_width- rect[LLx];
+    rot_rect[3]= page_crop_height- rect[LLy];
+    break;
+
+  case 270:
+    rot_rect[0]= page_crop_height- rect[URy];
+    rot_rect[1]= rect[LLx];
+    rot_rect[2]= page_crop_height- rect[LLy];
+    rot_rect[3]= rect[URx];
+    break;
+
+  default: // 0 deg
+    rot_rect[0]= rect[0];
+    rot_rect[1]= rect[1];
+    rot_rect[2]= rect[2];
+    rot_rect[3]= rect[3];
+    break;
+  }
+
+  // output rotated rect
+  ofs.println( "AnnotRect: " + rot_rect[0] + " " + rot_rect[1] +
+               " " + rot_rect[2] + " " + rot_rect[3] );
+
 }
 
-  
 static void
 ReportAnnots( PrintWriter ofs,
               PdfReader reader_p,
