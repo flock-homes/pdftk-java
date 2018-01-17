@@ -392,7 +392,7 @@ BuildBookmarks(PdfReader reader_p,
                        itext::PdfObject::TEXT_UNICODE*/ ) );
     }
     else { // XML entities input
-      String jvs = report.XmlStringToJcharArray( it_content.m_title );
+      String jvs = data_import.XmlStringToJcharArray( it_content.m_title );
 
       bookmark_p.put( PdfName.TITLE,
                        new PdfString( jvs /*,
@@ -514,7 +514,7 @@ BuildBookmarks(PdfWriter writer_p,
                        itext::PdfObject::TEXT_UNICODE*/ ) );
     }
     else { // XML entities input
-      String jvs = report.XmlStringToJcharArray( it_content.m_title );
+      String jvs = data_import.XmlStringToJcharArray( it_content.m_title );
 
       bookmark_p.put( PdfName.TITLE,
                        new PdfString( jvs /*,

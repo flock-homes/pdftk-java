@@ -3089,7 +3089,7 @@ int create_output() {
         }
         if( !m_update_info_filename.isEmpty() ) {
           if( m_update_info_filename.equals("-") ) {
-            if( !report.UpdateInfo( input_reader_p, System.in, m_update_info_utf8_b ) ) {
+            if( !data_import.UpdateInfo( input_reader_p, System.in, m_update_info_utf8_b ) ) {
               System.err.println("Warning: no Info added to output PDF.");
               ret_val= 3;
             }
@@ -3097,7 +3097,7 @@ int create_output() {
           else {
             try {
               FileInputStream ifs = new FileInputStream( m_update_info_filename );
-              if( !report.UpdateInfo( input_reader_p, ifs, m_update_info_utf8_b ) ) {
+              if( !data_import.UpdateInfo( input_reader_p, ifs, m_update_info_utf8_b ) ) {
                 System.err.println("Warning: no Info added to output PDF.");
                 ret_val= 3;
               }
