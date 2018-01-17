@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 import pdftk.com.lowagie.text.Rectangle;
 import pdftk.com.lowagie.text.pdf.PdfArray;
+import pdftk.com.lowagie.text.pdf.PdfBoolean;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
@@ -73,9 +74,58 @@ ReportAction( PrintWriter ofs,
               PdfReader reader_p,
               PdfDictionary action_p,
               boolean utf8_b,
-              String prefix ) {
-  System.err.println( "NOT TRANSLATED: ReportAction" );
-  /* NOT TRANSLATED */
+              String prefix )
+{
+  if( action_p.contains( PdfName.S ) ) {
+    PdfName s_p= (PdfName)
+      reader_p.getPdfObject( action_p.get( PdfName.S ) );
+
+    // URI action
+    if( s_p.equals( PdfName.URI ) ) {
+      ofs.println( prefix + "ActionSubtype: URI" );
+
+      // report URI
+      if( action_p.contains( PdfName.URI ) ) {
+        PdfString uri_p= (PdfString)
+          reader_p.getPdfObject( action_p.get( PdfName.URI ) );
+        if( uri_p != null && uri_p.isString() ) {
+          
+          ofs.println( prefix + "ActionURI: " +
+                       OutputPdfString( uri_p, utf8_b ) );
+        }
+      }
+
+      // report IsMap
+      if( action_p.contains( PdfName.ISMAP ) ) {
+        PdfBoolean ismap_p= (PdfBoolean)
+          reader_p.getPdfObject( action_p.get( PdfName.ISMAP ) );
+        if( ismap_p != null && ismap_p.isBoolean() )
+          if( ismap_p.booleanValue() )
+            ofs.println( prefix + "ActionIsMap: true" );
+          else
+            ofs.println( prefix + "ActionIsMap: false" );
+      }
+      else
+        ofs.println( prefix + "ActionIsMap: false" );
+    }
+  }
+
+  // subsequent actions? can be a single action or an array
+  if( action_p.contains( PdfName.NEXT ) ) {
+    PdfObject next_p= reader_p.getPdfObject( action_p.get( PdfName.NEXT ) );
+    if( next_p.isDictionary() ) {
+      ReportAction( ofs, reader_p, (PdfDictionary)next_p, utf8_b, prefix );
+    }
+    else if( next_p.isArray() ) {
+      ArrayList<PdfObject> actions_p= ((PdfArray)next_p).getArrayList();
+      for( PdfObject ii : actions_p ) {
+        PdfDictionary next_action_p= (PdfDictionary)
+          reader_p.getPdfObject( ii );
+        if( next_action_p != null && next_action_p.isDictionary() )
+          ReportAction( ofs, reader_p, next_action_p, utf8_b, prefix ); // recurse
+      }
+    }
+  }
 }
   
 static final int LLx= 0;
