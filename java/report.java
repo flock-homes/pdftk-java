@@ -303,12 +303,230 @@ ReportAnnots( PrintWriter ofs,
   reader_p.resetReleasePage();
 }
 
+//
+static class PdfPageLabel {
+  static final String m_prefix= "PageLabel";
+  static final String m_begin_mark= "PageLabelBegin";
+  // TODO
+};
+
+//
+class PdfPageMedia {
+  static final String m_prefix= "PageMedia";
+  static final String m_begin_mark= "PageMediaBegin";
+  // TODO
+};
+
+static void
+ReportOutlines( PrintWriter ofs, 
+                PdfDictionary outline_p,
+                PdfReader reader_p,
+                boolean utf8_b )
+{
+  ArrayList<bookmarks.PdfBookmark> bookmark_data = new ArrayList<bookmarks.PdfBookmark>();
+  bookmarks.ReadOutlines( bookmark_data,
+                          outline_p,
+                          0,
+                          reader_p,
+                          utf8_b );
+  
+  for( bookmarks.PdfBookmark it : bookmark_data ) {
+    ofs.print( it );
+  }
+}
+
+static void
+ReportInfo( PrintWriter ofs,
+            PdfReader reader_p,
+            PdfDictionary info_p,
+            boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReportInfo" );
+  /* NOT TRANSLATED */
+}
+
+static void
+ReportPageLabels( PrintWriter ofs,
+                  PdfDictionary numtree_node_p,
+                  PdfReader reader_p,
+                  boolean utf8_b ) {
+  System.err.println( "NOT TRANSLATED: ReportPageLabels" );
+  /* NOT TRANSLATED */
+}
+  
 static void
 ReportOnPdf( PrintWriter ofs,
              PdfReader reader_p,
-             boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReportOnPdf" );
-  /* NOT TRANSLATED */
-}
+             boolean utf8_b )
+{
+  { // trailer data
+    PdfDictionary trailer_p= reader_p.getTrailer();
+    if( trailer_p != null && trailer_p.isDictionary() ) {
+
+      { // metadata
+        PdfDictionary info_p= (PdfDictionary)
+          reader_p.getPdfObject( trailer_p.get( PdfName.INFO ) );
+        if( info_p != null && info_p.isDictionary() ) {
+            
+          ReportInfo( ofs, reader_p, info_p, utf8_b );
+        }
+        else { // warning
+          System.err.println( "Warning: no info dictionary found" );
+        }
+      }
+
+      { // pdf ID; optional
+        PdfArray id_p= (PdfArray)
+          reader_p.getPdfObject( trailer_p.get( PdfName.ID ) );
+        if( id_p != null && id_p.isArray() ) {
+
+          ArrayList<PdfObject> id_al_p= id_p.getArrayList();
+          if( id_al_p != null ) {
+
+            for( int ii= 0; ii< id_al_p.size(); ++ii ) {
+              ofs.print( "PdfID" + ii + ": " );
+
+              PdfString id_ss_p= (PdfString)
+                reader_p.getPdfObject( id_al_p.get(ii) );
+              if( id_ss_p != null && id_ss_p.isString() ) {
+                
+                byte[] bb= id_ss_p.getBytes();
+                if( bb!=null && bb.length > 0 ) {
+                  for( byte bb_ss : bb ) {
+                    ofs.printf( "%02x", bb_ss );
+                  }
+                }
+              }
+              else { // error
+                System.err.println( "pdftk Error in ReportOnPdf(): invalid pdf id array string;" );
+              }
+
+              ofs.println();
+            }
+          }
+          else { // error
+            System.err.println( "pdftk Error in ReportOnPdf(): invalid ID ArrayList" );
+          }
+        }
+      }
+
+    }
+    else { // error
+      System.err.println( "pdftk Error in ReportOnPdf(): invalid trailer;" );
+    }
+  }
+
+  int numPages= reader_p.getNumberOfPages();
+
+  { // number of pages and outlines
+    PdfDictionary catalog_p= reader_p.catalog;
+    if( catalog_p != null && catalog_p.isDictionary() ) {
+
+      // number of pages
+      /*
+      itext::PdfDictionary* pages_p= (itext::PdfDictionary*)
+        reader_p->getPdfObject( catalog_p->get( itext::PdfName::PAGES ) );
+      if( pages_p && pages_p->isDictionary() ) {
+
+        itext::PdfNumber* count_p= (itext::PdfNumber*)
+          reader_p->getPdfObject( pages_p->get( itext::PdfName::COUNT ) );
+        if( count_p && count_p->isNumber() ) {
+
+          ofs << "NumberOfPages: " << (unsigned int)count_p->intValue() << endl;
+        }
+        else { // error
+          cerr << "pdftk Error in ReportOnPdf(): invalid count_p;" << endl;
+        }
+      }
+      else { // error
+        cerr << "pdftk Error in ReportOnPdf(): invalid pages_p;" << endl;
+      }
+      */
+      ofs.println( "NumberOfPages: " + numPages );
+
+      // outlines; optional
+      PdfDictionary outlines_p= (PdfDictionary)
+        reader_p.getPdfObject( catalog_p.get( PdfName.OUTLINES ) );
+      if( outlines_p != null && outlines_p.isDictionary() ) {
+
+        PdfDictionary top_outline_p= (PdfDictionary)
+          reader_p.getPdfObject( outlines_p.get( PdfName.FIRST ) );
+        if( top_outline_p != null && top_outline_p.isDictionary() ) {
+
+          ReportOutlines( ofs, top_outline_p, reader_p, utf8_b );
+        }
+        else { // error
+          // okay, not a big deal
+          // cerr << "Internal Error: invalid top_outline_p in ReportOnPdf()" << endl;
+        }
+      }
+
+    }
+    else { // error
+      System.err.println( "pdftk Error in ReportOnPdf(): couldn't find catalog;" );
+    }
+  }
+
+  { // page metrics, rotation, stamptkData
+    for( int ii= 1; ii<= numPages; ++ii ) {
+      PdfDictionary page_p= reader_p.getPageN( ii );
+
+      ofs.println( PdfPageMedia.m_begin_mark );
+      ofs.println( "PageMediaNumber: " + ii );
+
+      ofs.println( "PageMediaRotation: " + reader_p.getPageRotation( page_p ) );
+
+      Rectangle page_rect_p= reader_p.getPageSize( page_p );
+      if( page_rect_p != null ) {
+        ofs.println( "PageMediaRect: " 
+            + (float)(page_rect_p.left()) + " "
+            + (float)(page_rect_p.bottom()) + " "
+            + (float)(page_rect_p.right()) + " "
+            + (float)(page_rect_p.top()) );
+        ofs.println( "PageMediaDimensions: " 
+            + (float)(page_rect_p.right()- page_rect_p.left()) + " "
+            + (float)(page_rect_p.top()- page_rect_p.bottom()) );
+      }
+      
+      Rectangle page_crop_p= reader_p.getBoxSize( page_p, PdfName.CROPBOX );
+      if( page_crop_p != null && 
+          !( page_crop_p.left()== page_rect_p.left() &&
+             page_crop_p.bottom()== page_rect_p.bottom() &&
+             page_crop_p.right()== page_rect_p.right() &&
+             page_crop_p.top()== page_rect_p.top() ) )
+        {
+          ofs.println( "PageMediaCropRect: " 
+              + (float)(page_crop_p.left()) + " "
+              + (float)(page_crop_p.bottom()) + " "
+              + (float)(page_crop_p.right()) + " "
+              + (float)(page_crop_p.top()) );
+        } 
+
+      PdfString stamptkData_p= page_p.getAsString( PdfName.STAMPTKDATA );
+      if( stamptkData_p != null ) {
+        ofs.println( "PageMediaStamptkData: " +
+                     OutputPdfString( stamptkData_p, utf8_b ) );
+      }
+
+      reader_p.releasePage( ii );
+    }
+  }
+
+  { // page labels (a/k/a logical page numbers)
+    PdfDictionary catalog_p= reader_p.catalog;
+    if( catalog_p != null && catalog_p.isDictionary() ) {
+
+      PdfDictionary pagelabels_p= (PdfDictionary)
+        reader_p.getPdfObject( catalog_p.get( PdfName.PAGELABELS ) );
+      if( pagelabels_p != null && pagelabels_p.isDictionary() ) {
+
+        ReportPageLabels( ofs, pagelabels_p, reader_p, utf8_b );
+      }
+    }
+    else { // error
+      System.err.println( "pdftk Error in ReportOnPdf(): couldn't find catalog (2);" );
+    }
+  }
+
+} // end: ReportOnPdf
 
 };

@@ -345,7 +345,7 @@ public class PdfReader implements PdfViewerPreferences {
         return getPageRotation(pageRefs.getPageNRelease(index));
     }
 
-    int getPageRotation(PdfDictionary page) {
+    public int getPageRotation(PdfDictionary page) {
         PdfNumber rotate = page.getAsNumber(PdfName.ROTATE);
         if (rotate == null)
             return 0;
