@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Set;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -340,8 +341,34 @@ ReportInfo( PrintWriter ofs,
             PdfReader reader_p,
             PdfDictionary info_p,
             boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReportInfo" );
-  /* NOT TRANSLATED */
+  if( info_p != null && info_p.isDictionary() ) {
+    Set<PdfName> keys_p= info_p.getKeys();
+
+    // iterate over Info keys
+    for( PdfName key_p : keys_p ) {
+
+      int key_len= key_p.getBytes().length - 1; // minus one for init. slash
+
+      PdfObject value_p= reader_p.getPdfObject( info_p.get( key_p ) );
+
+      // don't output empty keys or values
+      if( 0< key_len &&
+          value_p.isString() && 
+          0< ((PdfString)value_p).toUnicodeString().length() ) 
+        { // ouput
+          ofs.println( data_import.PdfInfo.m_begin_mark );
+
+          ofs.println( data_import.PdfInfo.m_key_label + " " +
+                       OutputPdfName( key_p ) );
+
+          ofs.println( data_import.PdfInfo.m_value_label + " " +
+                       OutputPdfString( (PdfString)value_p, utf8_b ) );
+        }
+    }
+
+  }
+  else { // error
+  }
 }
 
 static void
