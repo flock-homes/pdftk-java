@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,13 +21,149 @@ import pdftk.com.lowagie.text.pdf.PdfWriter;
 import pdftk.com.lowagie.text.pdf.PRIndirectReference;
 
 class data_import {
-
+  
 static PdfData
-  LoadDataFile( InputStream ifs ) {
+  LoadDataFile( InputStream input_stream )
+{
   PdfData pdf_data_p = new PdfData();
-  System.err.println( "NOT TRANSLATED: LoadDataFile" );
-  /* NOT TRANSLATED */
-  return null;
+  Scanner ifs = new Scanner( input_stream );
+
+  String buff= "";
+
+  String buff_prev= "";
+  int buff_prev_len= 0;
+
+  PdfInfo info = new PdfInfo();
+  boolean info_b= false;
+
+  PdfBookmark bookmark = new PdfBookmark();
+  boolean bookmark_b= false;
+
+  boolean eof = !ifs.hasNextLine();
+  
+  while( !eof ) {
+    eof = !ifs.hasNextLine();
+    if (eof) buff = "";
+    else buff = ifs.nextLine();
+
+    if( eof ||
+        buff.startsWith( PdfInfo.m_begin_mark ) ||
+        buff.startsWith( PdfBookmark.m_begin_mark ) ||
+        buff.startsWith( report.PdfPageLabel.m_begin_mark ) ||
+        !buff_prev.isEmpty() && !buff.startsWith( buff_prev ) )
+    { // start of a new record or end of file
+      // pack data and reset
+
+      if( info_b ) {
+        if( info.valid() ) {
+          pdf_data_p.m_info.add( info );
+        }
+        else { // warning
+          System.err.println( "pdftk Warning: data info record not valid -- skipped; data:" );
+          System.err.print( info );
+        }
+      }
+      else if( bookmark_b ) {
+        if( bookmark.valid() ) {
+          pdf_data_p.m_bookmarks.add( bookmark );
+        }
+        else { // warning
+          System.err.println( "pdftk Warning: data bookmark record not valid -- skipped; data:" );
+          System.err.print( bookmark );
+        }
+      }
+
+      // reset
+      buff_prev= "";
+      //
+      info= new PdfInfo();
+      info_b= false;
+      //
+      bookmark= new PdfBookmark();
+      bookmark_b= false;
+    }
+
+    // whitespace or comment; skip
+    if( buff.isEmpty() || buff.startsWith("#") ) {
+      continue;
+    }
+
+    // info record
+    else if( buff.startsWith( PdfInfo.m_prefix ) ) {
+      buff_prev_len= PdfInfo.m_prefix.length();
+      info_b= true;
+      
+      if( buff.startsWith( PdfInfo.m_begin_mark ) ||
+          info.loadKey( buff ) ||
+          info.loadValue( buff ) )
+        {
+          // success
+        }
+      else { // warning
+        System.err.println( "pdftk Warning: unexpected Info case in LoadDataFile(); continuing" );
+      }
+    }
+
+    // bookmark record
+    else if( buff.startsWith( PdfBookmark.m_prefix ) ) {
+      buff_prev_len= PdfBookmark.m_prefix.length();
+      bookmark_b= true;
+      
+      if( buff.startsWith( PdfBookmark.m_begin_mark ) ||
+          bookmark.loadTitle( buff ) ||
+          bookmark.loadLevel( buff ) ||
+          bookmark.loadPageNum( buff ) )
+      {
+        // success
+      }
+      else { // warning
+        System.err.println( "pdftk Warning: unexpected Bookmark case in LoadDataFile(); continuing" );
+      }
+    }
+    
+    // page label record
+    else if( buff.startsWith( report.PdfPageLabel.m_prefix ) ) {
+      buff_prev_len= 0;
+      // TODO
+    }
+    
+    // page media record
+    else if( buff.startsWith( report.PdfPageMedia.m_prefix ) ) {
+      buff_prev_len= 0;
+      // TODO
+    }
+
+    // pdf id
+    else if( buff.startsWith( PdfData.m_prefix ) ) {
+      buff_prev_len= 0; // not a record
+      
+      if( pdf_data_p.loadID0( buff ) ||
+          pdf_data_p.loadID1( buff ) )
+        {
+          // success
+        }
+      else { // warning
+        System.err.println( "pdftk Warning: unexpected PdfID case in LoadDataFile(); continuing" );
+      }
+    }
+
+    // number of pages
+    else if( pdf_data_p.loadNumPages( buff ) ) {
+      buff_prev_len= 0; // not a record
+    }
+
+    else { // warning
+      System.err.println( "pdftk Warning: unexpected case 1 in LoadDataFile(); continuing" );
+    }
+      
+    buff_prev = buff.substring( 0, buff_prev_len );
+  }
+
+  if( buff_prev_len!= 0 ) { // warning; some incomplete record hasn't been packed
+    System.err.println( "pdftk Warning in LoadDataFile(): incomplete record;" );
+  }
+
+  return pdf_data_p;
 }
   
 static boolean
@@ -120,7 +257,7 @@ UpdateInfo( PdfReader reader_p,
 // created for data import, maybe useful for export, too
 
 //
-class PdfInfo {
+static class PdfInfo {
   static final String m_prefix= "Info";
   static final String m_begin_mark= "InfoBegin";
   static final String m_key_label= "InfoKey:";
@@ -136,12 +273,29 @@ class PdfInfo {
       m_key_label + " " + m_key + System.lineSeparator() +
       m_value_label + " " + m_value + System.lineSeparator();
   }
+  boolean loadKey ( String buff ) {
+    LoadableString loader = new LoadableString( m_key );
+    boolean success = loader.LoadString( buff, m_key_label );
+    m_key = loader.ss;
+    return success;
+  }
+  boolean loadValue ( String buff ) {
+    LoadableString loader = new LoadableString( m_value );
+    boolean success = loader.LoadString( buff, m_value_label );
+    m_value = loader.ss;
+    return success;
+  }
 };
 
 static class PdfData {
   ArrayList<PdfInfo> m_info = new ArrayList<PdfInfo>();
-  ArrayList<bookmarks.PdfBookmark> m_bookmarks = new ArrayList<bookmarks.PdfBookmark>();
+  ArrayList<PdfBookmark> m_bookmarks = new ArrayList<PdfBookmark>();
 
+  static final String m_prefix= "PdfID";
+  static final String m_id_0_label= "PdfID0:";
+  static final String m_id_1_label= "PdfID1:";
+  static final String m_num_pages_label= "NumberOfPages:";
+  
   int m_num_pages = -1;
 
   String m_id_0 = null;
@@ -155,10 +309,29 @@ static class PdfData {
     ss.append("PdfID0: " + m_id_0 + System.lineSeparator() +
               "PdfID1: " + m_id_1 + System.lineSeparator() +
               "NumberOfPages: " + m_num_pages + System.lineSeparator());
-    for (bookmarks.PdfBookmark vit : m_bookmarks) {
+    for (PdfBookmark vit : m_bookmarks) {
       ss.append(vit);
     }
     return ss.toString();
+  }
+
+  boolean loadNumPages ( String buff ) {
+    LoadableInt loader = new LoadableInt( m_num_pages );
+    boolean success = loader.LoadInt( buff, m_num_pages_label );
+    m_num_pages = loader.ii;
+    return success;
+  }
+  boolean loadID0 ( String buff ) {
+    LoadableString loader = new LoadableString( m_id_0 );
+    boolean success = loader.LoadString( buff, m_id_0_label );
+    m_id_0 = loader.ss;
+    return success;
+  }
+  boolean loadID1 ( String buff ) {
+    LoadableString loader = new LoadableString( m_id_1 );
+    boolean success = loader.LoadString( buff, m_id_1_label );
+    m_id_1 = loader.ss;
+    return success;
   }
 };
 

@@ -324,14 +324,14 @@ ReportOutlines( PrintWriter ofs,
                 PdfReader reader_p,
                 boolean utf8_b )
 {
-  ArrayList<bookmarks.PdfBookmark> bookmark_data = new ArrayList<bookmarks.PdfBookmark>();
+  ArrayList<PdfBookmark> bookmark_data = new ArrayList<PdfBookmark>();
   bookmarks.ReadOutlines( bookmark_data,
                           outline_p,
                           0,
                           reader_p,
                           utf8_b );
   
-  for( bookmarks.PdfBookmark it : bookmark_data ) {
+  for( PdfBookmark it : bookmark_data ) {
     ofs.print( it );
   }
 }
