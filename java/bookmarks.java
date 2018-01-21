@@ -53,7 +53,10 @@ GetPageNumber( PdfDictionary dict_p,
         // iterate over *dict_p's parent's kids until we run into *dict_p
         ArrayList<PdfDictionary> kids_p= parent_kids_p.getArrayList();
         if( kids_p!= null ) {
-          for( PdfDictionary kid_p : kids_p ) {
+          for( PdfDictionary kids_ii : kids_p ) {
+
+            PdfDictionary kid_p= (PdfDictionary)
+              reader_p.getPdfObject( kids_ii );
             if( kid_p!= null && kid_p.isDictionary() ) {
 
               if( kid_p== dict_p ) // we have what we were looking for

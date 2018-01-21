@@ -642,12 +642,14 @@ ReportAnnots( PrintStream ofs,
       reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
     if( annots_p != null && annots_p.isArray() ) {
 
-      ArrayList<PdfDictionary> annots_al_p= annots_p.getArrayList();
+      ArrayList<PdfObject> annots_al_p= annots_p.getArrayList();
       if( annots_al_p != null ) {
 
         // iterate over annotations
-        for( PdfDictionary annot_p : annots_al_p ) {
+        for( PdfObject jj : annots_al_p ) {
 
+          PdfDictionary annot_p= (PdfDictionary)
+            reader_p.getPdfObject( jj );
           if( annot_p != null && annot_p.isDictionary() ) {
 
             PdfName type_p= (PdfName)
