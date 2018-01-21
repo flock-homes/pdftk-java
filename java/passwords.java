@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 
 /*
   password character mapping by Acrobat (pre-1.7 PDF)
@@ -307,7 +308,7 @@ final static int[] unicode_latin_extended_windows_map=
 */
 static byte[] utf8_password_to_pdfdoc( String ss_, boolean encrypt_b ) {
 
-  byte[] ss = ss_.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+  byte[] ss = ss_.getBytes(StandardCharsets.UTF_8);
   int ss_size = ss.length;
   ArrayList<Byte> bb = new ArrayList<Byte>(ss_size);
 

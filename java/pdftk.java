@@ -1,13 +1,13 @@
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class pdftk {
@@ -104,21 +104,17 @@ get_output_stream( String output_filename,
   return os_p;
 }
 
-static Writer
-get_output_writer(String m_output_filename)
+static PrintStream
+get_print_stream(String m_output_filename, boolean m_output_utf8_b )
 throws IOException
 {
+  Charset encoding = ( m_output_utf8_b ? StandardCharsets.UTF_8 : StandardCharsets.US_ASCII );
   if(m_output_filename.isEmpty() || m_output_filename.equals("-")) {
-    return new OutputStreamWriter(System.out);
+    return new PrintStream(System.out, true, encoding.name() );
   }
   else {
-    return new FileWriter(m_output_filename);
+    return new PrintStream(m_output_filename, encoding.name() );
   }
-}
-
-static PrintWriter
-get_print_writer(Writer writer) {
-  return new PrintWriter(new BufferedWriter(writer), true);
 }
   
 public static void main(String[] args) {

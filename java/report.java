@@ -1,10 +1,13 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -19,6 +22,7 @@ import pdftk.com.lowagie.text.pdf.PdfReader;
 import pdftk.com.lowagie.text.pdf.PdfString;
 import pdftk.com.lowagie.text.pdf.PdfWriter;
 import pdftk.com.lowagie.text.pdf.PRIndirectReference;
+import pdftk.com.lowagie.text.pdf.PRStream;
 
 class report {
 
@@ -61,17 +65,392 @@ OutputPdfName( PdfName pdfnn_p )
   return "";
 }
 
+static class FormField {
+  String m_ft = ""; // type
+  String m_tt = ""; // name
+  String m_tu = ""; // alt. name
+  int m_ff = 0; // flags
+  HashSet<String> m_vv = new HashSet<String>(); // value -- may be an array
+  String m_dv = ""; // default value
+
+  // variable-text features
+  int m_qq = 0; // quadding (justification)
+  String m_ds = ""; // default style (rich text)
+  byte[] m_rv = new byte[0]; // rich text value
+
+  int m_maxlen = 0;
+
+  // for checkboxes and such
+  Set<String> m_states = new HashSet<String>(); // possible states
+  String m_state = "";
+
+  FormField () {}
+  FormField( FormField copy ) {
+    m_ft = copy.m_ft;
+    m_tt = copy.m_tt;
+    m_tu = copy.m_tu;
+    m_ff = copy.m_ff;
+    m_vv = new HashSet<String>( copy.m_vv );
+    m_dv = copy.m_dv;
+    m_qq = copy.m_qq;
+    m_ds = copy.m_ds;
+    m_rv = Arrays.copyOf( copy.m_rv, copy.m_rv.length );
+    m_maxlen = copy.m_maxlen;
+    m_states = new HashSet<String>( copy.m_states );
+    m_state = copy.m_state;
+  }
+};
+
+static void
+  OutputFormField( PrintStream ofs,
+                   FormField ff )
+{
+  ofs.println( "---" ); // delim
+  ofs.println( "FieldType: " + ff.m_ft );
+  ofs.println( "FieldName: " + ff.m_tt );
+  if( !ff.m_tu.isEmpty() )
+    ofs.println( "FieldNameAlt: " + ff.m_tu );
+  ofs.println( "FieldFlags: " + ff.m_ff );
+  for( String it : ff.m_vv ) {
+    ofs.println( "FieldValue: " + it );
+  }
+  if( !ff.m_dv.isEmpty() )
+    ofs.println( "FieldValueDefault: " + ff.m_dv );
+
+  ofs.print( "FieldJustification: " );
+  switch( ff.m_qq ) {
+  case 0:
+    ofs.println( "Left" );
+    break;
+  case 1:
+    ofs.println( "Center" );
+    break;
+  case 2:
+    ofs.println( "Right" );
+    break;
+  default:
+    ofs.println( ff.m_qq );
+    break;
+  }
+  
+  if( !ff.m_ds.isEmpty() )
+    ofs.println( "FieldStyleDefault: " + ff.m_ds );
+  if( ff.m_rv.length > 0 ) {
+    ofs.print( "FieldValueRichText: ");
+    try {
+      ofs.write( ff.m_rv );
+    }
+    catch (IOException e) {}
+    ofs.println();
+  }
+  if( 0< ff.m_maxlen )
+    ofs.println( "FieldMaxLength: " + ff.m_maxlen );
+
+  for( String it : ff.m_states ) {
+    ofs.println( "FieldStateOption: " + it );
+  }
+}
+
+  
+static boolean
+ReportAcroFormFields( PrintStream ofs,
+                      PdfArray kids_array_p,
+                      FormField acc_state,
+                      PdfReader reader_p,
+                      boolean utf8_b )
+{
+  FormField prev_state= new FormField( acc_state );
+  boolean ret_val_b= false;
+
+  ArrayList<PdfDictionary> kids_p= kids_array_p.getArrayList();
+  if( kids_p != null ) {
+    for( PdfDictionary kids_ii : kids_p ) {
+
+      PdfDictionary kid_p= (PdfDictionary)
+        reader_p.getPdfObject( kids_ii );
+      if( kid_p != null && kid_p.isDictionary() ) {
+
+        // field type
+        if( kid_p.contains( PdfName.FT ) ) {
+          PdfName ft_p= (PdfName)
+            reader_p.getPdfObject( kid_p.get( PdfName.FT ) );
+          if( ft_p != null && ft_p.isName() ) {
+            
+            if( ft_p.equals( PdfName.BTN ) ) { // button
+              acc_state.m_ft= "Button";
+            }
+            else if( ft_p.equals( PdfName.TX ) ) { // text
+              acc_state.m_ft= "Text";
+            }
+            else if( ft_p.equals( PdfName.CH ) ) { // choice
+              acc_state.m_ft= "Choice";
+            }
+            else if( ft_p.equals( PdfName.SIG ) ) { // signature
+              acc_state.m_ft= "Signature";
+            }
+            else { // warning
+              System.err.println( "pdftk Warning in ReportAcroFormFields(): unexpected field type;" );
+            }
+          }
+        }
+
+        // field name; special inheritance rule: prepend parent name
+        if( kid_p.contains( PdfName.T ) ) {
+          PdfString pdfs_p= (PdfString)
+            reader_p.getPdfObject( kid_p.get( PdfName.T ) );
+          if( pdfs_p != null && pdfs_p.isString() ) {
+            if( !acc_state.m_tt.isEmpty() ) {
+              acc_state.m_tt= acc_state.m_tt + ".";
+            }
+            acc_state.m_tt = acc_state.m_tt + OutputPdfString( pdfs_p, utf8_b );
+          }
+        }
+
+        // field alt. name
+        if( kid_p.contains( PdfName.TU ) ) {
+          PdfString pdfs_p= (PdfString)
+            reader_p.getPdfObject( kid_p.get( PdfName.TU ) );
+          if( pdfs_p != null && pdfs_p.isString() ) {
+            acc_state.m_tu= OutputPdfString( pdfs_p, utf8_b );
+          }
+        }
+        else {
+          acc_state.m_tu="";
+        }
+
+        // field flags; inheritable
+        if( kid_p.contains( PdfName.FF ) ) {
+          PdfNumber pdfs_p= (PdfNumber)
+            reader_p.getPdfObject( kid_p.get( PdfName.FF ) );
+          if( pdfs_p != null && pdfs_p.isNumber() ) {
+            acc_state.m_ff= pdfs_p.intValue();
+          }
+        }
+
+        // field value; inheritable; may be string or name
+        if( kid_p.contains( PdfName.V ) ) {
+          PdfObject pdfs_p= 
+            reader_p.getPdfObject( kid_p.get( PdfName.V ) );
+
+          if( pdfs_p != null && pdfs_p.isString() ) {
+            acc_state.m_vv.add( OutputPdfString( (PdfString)pdfs_p, utf8_b ) );
+          }
+          else if( pdfs_p != null && pdfs_p.isName() ) {
+            acc_state.m_vv.add( OutputPdfName( (PdfName)pdfs_p ) );
+          }
+          else if( pdfs_p != null && pdfs_p.isArray() ) {
+            // multiple selections
+            ArrayList<PdfObject> vv_p= ((PdfArray)pdfs_p).getArrayList();
+            for( PdfObject vv_ii : vv_p ) {
+              PdfObject pdfs_p_2= (PdfObject)
+                reader_p.getPdfObject( vv_ii );
+              
+              // copy/paste from above
+              if( pdfs_p_2 != null && pdfs_p_2.isString() ) {
+                acc_state.m_vv.add( OutputPdfString( (PdfString)pdfs_p_2, utf8_b ) );
+              }
+              else if( pdfs_p_2 != null && pdfs_p_2.isName() ) {
+                acc_state.m_vv.add( OutputPdfName( (PdfName)pdfs_p_2 ) );
+              }
+            }
+          }
+        }
+
+        // default value; inheritable
+        if( kid_p.contains( PdfName.DV ) ) {
+          PdfString pdfs_p= (PdfString)
+            reader_p.getPdfObject( kid_p.get( PdfName.DV ) );
+          if( pdfs_p != null && pdfs_p.isString() ) {
+            acc_state.m_dv= OutputPdfString( pdfs_p, utf8_b );
+          }
+        }
+
+        // quadding; inheritable
+        if( kid_p.contains( PdfName.Q ) ) {
+          PdfNumber pdfs_p= (PdfNumber)
+            reader_p.getPdfObject( kid_p.get( PdfName.Q ) );
+          if( pdfs_p != null && pdfs_p.isNumber() ) {
+
+            acc_state.m_qq= pdfs_p.intValue();
+          }
+        }
+
+        // default style
+        if( kid_p.contains( PdfName.DS ) ) {
+          PdfString pdfs_p= (PdfString)
+            reader_p.getPdfObject( kid_p.get( PdfName.DS ) );
+          if( pdfs_p != null && pdfs_p.isString() ) {
+            acc_state.m_ds= OutputPdfString( pdfs_p, utf8_b );
+          }
+        }
+        else {
+          acc_state.m_ds="";
+        }
+
+        // rich text value; may be a string or a stream
+        if( kid_p.contains( PdfName.RV ) ) {
+          PdfObject pdfo_p= (PdfObject)
+            reader_p.getPdfObject( kid_p.get( PdfName.RV ) );
+          if( pdfo_p != null && pdfo_p.isString() ) { // string
+            PdfString pdfs_p= (PdfString)pdfo_p;
+            String name_oss= OutputPdfString( pdfs_p, utf8_b );
+            acc_state.m_rv= name_oss.getBytes( StandardCharsets.UTF_8 );
+          }
+          else if( pdfo_p != null && pdfo_p.isStream() ) { // stream
+            PRStream pdfs_p= (PRStream)pdfo_p;
+            acc_state.m_rv = pdfs_p.getBytes();
+          }
+        }
+        else {
+          acc_state.m_rv=new byte[0];
+        }
+
+        // maximum length; inheritable
+        if( kid_p.contains( PdfName.MAXLEN ) ) {
+          PdfNumber pdfs_p= (PdfNumber)
+            reader_p.getPdfObject( kid_p.get( PdfName.MAXLEN ) );
+          if( pdfs_p != null && pdfs_p.isNumber() ) {
+
+            acc_state.m_maxlen= pdfs_p.intValue();
+          }
+        }
+
+        // available states
+        if( kid_p.contains( PdfName.AP ) ) {
+          PdfDictionary ap_p= (PdfDictionary)
+            reader_p.getPdfObject( kid_p.get( PdfName.AP ) );
+          if( ap_p != null && ap_p.isDictionary() ) {
+
+            // this is one way to cull button option names: iterate over
+            // appearance state names
+
+            // N
+            if( ap_p.contains( PdfName.N ) ) {
+              PdfObject n_p= 
+                reader_p.getPdfObject( ap_p.get( PdfName.N ) );
+              if( n_p != null && n_p.isDictionary() ) {
+                Set<PdfName> n_set_p= ((PdfDictionary)n_p).getKeys();
+                for( PdfName key_p : n_set_p ) {
+                  acc_state.m_states.add( OutputPdfName( key_p ) );
+                }
+              }
+            }
+
+            // D
+            if( ap_p.contains( PdfName.D ) ) {
+              PdfObject n_p= 
+                reader_p.getPdfObject( ap_p.get( PdfName.D ) );
+              if( n_p != null && n_p.isDictionary() ) {
+                Set<PdfName> n_set_p= ((PdfDictionary)n_p).getKeys();
+                for( PdfName key_p : n_set_p ) {
+                  acc_state.m_states.add( OutputPdfName( key_p ) );
+                }
+              }
+            }
+
+            // R
+            if( ap_p.contains( PdfName.R ) ) {
+              PdfObject n_p= 
+                reader_p.getPdfObject( ap_p.get( PdfName.N ) );
+              if( n_p != null && n_p.isDictionary() ) {
+                Set<PdfName> n_set_p= ((PdfDictionary)n_p).getKeys();
+                for( PdfName key_p : n_set_p ) {
+                  acc_state.m_states.add( OutputPdfName( key_p ) );
+                }
+              }
+            }
+
+          }
+        }
+
+        // list-box / combo-box possible states
+        if( kid_p.contains( PdfName.OPT ) ) {
+          PdfArray kid_opts_p= (PdfArray)
+            reader_p.getPdfObject( kid_p.get( PdfName.OPT ) );
+          if( kid_opts_p != null && kid_opts_p.isArray() ) {
+            ArrayList<PdfObject> opts_p= kid_opts_p.getArrayList();
+            for( PdfObject opts_ii : opts_p ) {
+              PdfString opt_p= (PdfString)
+                reader_p.getPdfObject( opts_ii );
+              if( opt_p != null && opt_p.isString() ) {
+                acc_state.m_states.add( OutputPdfString( opt_p, utf8_b ) );
+              }
+            }
+          }
+        }
+
+        if( kid_p.contains( PdfName.KIDS ) ) { // recurse
+          PdfArray kid_kids_p= (PdfArray)
+            reader_p.getPdfObject( kid_p.get( PdfName.KIDS )  );
+          if( kid_kids_p != null && kid_kids_p.isArray() ) {
+
+            boolean kids_have_names_b=
+              ReportAcroFormFields( ofs, kid_kids_p, acc_state, reader_p, utf8_b );
+
+            if( !kids_have_names_b &&
+                kid_p.contains( PdfName.T ) )
+              { 
+                // dump form field
+                OutputFormField( ofs, acc_state );
+              }
+
+            // reset state; 
+            acc_state= prev_state;
+          }
+          else { // error
+          }
+        }
+        else if( kid_p.contains( PdfName.T ) ) { 
+          // term. field; dump form field
+          OutputFormField( ofs, acc_state );
+
+          // reset state; 
+          acc_state= prev_state;
+
+          // record presense of field name
+          ret_val_b= true;
+        }
+
+      }
+    }
+  }
+  else { // warning
+    System.err.println( "pdftk Warning in ReportAcroFormFields(): unable to get ArrayList;" );
+  }
+
+  return ret_val_b;
+}
+
   
 static void
-ReportAcroFormFields( PrintWriter ofs,
+ReportAcroFormFields( PrintStream ofs,
                       PdfReader reader_p,
                       boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReportAcroFormFields" );
-  /* NOT TRANSLATED */
+  PdfDictionary catalog_p= reader_p.catalog;
+  if( catalog_p != null && catalog_p.isDictionary() ) {
+    
+    PdfDictionary acro_form_p= (PdfDictionary)
+      reader_p.getPdfObject( catalog_p.get( PdfName.ACROFORM ) );
+    if( acro_form_p != null && acro_form_p.isDictionary() ) {
+
+      PdfArray fields_p= (PdfArray)
+        reader_p.getPdfObject( acro_form_p.get( PdfName.FIELDS ) );
+      if( fields_p != null && fields_p.isArray() ) {
+
+        // enter recursion
+        FormField root_field_state = new FormField();
+        ReportAcroFormFields( ofs, fields_p, root_field_state, reader_p, utf8_b );
+      }
+    }
+  }
+  else { // error
+    System.err.println( "pdftk Error in ReportAcroFormFields(): unable to access PDF catalog;" );
+  }
+
 }
 
 static void
-ReportAction( PrintWriter ofs, 
+ReportAction( PrintStream ofs, 
               PdfReader reader_p,
               PdfDictionary action_p,
               boolean utf8_b,
@@ -135,7 +514,7 @@ static final int URx= 2;
 static final int URy= 3;
   
 static void
-ReportAnnot( PrintWriter ofs,
+ReportAnnot( PrintStream ofs,
              PdfReader reader_p,
              int page_num,
              PdfDictionary page_p,
@@ -229,7 +608,7 @@ ReportAnnot( PrintWriter ofs,
 }
 
 static void
-ReportAnnots( PrintWriter ofs,
+ReportAnnots( PrintStream ofs,
               PdfReader reader_p,
               boolean utf8_b ) {
   reader_p.resetReleasePage();
@@ -319,7 +698,7 @@ class PdfPageMedia {
 };
 
 static void
-ReportOutlines( PrintWriter ofs, 
+ReportOutlines( PrintStream ofs, 
                 PdfDictionary outline_p,
                 PdfReader reader_p,
                 boolean utf8_b )
@@ -337,7 +716,7 @@ ReportOutlines( PrintWriter ofs,
 }
 
 static void
-ReportInfo( PrintWriter ofs,
+ReportInfo( PrintStream ofs,
             PdfReader reader_p,
             PdfDictionary info_p,
             boolean utf8_b ) {
@@ -372,7 +751,7 @@ ReportInfo( PrintWriter ofs,
 }
 
 static void
-ReportPageLabels( PrintWriter ofs,
+ReportPageLabels( PrintStream ofs,
                   PdfDictionary numtree_node_p,
                   PdfReader reader_p,
                   boolean utf8_b ) {
@@ -381,7 +760,7 @@ ReportPageLabels( PrintWriter ofs,
 }
   
 static void
-ReportOnPdf( PrintWriter ofs,
+ReportOnPdf( PrintStream ofs,
              PdfReader reader_p,
              boolean utf8_b )
 {

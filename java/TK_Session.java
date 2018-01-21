@@ -12,9 +12,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.io.OutputStream;
-import java.io.Writer;
+import java.io.PrintStream;
 import java.io.IOException;
 
 import java.util.regex.Matcher;
@@ -2922,9 +2921,8 @@ int create_output() {
           }
         }
         try {
-          FileWriter ofs = new FileWriter(doc_data_fn);
-          PrintWriter pofs = pdftk.get_print_writer( ofs );
-          report.ReportOnPdf( pofs, input_reader_p, m_output_utf8_b );
+          PrintStream ofs = pdftk.get_print_stream( doc_data_fn, m_output_utf8_b );
+          report.ReportOnPdf( ofs, input_reader_p, m_output_utf8_b );
         }
         catch (FileNotFoundException e) { // error
           System.err.println("Error: unable to open file for output: doc_data.txt");
@@ -3337,16 +3335,15 @@ int create_output() {
           m_input_pdf.get(0).m_readers.get(0).second;
 
         try {
-          Writer ofs = pdftk.get_output_writer( m_output_filename );
-          PrintWriter pofs = pdftk.get_print_writer( ofs );
+          PrintStream ofs = pdftk.get_print_stream( m_output_filename, m_output_utf8_b );
           if( m_operation== keyword.dump_data_k ) {
-            report.ReportOnPdf( pofs, input_reader_p, m_output_utf8_b );
+            report.ReportOnPdf( ofs, input_reader_p, m_output_utf8_b );
           }
           else if( m_operation== keyword.dump_data_fields_k ) {
-            report.ReportAcroFormFields( pofs, input_reader_p, m_output_utf8_b );
+            report.ReportAcroFormFields( ofs, input_reader_p, m_output_utf8_b );
           }
           else if( m_operation== keyword.dump_data_annots_k ) {
-            report.ReportAnnots( pofs, input_reader_p, m_output_utf8_b );
+            report.ReportAnnots( ofs, input_reader_p, m_output_utf8_b );
           }
         }
         catch (FileNotFoundException e) { // error
