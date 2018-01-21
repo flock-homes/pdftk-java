@@ -51,9 +51,9 @@ GetPageNumber( PdfDictionary dict_p,
         // Kids may be Pages or Page Tree Nodes
 
         // iterate over *dict_p's parent's kids until we run into *dict_p
-        ArrayList<PdfDictionary> kids_p= parent_kids_p.getArrayList();
+        ArrayList<PRIndirectReference> kids_p= parent_kids_p.getArrayList();
         if( kids_p!= null ) {
-          for( PdfDictionary kids_ii : kids_p ) {
+          for( PRIndirectReference kids_ii : kids_p ) {
 
             PdfDictionary kid_p= (PdfDictionary)
               reader_p.getPdfObject( kids_ii );
@@ -205,11 +205,11 @@ ReadOutlines( ArrayList<PdfBookmark> bookmark_data,
       // destination is an array
       if( destination_p != null && destination_p.isArray() ) {
 
-        ArrayList<PdfObject> array_list_p= ((PdfArray)destination_p).getArrayList();
+        ArrayList<PRIndirectReference> array_list_p= ((PdfArray)destination_p).getArrayList();
         if( array_list_p != null && !array_list_p.isEmpty() ) {
 
           PdfDictionary page_p= (PdfDictionary)
-            reader_p.getPdfObject( (PdfObject)(array_list_p.get(0)) );
+            reader_p.getPdfObject( array_list_p.get(0) );
 
           if( page_p !=null && page_p.isDictionary() ) {
             bookmark.m_page_num= GetPageNumber(page_p, reader_p, cache)+ 1;

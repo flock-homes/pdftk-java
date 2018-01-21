@@ -163,9 +163,9 @@ ReportAcroFormFields( PrintStream ofs,
   FormField prev_state= new FormField( acc_state );
   boolean ret_val_b= false;
 
-  ArrayList<PdfDictionary> kids_p= kids_array_p.getArrayList();
+  ArrayList<PRIndirectReference> kids_p= kids_array_p.getArrayList();
   if( kids_p != null ) {
-    for( PdfDictionary kids_ii : kids_p ) {
+    for( PRIndirectReference kids_ii : kids_p ) {
 
       PdfDictionary kid_p= (PdfDictionary)
         reader_p.getPdfObject( kids_ii );
@@ -241,8 +241,8 @@ ReportAcroFormFields( PrintStream ofs,
           }
           else if( pdfs_p != null && pdfs_p.isArray() ) {
             // multiple selections
-            ArrayList<PdfObject> vv_p= ((PdfArray)pdfs_p).getArrayList();
-            for( PdfObject vv_ii : vv_p ) {
+            ArrayList<PRIndirectReference> vv_p= ((PdfArray)pdfs_p).getArrayList();
+            for( PRIndirectReference vv_ii : vv_p ) {
               PdfObject pdfs_p_2= (PdfObject)
                 reader_p.getPdfObject( vv_ii );
               
@@ -369,7 +369,7 @@ ReportAcroFormFields( PrintStream ofs,
           PdfArray kid_opts_p= (PdfArray)
             reader_p.getPdfObject( kid_p.get( PdfName.OPT ) );
           if( kid_opts_p != null && kid_opts_p.isArray() ) {
-            ArrayList<PdfObject> opts_p= kid_opts_p.getArrayList();
+            ArrayList<PRIndirectReference> opts_p= kid_opts_p.getArrayList();
             for( PdfObject opts_ii : opts_p ) {
               PdfString opt_p= (PdfString)
                 reader_p.getPdfObject( opts_ii );
@@ -498,8 +498,8 @@ ReportAction( PrintStream ofs,
       ReportAction( ofs, reader_p, (PdfDictionary)next_p, utf8_b, prefix );
     }
     else if( next_p.isArray() ) {
-      ArrayList<PdfObject> actions_p= ((PdfArray)next_p).getArrayList();
-      for( PdfObject ii : actions_p ) {
+      ArrayList<PRIndirectReference> actions_p= ((PdfArray)next_p).getArrayList();
+      for( PRIndirectReference ii : actions_p ) {
         PdfDictionary next_action_p= (PdfDictionary)
           reader_p.getPdfObject( ii );
         if( next_action_p != null && next_action_p.isDictionary() )
@@ -539,7 +539,7 @@ ReportAnnot( PrintStream ofs,
   PdfArray rect_p= (PdfArray)
     reader_p.getPdfObject( annot_p.get( PdfName.RECT ) );
   if( rect_p != null && rect_p.isArray() ) {
-    ArrayList<PdfObject> rect_al_p= rect_p.getArrayList();
+    ArrayList<PRIndirectReference> rect_al_p= rect_p.getArrayList();
     if( rect_al_p != null && rect_al_p.size()== 4 ) {
 
       for( int ii= 0; ii< 4; ++ii ) {
@@ -642,11 +642,11 @@ ReportAnnots( PrintStream ofs,
       reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
     if( annots_p != null && annots_p.isArray() ) {
 
-      ArrayList<PdfObject> annots_al_p= annots_p.getArrayList();
+      ArrayList<PRIndirectReference> annots_al_p= annots_p.getArrayList();
       if( annots_al_p != null ) {
 
         // iterate over annotations
-        for( PdfObject jj : annots_al_p ) {
+        for( PRIndirectReference jj : annots_al_p ) {
 
           PdfDictionary annot_p= (PdfDictionary)
             reader_p.getPdfObject( jj );
@@ -767,17 +767,17 @@ ReportPageLabels( PrintStream ofs,
   if( nums_p != null && nums_p.isArray() ) {
     // report page numbers
 
-    ArrayList<PdfObject> labels_p= nums_p.getArrayList();
+    ArrayList<PRIndirectReference> labels_p= nums_p.getArrayList();
     if( labels_p != null ) {
-      for( Iterator<PdfObject> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
+      for( Iterator<PRIndirectReference> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
         
         // label index
         PdfNumber index_p= (PdfNumber)
-          reader_p.getPdfObject( (PdfNumber)labels_ii.next() );
+          reader_p.getPdfObject( labels_ii.next() );
 
         // label dictionary
         PdfDictionary label_p= (PdfDictionary)
-          reader_p.getPdfObject( (PdfDictionary)labels_ii.next() );
+          reader_p.getPdfObject( labels_ii.next() );
 
         if( index_p != null && index_p.isNumber() &&
             label_p != null && label_p.isDictionary() )
@@ -855,9 +855,9 @@ ReportPageLabels( PrintStream ofs,
       reader_p.getPdfObject( numtree_node_p.get( PdfName.KIDS ) );
     if( kids_p != null && kids_p.isArray() ) {
 
-      ArrayList<PdfDictionary> kids_ar_p= kids_p.getArrayList();
+      ArrayList<PRIndirectReference> kids_ar_p= kids_p.getArrayList();
       if( kids_ar_p != null ) {
-        for( PdfDictionary kids_ii : kids_ar_p ) {
+        for( PRIndirectReference kids_ii : kids_ar_p ) {
 
           PdfDictionary kid_p= (PdfDictionary)
             reader_p.getPdfObject( kids_ii );
@@ -907,7 +907,7 @@ ReportOnPdf( PrintStream ofs,
           reader_p.getPdfObject( trailer_p.get( PdfName.ID ) );
         if( id_p != null && id_p.isArray() ) {
 
-          ArrayList<PdfObject> id_al_p= id_p.getArrayList();
+          ArrayList<PRIndirectReference> id_al_p= id_p.getArrayList();
           if( id_al_p != null ) {
 
             for( int ii= 0; ii< id_al_p.size(); ++ii ) {
