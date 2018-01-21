@@ -333,7 +333,8 @@ BuildBookmarks(PdfReader reader_p,
     // recurse in loop
   }
 
-  for( ;it_content!=null; it_content = (it.hasNext()?it.next():null) ) {
+  for( ;it.hasNext(); it.next() ) {
+    it_content = it.next();it.previous();
   
     if( parent_level+ 1< it_content.m_level ) { // encountered child; recurse
       num_bookmarks_total += BuildBookmarks( reader_p,
@@ -342,7 +343,7 @@ BuildBookmarks(PdfReader reader_p,
                                bookmark_prev_ref_p,
                                parent_level+ 1,
                                utf8_b );
-      it_content=it.previous();
+      it.previous();
       continue;
     }
     else if( it_content.m_level< parent_level+ 1 ) {
@@ -451,7 +452,8 @@ BuildBookmarks(PdfWriter writer_p,
     // recurse in loop
   }
 
-  for( ;it_content!=null; it_content = (it.hasNext()?it.next():null) ) {
+  for( ;it.hasNext(); it.next() ) {
+    it_content = it.next();it.previous();
   
     if( parent_level+ 1< it_content.m_level ) { // encountered child; recurse
       BuildBookmarks( writer_p,
@@ -464,7 +466,7 @@ BuildBookmarks(PdfWriter writer_p,
                       level_offset,
                       utf8_b,
                       state );
-      it_content = it.previous();
+      it.previous();
       continue;
     }
     else if( it_content.m_level< parent_level+ 1 ) {
