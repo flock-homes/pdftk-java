@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import java.io.IOException;
@@ -754,9 +755,128 @@ static void
 ReportPageLabels( PrintStream ofs,
                   PdfDictionary numtree_node_p,
                   PdfReader reader_p,
-                  boolean utf8_b ) {
-  System.err.println( "NOT TRANSLATED: ReportPageLabels" );
-  /* NOT TRANSLATED */
+                  boolean utf8_b )
+  // if *numtree_node_p has Nums, report them;
+  // else if *numtree_node_p has Kids, recurse
+  // output 1-based page numbers; that's what we do for bookmarks
+{
+  PdfArray nums_p= (PdfArray)
+    reader_p.getPdfObject( numtree_node_p.get( PdfName.NUMS ) );
+  if( nums_p != null && nums_p.isArray() ) {
+    // report page numbers
+
+    ArrayList<PdfObject> labels_p= nums_p.getArrayList();
+    if( labels_p != null ) {
+      for( Iterator<PdfObject> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
+        
+        // label index
+        PdfNumber index_p= (PdfNumber)
+          reader_p.getPdfObject( (PdfNumber)labels_ii.next() );
+
+        // label dictionary
+        PdfDictionary label_p= (PdfDictionary)
+          reader_p.getPdfObject( (PdfDictionary)labels_ii.next() );
+
+        if( index_p != null && index_p.isNumber() &&
+            label_p != null && label_p.isDictionary() )
+          {
+            ofs.println( PdfPageLabel.m_begin_mark );
+
+            // PageLabelNewIndex
+            ofs.println( "PageLabelNewIndex: " + (long)(index_p.intValue())+ 1 );
+            
+            { // PageLabelStart
+              ofs.print( "PageLabelStart: " ); 
+              PdfNumber start_p= (PdfNumber)
+                reader_p.getPdfObject( label_p.get( PdfName.ST ) );
+              if( start_p != null && start_p.isNumber() ) {
+                ofs.println( (long)(start_p.intValue()) );
+              }
+              else {
+                ofs.println( "1" ); // the default
+              }
+            }
+
+            { // PageLabelPrefix
+              PdfString prefix_p= (PdfString)
+                reader_p.getPdfObject( label_p.get( PdfName.P ) );
+              if( prefix_p != null && prefix_p.isString() ) {
+                ofs.println( "PageLabelPrefix: " +
+                             OutputPdfString( prefix_p, utf8_b ) );
+              }
+            }
+
+            { // PageLabelNumStyle
+              PdfName r_p= new PdfName("r");
+              PdfName a_p= new PdfName("a");
+
+              PdfName style_p= (PdfName)
+                reader_p.getPdfObject( label_p.get( PdfName.S ) );
+              ofs.print( "PageLabelNumStyle: " );
+              if( style_p != null && style_p.isName() ) {
+                if( style_p.equals( PdfName.D ) ) {
+                  ofs.println( "DecimalArabicNumerals" );
+                }
+                else if( style_p.equals( PdfName.R ) ) {
+                  ofs.println( "UppercaseRomanNumerals" );
+                }
+                else if( style_p.equals( r_p ) ) {
+                  ofs.println( "LowercaseRomanNumerals" );
+                }
+                else if( style_p.equals( PdfName.A ) ) {
+                  ofs.println( "UppercaseLetters" );
+                }
+                else if( style_p.equals( a_p ) ) {
+                  ofs.println( "LowercaseLetters" );
+                }
+                else { // error
+                  ofs.println( "[PDFTK ERROR]" );
+                }
+              }
+              else { // default
+                ofs.println( "NoNumber" );
+              }
+            }
+
+          }
+        else { // error
+          ofs.println( "[PDFTK ERROR: INVALID label_p IN ReportPageLabelNode]" );
+        }
+      }
+    }
+    else { // error
+      ofs.println( "[PDFTK ERROR: INVALID labels_p IN ReportPageLabelNode]" );
+    }
+  }
+  else { // try recursing
+    PdfArray kids_p= (PdfArray)
+      reader_p.getPdfObject( numtree_node_p.get( PdfName.KIDS ) );
+    if( kids_p != null && kids_p.isArray() ) {
+
+      ArrayList<PdfDictionary> kids_ar_p= kids_p.getArrayList();
+      if( kids_ar_p != null ) {
+        for( PdfDictionary kids_ii : kids_ar_p ) {
+
+          PdfDictionary kid_p= (PdfDictionary)
+            reader_p.getPdfObject( kids_ii );
+          if( kid_p != null && kid_p.isDictionary() ) {
+
+            // recurse
+            ReportPageLabels( ofs, kid_p, reader_p, utf8_b );
+          }
+          else { // error
+            ofs.println( "[PDFTK ERROR: INVALID kid_p]" );
+          }
+        }
+      }
+      else { // error
+        ofs.println( "[PDFTK ERROR: INVALID kids_ar_p]" );
+      }
+    }
+    else { // error; a number tree must have one or the other
+      ofs.println( "[PDFTK ERROR: INVALID PAGE LABEL NUMBER TREE]" );
+    }
+  }
 }
   
 static void
