@@ -12,6 +12,9 @@
         <fileset dir="lib" includes="*.jar"/>
       </classpath>
     </javac>
+    <copy todir="build/classes">
+      <fileset dir="java" includes="**/*.afm"/>
+    </copy>
   </target>
 
   <target name="jar" depends="compile">
