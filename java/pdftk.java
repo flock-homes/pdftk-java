@@ -209,7 +209,7 @@ static void
 describe_header() {
   System.out.println();
   System.out.println("pdftk port to java " + PDFTK_VER + " a Handy Tool for Manipulating PDF Documents");
-  System.out.println("Copyright (c) 2017-2018 Marc Vinyals - https://gitlab.com/marcvinyals/pdftk")
+  System.out.println("Copyright (c) 2017-2018 Marc Vinyals - https://gitlab.com/marcvinyals/pdftk");
   System.out.println("Copyright (c) 2003-2013 Steward and Lee, LLC.");
   System.out.println("This is free software; see the source code for copying conditions. There is");
   System.out.println("NO warranty, not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.");
