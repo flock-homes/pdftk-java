@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH PDFTK 1 "July 24, 2013"
+.TH PDFTK 1 "May 11, 2018"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -501,10 +501,10 @@ pdftk in.pdf cat 1east 2-end output out.pdf
 .B Rotate an entire PDF document to 180 degrees
 pdftk in.pdf cat 1-endsouth output out.pdf
 .SH NOTES
-The pdftk home page permalink is:
+This is a port of pdftk to java. See
 .br
-http://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
+https://gitlab.com/marcvinyals/pdftk
 .br
-The easy-to-remember shortcut is: www.pdftk.com
+The original program can be found at www.pdftk.com
 .SH AUTHOR
-Sid Steward (sid.steward at pdflabs dot com) maintains pdftk.  Please email him with questions or bug reports.  Include pdftk in the subject line to ensure successful delivery.  Thank you.
+Original author of pdftk is Sid Steward (sid.steward at pdflabs dot com).
