@@ -1,3 +1,26 @@
+/*
+ *
+ *   This file is part of the pdftk port to java
+ *
+ *   Copyright (c) Marc Vinyals 2017-2018
+ *
+ *   The program is a java port of PDFtk, the PDF Toolkit
+ *   Copyright (c) 2003-2013 Steward and Lee, LLC
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   The program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -185,8 +208,9 @@ public static void main(String[] args) {
 static void
 describe_header() {
   System.out.println();
-  System.out.println("pdftk " + PDFTK_VER + " a Handy Tool for Manipulating PDF Documents");
-  System.out.println("Copyright (c) 2003-13 Steward and Lee, LLC - Please Visit: www.pdftk.com");
+  System.out.println("pdftk port to java " + PDFTK_VER + " a Handy Tool for Manipulating PDF Documents");
+  System.out.println("Copyright (c) 2017-2018 Marc Vinyals - https://gitlab.com/marcvinyals/pdftk")
+  System.out.println("Copyright (c) 2003-2013 Steward and Lee, LLC.");
   System.out.println("This is free software; see the source code for copying conditions. There is");
   System.out.println("NO warranty, not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.");
 }
@@ -747,15 +771,11 @@ describe_full() {
 "   pdftk in.pdf cat 1-endsouth output out.pdf\n" +
 "\n" +
 "NOTES\n" +
-"       The pdftk home page permalink is:\n" +
-"       http://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/\n" +
-"       The easy-to-remember shortcut is: www.pdftk.com\n" +
+"       This is a port of pdftk to java. See https://gitlab.com/marcvinyals/pdftk\n" +
+"       The original program can be found at www.pdftk.com\n" +
 "\n" +
 "AUTHOR\n" +
-"       Sid Steward (sid.steward at pdflabs dot com) maintains pdftk.  Please\n" +
-"       email him with questions or bug reports.  Include pdftk in the subject\n" +
-"       line to ensure successful delivery.  Thank you.");
-
+"       Original author of pdftk is Sid Steward (sid.steward at pdflabs dot com).");
 }
 
 };
