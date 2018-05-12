@@ -27,6 +27,12 @@ and link `bcprov.jar` and `commons-lang3.jar` into it. Then:
 $ ant jar
 ```
 
+## Running instructions
+
+```
+$ java -cp build/jar/pdftk.jar:lib/*.jar pdftk
+```
+
 ## Source organization
 
 `pdftk/` contains the original C++ sources for reference.
