@@ -30,7 +30,7 @@ $ ant jar
 ## Running instructions
 
 ```
-$ java -cp build/jar/pdftk.jar:lib/*.jar pdftk
+$ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar pdftk
 ```
 
 ## Source organization
