@@ -391,7 +391,7 @@ ReportAcroFormFields( PrintStream ofs,
           PdfArray kid_opts_p= (PdfArray)
             reader_p.getPdfObject( kid_p.get( PdfName.OPT ) );
           if( kid_opts_p != null && kid_opts_p.isArray() ) {
-            ArrayList<PRIndirectReference> opts_p= kid_opts_p.getArrayList();
+            ArrayList<PdfObject> opts_p= kid_opts_p.getArrayList();
             for( PdfObject opts_ii : opts_p ) {
               PdfString opt_p= (PdfString)
                 reader_p.getPdfObject( opts_ii );
@@ -418,7 +418,7 @@ ReportAcroFormFields( PrintStream ofs,
               }
 
             // reset state; 
-            acc_state= prev_state;
+            acc_state= new FormField(prev_state);
           }
           else { // error
           }
@@ -428,7 +428,7 @@ ReportAcroFormFields( PrintStream ofs,
           OutputFormField( ofs, acc_state );
 
           // reset state; 
-          acc_state= prev_state;
+          acc_state= new FormField(prev_state);
 
           // record presense of field name
           ret_val_b= true;
