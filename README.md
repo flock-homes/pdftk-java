@@ -11,10 +11,30 @@ will be appreciated.
  - jdk >= 1.7
  - commons-lang3
  - bcprov
- - ant (build time)
- - ivy (optional, for resolving dependencies at build time)
+ - gradle or ant (build time)
+ - ivy (optionally for ant, for resolving dependencies at build time)
 
-## Building instructions
+## Building and running with Gradle
+
+If you have gradle installed you can produce a standalone jar with:
+```
+gradle shadowJar
+```
+
+This can then be run with just java installed like:
+```
+java -jar build/libs/pdftk-all.jar
+```
+
+The build configuration is relatively simple so it should work with most 
+versions of gradle (tested from 3.4 to 4.8) but if you have problems try
+installing gradle wrapper at a particular version and then running the wrapper:
+```
+gradle wrapper --gradle-version 4.8
+./gradlew shadowJar
+```
+
+## Building and running with ant
 
 With ivy:
 ```
@@ -27,8 +47,7 @@ and link `bcprov.jar` and `commons-lang3.jar` into it. Then:
 $ ant jar
 ```
 
-## Running instructions
-
+To run:
 ```
 $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar pdftk
 ```
