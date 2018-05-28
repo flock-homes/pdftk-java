@@ -7,7 +7,9 @@
   <target name="compile">
     <mkdir dir="lib"/>
     <mkdir dir="build/classes"/>
-    <javac srcdir="java" destdir="build/classes" >
+    <javac srcdir="java"
+           destdir="build/classes"
+           encoding="UTF-8" >
       <classpath>
         <fileset dir="lib" includes="*.jar"/>
       </classpath>
