@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.Scanner;
 
 import java.io.InputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -2937,9 +2938,9 @@ int create_output() {
 
         String doc_data_fn= "doc_data.txt";
         if( !m_output_filename.isEmpty() ) {
-          int loc= m_output_filename.lastIndexOf(pdftk.PATH_DELIM);
+          int loc= m_output_filename.lastIndexOf(File.separatorChar);
           if( loc >= 0 ) {
-            doc_data_fn= m_output_filename.substring( 0, loc )+ pdftk.PATH_DELIM + doc_data_fn;
+            doc_data_fn= m_output_filename.substring( 0, loc )+ File.separatorChar + doc_data_fn;
           }
         }
         try {

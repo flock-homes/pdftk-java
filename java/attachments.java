@@ -21,6 +21,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -35,8 +36,7 @@ class attachments {
 static String
   drop_path( String ss )
 {
-  final char path_delim= pdftk.PATH_DELIM; // given at compile-time
-  int loc = ss.lastIndexOf( path_delim );
+  int loc = ss.lastIndexOf( File.separatorChar );
   if( loc != -1 && loc!= ss.length()- 1 ) {
     return ss.substring( loc+ 1 );
   }
@@ -46,15 +46,14 @@ static String
 static String
 normalize_pathname( String output_pathname )
 {
-  final char path_delim= pdftk.PATH_DELIM; // given at compile-time
   if( output_pathname== "PROMPT" ) {
     output_pathname = pdftk.prompt_for_filename( "Please enter the directory where you want attachments unpacked:" );
   }
-  if( output_pathname.lastIndexOf( path_delim )== output_pathname.length()- 1 ) {
+  if( output_pathname.lastIndexOf( File.separatorChar )== output_pathname.length()- 1 ) {
     return output_pathname;
   }
   else{ // add delim to end
-    return output_pathname+ pdftk.PATH_DELIM;
+    return output_pathname+ File.separatorChar;
   }
 }
 
