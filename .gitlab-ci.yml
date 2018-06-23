@@ -1,7 +1,8 @@
 image: openjdk:11
 
 before_script:
-  - apt-get install ivy
+  - apt-get update -yqq
+  - apt-get install ivy -yqq
 
 stages:
   - build
