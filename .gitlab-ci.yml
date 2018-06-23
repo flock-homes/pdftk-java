@@ -10,7 +10,8 @@ php-pdftk:
     - ant -lib /usr/share/java
     - apt-get install phpunit composer -yqq
     - composer require mikehaertl/php-pdftk
-    - echo -e '#!/bin/bash\njava -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"' > /usr/bin/pdftk
+    - echo -e '#!/bin/bash\njava -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar pdftk "$@"' > /usr/bin/pdftk
     - chmod +x /usr/bin/pdftk
     - pdftk --version
-    - phpunit vendor/mikehaertl/php-pdftk/tests
+    - cd vendor/mikehaertl/php-pdftk/
+    - phpunit
