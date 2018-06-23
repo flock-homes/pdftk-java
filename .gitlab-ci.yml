@@ -2,7 +2,7 @@ image: openjdk:11
 
 before_script:
   - apt-get update -yqq
-  - apt-get install ivy -yqq
+  - apt-get install ant ivy -yqq
 
 stages:
   - build
