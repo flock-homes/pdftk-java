@@ -8,8 +8,8 @@ php-pdftk:
   stage: test
   script:
     - ant -lib /usr/share/java
-    - alias pdftk='java -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"'
     - apt-get install phpunit composer -yqq
     - composer require mikehaertl/php-pdftk
+    - alias pdftk='java -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"'
     - pdftk --version
     - phpunit vendor/mikehaertl/php-pdftk/tests
