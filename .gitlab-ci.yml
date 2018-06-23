@@ -1,0 +1,14 @@
+stages:
+  - build
+  - test
+
+install:
+  stage: build
+  script:
+    - ant -lib /usr/share/java
+    - alias pdftk='java -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"'
+
+php-pdftk:
+  stage: test
+  script:
+    - composer require mikehaertl/php-pdftk
