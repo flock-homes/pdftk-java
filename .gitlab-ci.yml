@@ -11,3 +11,4 @@ php-pdftk:
     - alias pdftk='java -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"'
     - apt-get install phpunit composer -yqq
     - composer require mikehaertl/php-pdftk
+    - phpunit
