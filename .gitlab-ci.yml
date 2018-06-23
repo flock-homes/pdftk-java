@@ -4,18 +4,10 @@ before_script:
   - apt-get update -yqq
   - apt-get install ant ivy -yqq
 
-stages:
-  - build
-  - test
-
-install:
-  stage: build
-  script:
-    - ant -lib /usr/share/java
-    - alias pdftk='java -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"'
-
 php-pdftk:
   stage: test
   script:
-    - apt-get install composer
+    - ant -lib /usr/share/java
+    - alias pdftk='java -cp build/jar/pdftk.jar:lib/bcprov-1.58.jar:lib/commons-lang3.jar "$@"'
+    - apt-get install phpunit composer -yqq
     - composer require mikehaertl/php-pdftk
