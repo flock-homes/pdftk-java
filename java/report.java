@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 
 import java.io.IOException;
@@ -31,6 +32,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
+
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -1025,16 +1028,18 @@ ReportOnPdf( PrintStream ofs,
 
       ofs.println( "PageMediaRotation: " + reader_p.getPageRotation( page_p ) );
 
+      NumberFormat c_format = NumberFormat.getInstance(Locale.ROOT);
+      
       Rectangle page_rect_p= reader_p.getPageSize( page_p );
       if( page_rect_p != null ) {
         ofs.println( "PageMediaRect: " 
-            + (float)(page_rect_p.left()) + " "
-            + (float)(page_rect_p.bottom()) + " "
-            + (float)(page_rect_p.right()) + " "
-            + (float)(page_rect_p.top()) );
+            + c_format.format(page_rect_p.left()) + " "
+            + c_format.format(page_rect_p.bottom()) + " "
+            + c_format.format(page_rect_p.right()) + " "
+            + c_format.format(page_rect_p.top()) );
         ofs.println( "PageMediaDimensions: " 
-            + (float)(page_rect_p.right()- page_rect_p.left()) + " "
-            + (float)(page_rect_p.top()- page_rect_p.bottom()) );
+            + c_format.format(page_rect_p.right()- page_rect_p.left()) + " "
+            + c_format.format(page_rect_p.top()- page_rect_p.bottom()) );
       }
       
       Rectangle page_crop_p= reader_p.getBoxSize( page_p, PdfName.CROPBOX );
@@ -1045,10 +1050,10 @@ ReportOnPdf( PrintStream ofs,
              page_crop_p.top()== page_rect_p.top() ) )
         {
           ofs.println( "PageMediaCropRect: " 
-              + (float)(page_crop_p.left()) + " "
-              + (float)(page_crop_p.bottom()) + " "
-              + (float)(page_crop_p.right()) + " "
-              + (float)(page_crop_p.top()) );
+              + c_format.format(page_crop_p.left()) + " "
+              + c_format.format(page_crop_p.bottom()) + " "
+              + c_format.format(page_crop_p.right()) + " "
+              + c_format.format(page_crop_p.top()) );
         } 
 
       PdfString stamptkData_p= page_p.getAsString( PdfName.STAMPTKDATA );
