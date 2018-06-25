@@ -11,7 +11,7 @@ php-pdftk:
     - apt-get install phpunit composer -yqq
     - git clone https://github.com/mikehaertl/php-pdftk
     - cd php-pdftk
-    - echo -e '#!/bin/bash\njava -cp ../build/jar/pdftk.jar:../lib/bcprov-1.58.jar:../lib/commons-lang3.jar pdftk "$@"' > /usr/bin/pdftk
+    - echo -e '#!/bin/bash\njava -cp ../build/jar/pdftk.jar:../lib/bcprov-jdk15on-1.51.jar:../lib/commons-lang3-3.7.jar pdftk "$@"' > /usr/bin/pdftk
     - chmod +x /usr/bin/pdftk
     - pdftk --version
     - composer install
