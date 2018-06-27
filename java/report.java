@@ -88,6 +88,19 @@ OutputPdfName( PdfName pdfnn_p )
   return "";
 }
 
+static String
+OutputPdfStringOrName( PdfObject pdfoo_p ,
+                       boolean utf8_b )
+{
+  if( pdfoo_p != null && pdfoo_p.isString() ) {
+    return OutputPdfString( (PdfString)pdfoo_p, utf8_b );
+  }
+  else if( pdfoo_p != null && pdfoo_p.isName() ) {
+    return OutputPdfName( (PdfName)pdfoo_p );
+  }
+  return null;
+}
+
 static class FormField {
   String m_ft = ""; // type
   String m_tt = ""; // name
@@ -255,25 +268,20 @@ ReportAcroFormFields( PrintStream ofs,
           PdfObject pdfs_p= 
             reader_p.getPdfObject( kid_p.get( PdfName.V ) );
 
-          if( pdfs_p != null && pdfs_p.isString() ) {
-            acc_state.m_vv.add( OutputPdfString( (PdfString)pdfs_p, utf8_b ) );
+          if( pdfs_p == null ) continue;
+          String maybe_output = OutputPdfStringOrName( pdfs_p, utf8_b );
+          if ( maybe_output != null ) {
+            acc_state.m_vv.add( maybe_output );
           }
-          else if( pdfs_p != null && pdfs_p.isName() ) {
-            acc_state.m_vv.add( OutputPdfName( (PdfName)pdfs_p ) );
-          }
-          else if( pdfs_p != null && pdfs_p.isArray() ) {
+          else if( pdfs_p.isArray() ) {
             // multiple selections
             ArrayList<PRIndirectReference> vv_p= ((PdfArray)pdfs_p).getArrayList();
             for( PRIndirectReference vv_ii : vv_p ) {
               PdfObject pdfs_p_2= (PdfObject)
                 reader_p.getPdfObject( vv_ii );
-              
-              // copy/paste from above
-              if( pdfs_p_2 != null && pdfs_p_2.isString() ) {
-                acc_state.m_vv.add( OutputPdfString( (PdfString)pdfs_p_2, utf8_b ) );
-              }
-              else if( pdfs_p_2 != null && pdfs_p_2.isName() ) {
-                acc_state.m_vv.add( OutputPdfName( (PdfName)pdfs_p_2 ) );
+              String maybe_output_2 = OutputPdfStringOrName( pdfs_p_2, utf8_b );
+              if ( maybe_output != null ) {
+                acc_state.m_vv.add( maybe_output_2 );
               }
             }
           }
@@ -281,10 +289,11 @@ ReportAcroFormFields( PrintStream ofs,
 
         // default value; inheritable
         if( kid_p.contains( PdfName.DV ) ) {
-          PdfString pdfs_p= (PdfString)
+          PdfObject pdfs_p= (PdfObject)
             reader_p.getPdfObject( kid_p.get( PdfName.DV ) );
-          if( pdfs_p != null && pdfs_p.isString() ) {
-            acc_state.m_dv= OutputPdfString( pdfs_p, utf8_b );
+          String maybe_output = OutputPdfStringOrName( pdfs_p, utf8_b );
+          if( maybe_output != null ) {
+            acc_state.m_dv= maybe_output;
           }
         }
 
