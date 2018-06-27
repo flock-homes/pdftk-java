@@ -16,3 +16,15 @@ php-pdftk:
     - composer install
     - pdftk --version
     - phpunit
+
+pypdftk:
+  stage: test
+  script:
+    - ant -lib /usr/share/java
+    - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.51.jar:'`pwd`'/lib/commons-lang3-3.7.jar pdftk "$@"' > /usr/bin/pdftk
+    - chmod +x /usr/bin/pdftk
+    - apt-get install pytest -yqq
+    - git clone https://github.com/revolunet/pypdftk
+    - cd pypdftk
+    - pdftk --version
+    - pytest test.py
