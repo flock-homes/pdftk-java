@@ -25,12 +25,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfStream;
-import pdftk.com.lowagie.text.pdf.PdfString;
-import pdftk.com.lowagie.text.pdf.PRStream;
+import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfName;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStream;
+import com.itextpdf.text.pdf.PdfString;
+import com.itextpdf.text.pdf.PRStream;
 
 class attachments {
 static String

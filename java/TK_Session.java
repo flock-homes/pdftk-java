@@ -42,31 +42,31 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import pdftk.com.lowagie.text.Document;
-import pdftk.com.lowagie.text.DocumentException;
-import pdftk.com.lowagie.text.Rectangle;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Rectangle;
 
-import pdftk.com.lowagie.text.pdf.AcroFields;
-import pdftk.com.lowagie.text.pdf.FdfReader;
-import pdftk.com.lowagie.text.pdf.FdfWriter;
-import pdftk.com.lowagie.text.pdf.XfdfReader;
+import com.itextpdf.text.pdf.AcroFields;
+import com.itextpdf.text.pdf.FdfReader;
+import com.itextpdf.text.pdf.FdfWriter;
+import com.itextpdf.text.pdf.XfdfReader;
 
-import pdftk.com.lowagie.text.pdf.PdfAnnotation;
-import pdftk.com.lowagie.text.pdf.PdfArray;
-import pdftk.com.lowagie.text.pdf.PdfBoolean;
-import pdftk.com.lowagie.text.pdf.PdfContentByte;
-import pdftk.com.lowagie.text.pdf.PdfCopy;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfFileSpecification;
-import pdftk.com.lowagie.text.pdf.PdfImportedPage;
-import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfNameTree;
-import pdftk.com.lowagie.text.pdf.PdfNumber;
-import pdftk.com.lowagie.text.pdf.PdfObject;
-import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfStamperImp;
-import pdftk.com.lowagie.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.PdfAnnotation;
+import com.itextpdf.text.pdf.PdfArray;
+import com.itextpdf.text.pdf.PdfBoolean;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfCopy;
+import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfFileSpecification;
+import com.itextpdf.text.pdf.PdfImportedPage;
+import com.itextpdf.text.pdf.PdfIndirectReference;
+import com.itextpdf.text.pdf.PdfName;
+import com.itextpdf.text.pdf.PdfNameTree;
+import com.itextpdf.text.pdf.PdfNumber;
+import com.itextpdf.text.pdf.PdfObject;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
+import com.itextpdf.text.pdf.PdfWriter;
 
 class TK_Session {
   

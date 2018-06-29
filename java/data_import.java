@@ -29,17 +29,17 @@ import java.io.OutputStream;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import pdftk.com.lowagie.text.Rectangle;
-import pdftk.com.lowagie.text.pdf.PdfArray;
-import pdftk.com.lowagie.text.pdf.PdfBoolean;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfNumber;
-import pdftk.com.lowagie.text.pdf.PdfObject;
-import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfString;
-import pdftk.com.lowagie.text.pdf.PdfWriter;
-import pdftk.com.lowagie.text.pdf.PRIndirectReference;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfArray;
+import com.itextpdf.text.pdf.PdfBoolean;
+import com.itextpdf.text.pdf.PdfDictionary;
+import com.itextpdf.text.pdf.PdfName;
+import com.itextpdf.text.pdf.PdfNumber;
+import com.itextpdf.text.pdf.PdfObject;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfString;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.PRIndirectReference;
 
 class data_import {
   
