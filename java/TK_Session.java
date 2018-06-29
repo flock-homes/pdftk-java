@@ -156,7 +156,7 @@ InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b 
     pr = new InputPdf.PagesReader( reader );
     input_pdf_p.m_readers.add( pr );
 
-    input_pdf_p.m_authorized_b= ( !reader.encrypted || reader.ownerPasswordUsed );
+    input_pdf_p.m_authorized_b= reader.isOpenedWithFullPermissions();
     if( !input_pdf_p.m_authorized_b ) {
       open_success_b= false;
     }
@@ -1995,8 +1995,8 @@ void dump_session_data()
 
           Rectangle crop_box_p= 
             input_reader_p.getCropBox( m_input_attach_file_pagenum );
-          float corner_top= crop_box_p.top()- margin;
-          float corner_left= crop_box_p.left()+ margin;
+          float corner_top= crop_box_p.getTop()- margin;
+          float corner_left= crop_box_p.getLeft()+ margin;
 
           PdfArray annots_p= (PdfArray)
             input_reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
@@ -2033,11 +2033,11 @@ void dump_session_data()
                 String filename= attachments.drop_path(vit);
 
                 // wrap our location over page bounds, if needed
-                if( crop_box_p.right() < corner_left+ trans ) {
-                  corner_left= crop_box_p.left()+ margin;
+                if( crop_box_p.getRight() < corner_left+ trans ) {
+                  corner_left= crop_box_p.getLeft()+ margin;
                 }
-                if( corner_top- trans< crop_box_p.bottom() ) {
-                  corner_top= crop_box_p.top()- margin;
+                if( corner_top- trans< crop_box_p.getBottom() ) {
+                  corner_top= crop_box_p.getTop()- margin;
                 }
 
                 Rectangle annot_bbox_p= 
@@ -2081,7 +2081,7 @@ void dump_session_data()
       }
     }
     else { // attach to document using the EmbeddedFiles name tree
-      PdfDictionary catalog_p= input_reader_p.catalog; // to top, Root dict
+      PdfDictionary catalog_p= input_reader_p.getCatalog(); // to top, Root dict
       if( catalog_p != null && catalog_p.isDictionary() ) {
 
         // the Names dict
@@ -2097,13 +2097,13 @@ void dump_session_data()
           // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
           PdfDictionary emb_files_tree_p= (PdfDictionary)
             input_reader_p.getPdfObject( names_p.get( PdfName.EMBEDDEDFILES ) );
-          HashMap<String,PdfIndirectReference> emb_files_map_p= null;
+          HashMap<String,PdfObject> emb_files_map_p= null;
           boolean emb_files_tree_new_b= false;
           if( emb_files_tree_p != null ) { // read current name tree of attachments into a map
             emb_files_map_p= PdfNameTree.readTree( emb_files_tree_p );
           }
           else { // create material
-            emb_files_map_p= new HashMap<String,PdfIndirectReference>();
+            emb_files_map_p= new HashMap<String,PdfObject>();
             emb_files_tree_new_b= true;
           }
 
@@ -2196,7 +2196,7 @@ void dump_session_data()
   String output_pathname= attachments.normalize_pathname( m_output_filename );
 
   { // unpack document attachments
-    PdfDictionary catalog_p= input_reader_p.catalog; // to top, Root dict
+    PdfDictionary catalog_p= input_reader_p.getCatalog(); // to top, Root dict
     if( catalog_p != null && catalog_p.isDictionary() ) {
 
       // the Names dict
@@ -2207,7 +2207,7 @@ void dump_session_data()
         // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
         PdfDictionary emb_files_tree_p= (PdfDictionary)
           input_reader_p.getPdfObject( names_p.get( PdfName.EMBEDDEDFILES ) );
-        HashMap<Object, PdfObject> emb_files_map_p= null;
+        HashMap<String, PdfObject> emb_files_map_p= null;
         if( emb_files_tree_p != null && emb_files_tree_p.isDictionary() ) { 
           // read current name tree of attachments into a map
           emb_files_map_p= PdfNameTree.readTree( emb_files_tree_p );
@@ -2402,22 +2402,18 @@ static char GetPdfVersionChar( PdfName version_p ) {
   char version_cc= PdfWriter.VERSION_1_4; // default
 
   if( version_p != null )
-    if( version_p.equals( PdfName.VERSION_1_4 ) )
+    if( version_p.equals( PdfWriter.PDF_VERSION_1_4 ) )
       version_cc= PdfWriter.VERSION_1_4;
-    else if( version_p.equals( PdfName.VERSION_1_5 ) )
+    else if( version_p.equals( PdfWriter.PDF_VERSION_1_5 ) )
       version_cc= PdfWriter.VERSION_1_5;
-    else if( version_p.equals( PdfName.VERSION_1_6 ) )
+    else if( version_p.equals( PdfWriter.PDF_VERSION_1_6 ) )
       version_cc= PdfWriter.VERSION_1_6;
-    else if( version_p.equals( PdfName.VERSION_1_7 ) )
+    else if( version_p.equals( PdfWriter.PDF_VERSION_1_7 ) )
       version_cc= PdfWriter.VERSION_1_7;
-    else if( version_p.equals( PdfName.VERSION_1_3 ) )
+    else if( version_p.equals( PdfWriter.PDF_VERSION_1_3 ) )
       version_cc= PdfWriter.VERSION_1_3;
-    else if( version_p.equals( PdfName.VERSION_1_2 ) )
+    else if( version_p.equals( PdfWriter.PDF_VERSION_1_2 ) )
       version_cc= PdfWriter.VERSION_1_2;
-    else if( version_p.equals( PdfName.VERSION_1_1 ) )
-      version_cc= PdfWriter.VERSION_1_1;
-    else if( version_p.equals( PdfName.VERSION_1_0 ) )
-      version_cc= PdfWriter.VERSION_1_0;
 
   return version_cc;
 }
@@ -2591,8 +2587,8 @@ int create_output() {
               if( extensions_p != null && extensions_p.isDictionary() ) {
 
                 // iterate over developers
-                Set<PdfObject> keys_p= extensions_p.getKeys();
-                Iterator<PdfObject> kit= keys_p.iterator();
+                Set<PdfName> keys_p= extensions_p.getKeys();
+                Iterator<PdfName> kit= keys_p.iterator();
                 while( kit.hasNext() ) {
                   PdfName developer_p= (PdfName) reader_p.getPdfObject( kit.next() );
                     
@@ -3079,7 +3075,7 @@ int create_output() {
 
         // drop the xfa?
         if( m_output_drop_xfa_b ) {
-          PdfDictionary catalog_p= input_reader_p.catalog;
+          PdfDictionary catalog_p= input_reader_p.getCatalog();
           if( catalog_p != null && catalog_p.isDictionary() ) {
               
             PdfDictionary acro_form_p= (PdfDictionary)
@@ -3093,7 +3089,7 @@ int create_output() {
 
         // drop the xmp?
         if( m_output_drop_xmp_b ) {
-          PdfDictionary catalog_p= input_reader_p.catalog;
+          PdfDictionary catalog_p= input_reader_p.getCatalog();
           if( catalog_p != null && catalog_p.isDictionary() ) {
               
             catalog_p.remove( PdfName.METADATA );
@@ -3101,8 +3097,8 @@ int create_output() {
         }
 
         //
-        PdfStamperImp writer_p=
-          new PdfStamperImp( input_reader_p, ofs_p, '\0', false /* append mode */ );
+        PdfStamper writer_p=
+          new PdfStamper( input_reader_p, ofs_p ); /* append mode */
 
         // update the info?
         if( m_update_info_filename.equals("PROMPT") ) {
@@ -3231,7 +3227,7 @@ int create_output() {
 
         // cue viewer to render form field appearances?
         if( m_output_need_appearances_b ) {
-          PdfDictionary catalog_p= input_reader_p.catalog;
+          PdfDictionary catalog_p= input_reader_p.getCatalog();
           if( catalog_p != null && catalog_p.isDictionary() ) {
             PdfDictionary acro_form_p= (PdfDictionary)
               input_reader_p.getPdfObject( catalog_p.get( PdfName.ACROFORM ) );
@@ -3284,16 +3280,16 @@ int create_output() {
               doc_page_size_p= doc_page_size_p.rotate();
             }
 
-            float h_scale= doc_page_size_p.width() / mark_page_size_p.width();
-            float v_scale= doc_page_size_p.height() / mark_page_size_p.height();
+            float h_scale= doc_page_size_p.getWidth() / mark_page_size_p.getWidth();
+            float v_scale= doc_page_size_p.getHeight() / mark_page_size_p.getHeight();
             float mark_scale= (h_scale< v_scale) ? h_scale : v_scale;
 
-            float h_trans= (float)(doc_page_size_p.left()- mark_page_size_p.left()* mark_scale +
-                                     (doc_page_size_p.width()- 
-                                      mark_page_size_p.width()* mark_scale) / 2.0);
-            float v_trans= (float)(doc_page_size_p.bottom()- mark_page_size_p.bottom()* mark_scale +
-                                     (doc_page_size_p.height()- 
-                                      mark_page_size_p.height()* mark_scale) / 2.0);
+            float h_trans= (float)(doc_page_size_p.getLeft()- mark_page_size_p.getLeft()* mark_scale +
+                                     (doc_page_size_p.getWidth()- 
+                                      mark_page_size_p.getWidth()* mark_scale) / 2.0);
+            float v_trans= (float)(doc_page_size_p.getBottom()- mark_page_size_p.getBottom()* mark_scale +
+                                     (doc_page_size_p.getHeight()- 
+                                      mark_page_size_p.getHeight()* mark_scale) / 2.0);
           
             PdfContentByte content_byte_p= 
               ( background_b ) ? writer_p.getUnderContent( ii ) : writer_p.getOverContent( ii );
@@ -3310,20 +3306,20 @@ int create_output() {
                                            0, -1* mark_scale,
                                            mark_scale, 0,
                                            h_trans, 
-                                           v_trans+ mark_page_size_p.height()* mark_scale );
+                                           v_trans+ mark_page_size_p.getHeight()* mark_scale );
             }
             else if( mark_page_rotation== 180 ) {
               content_byte_p.addTemplate( mark_page_p, 
                                            -1* mark_scale, 0,
                                            0, -1* mark_scale,
-                                           h_trans+ mark_page_size_p.width()* mark_scale, 
-                                           v_trans+ mark_page_size_p.height()* mark_scale );
+                                           h_trans+ mark_page_size_p.getWidth()* mark_scale, 
+                                           v_trans+ mark_page_size_p.getHeight()* mark_scale );
             }
             else if( mark_page_rotation== 270 ) {
               content_byte_p.addTemplate( mark_page_p, 
                                            0, mark_scale,
                                            -1* mark_scale, 0,
-                                           h_trans+ mark_page_size_p.width()* mark_scale, v_trans );
+                                           h_trans+ mark_page_size_p.getWidth()* mark_scale, v_trans );
             }
           }
         }

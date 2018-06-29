@@ -201,9 +201,9 @@ ReportAcroFormFields( PrintStream ofs,
   FormField prev_state= new FormField( acc_state );
   boolean ret_val_b= false;
 
-  ArrayList<PRIndirectReference> kids_p= kids_array_p.getArrayList();
+  ArrayList<PdfObject> kids_p= kids_array_p.getArrayList();
   if( kids_p != null ) {
-    for( PRIndirectReference kids_ii : kids_p ) {
+    for( PdfObject kids_ii : kids_p ) {
 
       PdfDictionary kid_p= (PdfDictionary)
         reader_p.getPdfObject( kids_ii );
@@ -278,8 +278,8 @@ ReportAcroFormFields( PrintStream ofs,
           }
           else if( pdfs_p.isArray() ) {
             // multiple selections
-            ArrayList<PRIndirectReference> vv_p= ((PdfArray)pdfs_p).getArrayList();
-            for( PRIndirectReference vv_ii : vv_p ) {
+            ArrayList<PdfObject> vv_p= ((PdfArray)pdfs_p).getArrayList();
+            for( PdfObject vv_ii : vv_p ) {
               PdfObject pdfs_p_2= (PdfObject)
                 reader_p.getPdfObject( vv_ii );
               String maybe_output_2 = OutputPdfStringOrName( pdfs_p_2, utf8_b );
@@ -461,7 +461,7 @@ static void
 ReportAcroFormFields( PrintStream ofs,
                       PdfReader reader_p,
                       boolean utf8_b ) {
-  PdfDictionary catalog_p= reader_p.catalog;
+  PdfDictionary catalog_p= reader_p.getCatalog();
   if( catalog_p != null && catalog_p.isDictionary() ) {
     
     PdfDictionary acro_form_p= (PdfDictionary)
@@ -532,8 +532,8 @@ ReportAction( PrintStream ofs,
       ReportAction( ofs, reader_p, (PdfDictionary)next_p, utf8_b, prefix );
     }
     else if( next_p.isArray() ) {
-      ArrayList<PRIndirectReference> actions_p= ((PdfArray)next_p).getArrayList();
-      for( PRIndirectReference ii : actions_p ) {
+      ArrayList<PdfObject> actions_p= ((PdfArray)next_p).getArrayList();
+      for( PdfObject ii : actions_p ) {
         PdfDictionary next_action_p= (PdfDictionary)
           reader_p.getPdfObject( ii );
         if( next_action_p != null && next_action_p.isDictionary() )
@@ -573,7 +573,7 @@ ReportAnnot( PrintStream ofs,
   PdfArray rect_p= (PdfArray)
     reader_p.getPdfObject( annot_p.get( PdfName.RECT ) );
   if( rect_p != null && rect_p.isArray() ) {
-    ArrayList<PRIndirectReference> rect_al_p= rect_p.getArrayList();
+    ArrayList<PdfObject> rect_al_p= rect_p.getArrayList();
     if( rect_al_p != null && rect_al_p.size()== 4 ) {
 
       for( int ii= 0; ii< 4; ++ii ) {
@@ -593,13 +593,13 @@ ReportAnnot( PrintStream ofs,
   float page_crop_height= 0;
   {
     Rectangle page_crop_p= reader_p.getCropBox( page_num );
-    rect[0]= rect[0]- page_crop_p.left();
-    rect[1]= rect[1]- page_crop_p.bottom();
-    rect[2]= rect[2]- page_crop_p.left();
-    rect[3]= rect[3]- page_crop_p.bottom();
+    rect[0]= rect[0]- page_crop_p.getLeft();
+    rect[1]= rect[1]- page_crop_p.getBottom();
+    rect[2]= rect[2]- page_crop_p.getLeft();
+    rect[3]= rect[3]- page_crop_p.getBottom();
 
-    page_crop_width= (float)(page_crop_p.right()- page_crop_p.left());
-    page_crop_height= (float)(page_crop_p.top()- page_crop_p.bottom());
+    page_crop_width= (float)(page_crop_p.getRight()- page_crop_p.getLeft());
+    page_crop_height= (float)(page_crop_p.getTop()- page_crop_p.getBottom());
   }
 
   // create new rect based on page rotation
@@ -656,7 +656,7 @@ ReportAnnots( PrintStream ofs,
 
   // document base url
   PdfDictionary uri_p= (PdfDictionary)
-    reader_p.getPdfObject( reader_p.catalog.get( PdfName.URI ) );
+    reader_p.getPdfObject( reader_p.getCatalog().get( PdfName.URI ) );
   if( uri_p != null && uri_p.isDictionary() ) {
     
     PdfString base_p= (PdfString)
@@ -676,11 +676,11 @@ ReportAnnots( PrintStream ofs,
       reader_p.getPdfObject( page_p.get( PdfName.ANNOTS ) );
     if( annots_p != null && annots_p.isArray() ) {
 
-      ArrayList<PRIndirectReference> annots_al_p= annots_p.getArrayList();
+      ArrayList<PdfObject> annots_al_p= annots_p.getArrayList();
       if( annots_al_p != null ) {
 
         // iterate over annotations
-        for( PRIndirectReference jj : annots_al_p ) {
+        for( PdfObject jj : annots_al_p ) {
 
           PdfDictionary annot_p= (PdfDictionary)
             reader_p.getPdfObject( jj );
@@ -801,9 +801,9 @@ ReportPageLabels( PrintStream ofs,
   if( nums_p != null && nums_p.isArray() ) {
     // report page numbers
 
-    ArrayList<PRIndirectReference> labels_p= nums_p.getArrayList();
+    ArrayList<PdfObject> labels_p= nums_p.getArrayList();
     if( labels_p != null ) {
-      for( Iterator<PRIndirectReference> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
+      for( Iterator<PdfObject> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
         
         // label index
         PdfNumber index_p= (PdfNumber)
@@ -889,9 +889,9 @@ ReportPageLabels( PrintStream ofs,
       reader_p.getPdfObject( numtree_node_p.get( PdfName.KIDS ) );
     if( kids_p != null && kids_p.isArray() ) {
 
-      ArrayList<PRIndirectReference> kids_ar_p= kids_p.getArrayList();
+      ArrayList<PdfObject> kids_ar_p= kids_p.getArrayList();
       if( kids_ar_p != null ) {
-        for( PRIndirectReference kids_ii : kids_ar_p ) {
+        for( PdfObject kids_ii : kids_ar_p ) {
 
           PdfDictionary kid_p= (PdfDictionary)
             reader_p.getPdfObject( kids_ii );
@@ -941,7 +941,7 @@ ReportOnPdf( PrintStream ofs,
           reader_p.getPdfObject( trailer_p.get( PdfName.ID ) );
         if( id_p != null && id_p.isArray() ) {
 
-          ArrayList<PRIndirectReference> id_al_p= id_p.getArrayList();
+          ArrayList<PdfObject> id_al_p= id_p.getArrayList();
           if( id_al_p != null ) {
 
             for( int ii= 0; ii< id_al_p.size(); ++ii ) {
@@ -980,7 +980,7 @@ ReportOnPdf( PrintStream ofs,
   int numPages= reader_p.getNumberOfPages();
 
   { // number of pages and outlines
-    PdfDictionary catalog_p= reader_p.catalog;
+    PdfDictionary catalog_p= reader_p.getCatalog();
     if( catalog_p != null && catalog_p.isDictionary() ) {
 
       // number of pages
@@ -1038,31 +1038,31 @@ ReportOnPdf( PrintStream ofs,
       ofs.println( "PageMediaRotation: " + reader_p.getPageRotation( page_p ) );
 
       NumberFormat c_format = NumberFormat.getInstance(Locale.ROOT);
-      
+
       Rectangle page_rect_p= reader_p.getPageSize( page_p );
       if( page_rect_p != null ) {
         ofs.println( "PageMediaRect: " 
-            + c_format.format(page_rect_p.left()) + " "
-            + c_format.format(page_rect_p.bottom()) + " "
-            + c_format.format(page_rect_p.right()) + " "
-            + c_format.format(page_rect_p.top()) );
+            + c_format.format(page_rect_p.getLeft()) + " "
+            + c_format.format(page_rect_p.getBottom()) + " "
+            + c_format.format(page_rect_p.getRight()) + " "
+            + c_format.format(page_rect_p.getTop()) );
         ofs.println( "PageMediaDimensions: " 
-            + c_format.format(page_rect_p.right()- page_rect_p.left()) + " "
-            + c_format.format(page_rect_p.top()- page_rect_p.bottom()) );
+            + c_format.format(page_rect_p.getRight()- page_rect_p.getLeft()) + " "
+            + c_format.format(page_rect_p.getTop()- page_rect_p.getBottom()) );
       }
       
       Rectangle page_crop_p= reader_p.getBoxSize( page_p, PdfName.CROPBOX );
       if( page_crop_p != null && 
-          !( page_crop_p.left()== page_rect_p.left() &&
-             page_crop_p.bottom()== page_rect_p.bottom() &&
-             page_crop_p.right()== page_rect_p.right() &&
-             page_crop_p.top()== page_rect_p.top() ) )
+          !( page_crop_p.getLeft()== page_rect_p.getLeft() &&
+             page_crop_p.getBottom()== page_rect_p.getBottom() &&
+             page_crop_p.getRight()== page_rect_p.getRight() &&
+             page_crop_p.getTop()== page_rect_p.getTop() ) )
         {
           ofs.println( "PageMediaCropRect: " 
-              + c_format.format(page_crop_p.left()) + " "
-              + c_format.format(page_crop_p.bottom()) + " "
-              + c_format.format(page_crop_p.right()) + " "
-              + c_format.format(page_crop_p.top()) );
+              + c_format.format(page_crop_p.getLeft()) + " "
+              + c_format.format(page_crop_p.getBottom()) + " "
+              + c_format.format(page_crop_p.getRight()) + " "
+              + c_format.format(page_crop_p.getTop()) );
         } 
 
       PdfString stamptkData_p= page_p.getAsString( PdfName.STAMPTKDATA );
@@ -1076,7 +1076,7 @@ ReportOnPdf( PrintStream ofs,
   }
 
   { // page labels (a/k/a logical page numbers)
-    PdfDictionary catalog_p= reader_p.catalog;
+    PdfDictionary catalog_p= reader_p.getCatalog();
     if( catalog_p != null && catalog_p.isDictionary() ) {
 
       PdfDictionary pagelabels_p= (PdfDictionary)

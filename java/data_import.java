@@ -206,7 +206,7 @@ UpdateInfo( PdfReader reader_p,
           // build bookmarks
           PdfDictionary outlines_p= new PdfDictionary( PdfName.OUTLINES );
           if( outlines_p != null ) {
-            PRIndirectReference outlines_ref_p= reader_p.getPRIndirectReference( outlines_p );
+            PRIndirectReference outlines_ref_p= reader_p.addPdfObject( outlines_p );
 
             int num_bookmarks_total = bookmarks.BuildBookmarks( reader_p,
                             pdf_data.m_bookmarks.listIterator(),
