@@ -12,6 +12,9 @@
   * **Added code**
 * com/lowagie/text/pdf/PRTokeniser.java
   * **Multiple changes**
+* com/lowagie/text/pdf/PdfArray.java
+  * Changes in `toPdf`.
+  * Other changes are just comments.
 
 ## Based on itext-paulo-155
 
@@ -105,6 +108,26 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PRIndirectReference.java
 * com/lowagie/text/pdf/PageResources.java
 * com/lowagie/text/pdf/PatternColor.java
+* com/lowagie/text/pdf/PdfAcroForm.java
+  * Added code
+* com/lowagie/text/pdf/PdfAction.java
+* com/lowagie/text/pdf/PdfAnnotation.java
+  * Modified code
+* com/lowagie/text/pdf/PdfAppearance.java
+* com/lowagie/text/pdf/PdfBoolean.java
+* com/lowagie/text/pdf/PdfBorderArray.java
+* com/lowagie/text/pdf/PdfBorderDictionary.java
+* com/lowagie/text/pdf/PdfChunk.java
+  * Commented out methods
+* com/lowagie/text/pdf/PdfColor.java
+* com/lowagie/text/pdf/PdfContentByte.java
+  * Cosmetic type casts
+  * Commented out methods
+* com/lowagie/text/pdf/PdfContents.java
+* com/lowagie/text/pdf/PdfCopy.java
+  * **Multiple changes**
+* com/lowagie/text/pdf/PdfCopyFieldsImp.java
+  * Commented out methods
 
 ## Deprecated
 
@@ -117,20 +140,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 
 ## Not reviewed yet
 
-* com/lowagie/text/pdf/PdfAcroForm.java
-* com/lowagie/text/pdf/PdfAction.java
-* com/lowagie/text/pdf/PdfAnnotation.java
-* com/lowagie/text/pdf/PdfAppearance.java
-* com/lowagie/text/pdf/PdfArray.java
-* com/lowagie/text/pdf/PdfBoolean.java
-* com/lowagie/text/pdf/PdfBorderArray.java
-* com/lowagie/text/pdf/PdfBorderDictionary.java
-* com/lowagie/text/pdf/PdfChunk.java
-* com/lowagie/text/pdf/PdfColor.java
-* com/lowagie/text/pdf/PdfContentByte.java
-* com/lowagie/text/pdf/PdfContents.java
-* com/lowagie/text/pdf/PdfCopy.java
-* com/lowagie/text/pdf/PdfCopyFieldsImp.java
 * com/lowagie/text/pdf/PdfDashPattern.java
 * com/lowagie/text/pdf/PdfDate.java
 * com/lowagie/text/pdf/PdfDestination.java
