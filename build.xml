@@ -29,9 +29,41 @@
   </target>
 
   <target name="resolve">
-    <ivy:retrieve />
+    <ivy:retrieve conf="build"/>
   </target>
   
   <target name="main" depends="clean,resolve,jar" />
+  
+  <target name="test-compile" depends="compile">
+    <mkdir dir="build/test"/>
+    <javac srcdir="test"
+           destdir="build/test"
+           encoding="UTF-8" >
+      <classpath>
+        <fileset dir="lib" includes="*.jar"/>
+        <pathelement path="build/classes"/>
+      </classpath>
+    </javac>
+  </target>
 
+  <target name="test-run" depends="test-compile">
+    <junit>
+      <classpath>
+        <fileset dir="lib" includes="*.jar"/>
+        <pathelement path="build/classes"/>
+        <pathelement path="build/test"/>
+      </classpath>
+      <formatter type="brief" usefile="false" />
+      <batchtest>
+        <fileset dir="test" includes="*Test.java" />
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="test-resolve">
+    <ivy:retrieve conf="test"/>
+  </target>  
+
+  <target name="test" depends="test-resolve,test-run" />
+  
 </project>
