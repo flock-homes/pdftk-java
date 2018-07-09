@@ -16,3 +16,8 @@ php-pdftk:
     - composer install
     - pdftk --version
     - phpunit
+
+test:
+  stage: test
+  script:
+    - ant -lib /usr/share/java test
