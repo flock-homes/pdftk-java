@@ -27,4 +27,15 @@ public class BlackBoxTest {
     String expectedData = slurp("test/files/blank.data");
     assertEquals(expectedData, systemOutRule.getLog());    
   }
+
+  @Test
+  public void cat() throws IOException {
+    exit.expectSystemExitWithStatus(0);
+    pdftk.main(new String[]{"test/files/refs.pdf",
+                            "test/files/refsalt.pdf",
+                            "cat", "output", "-"});
+    String expectedData = slurp("test/files/cat-refs-refsalt.pdf");
+    assertEquals(expectedData, systemOutRule.getLog());    
+  }
+  
 };
