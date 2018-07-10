@@ -1,10 +1,11 @@
-<ivy-module version="2.0">
+<ivy-module version="2.2">
   <info organisation="com.gitlab.marcvinyals" module="pdftk"/>
-  <configurations defaultconfmapping="build->default;test->default">
+  <configurations defaultconf="build"
+                  defaultconfmapping="build->default;test->default">
     <conf name="build"/>
     <conf name="test" extends="build"/>
   </configurations>
-  <dependencies defaultconf="build">
+  <dependencies>
     <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.51"/>
     <dependency org="org.apache.commons" name="commons-lang3" rev="3.7"/>
     <dependency org="junit" name="junit" rev="4.12" conf="test"/>
