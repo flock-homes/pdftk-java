@@ -25,7 +25,7 @@
     <mkdir dir="build/jar"/>
     <jar destfile="build/jar/pdftk.jar" basedir="build/classes">
       <manifest>
-        <attribute name="Main-Class" value="pdftk"/>
+        <attribute name="Main-Class" value="com.gitlab.pdftk_java.pdftk"/>
       </manifest>
     </jar>
   </target>

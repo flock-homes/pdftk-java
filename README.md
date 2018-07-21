@@ -1,10 +1,11 @@
-This is an attempt to port pfdtk into Java. The current goal is to
-make a translation as faithful as it is reasonable, and to leave
-possible improvements and refactoring for later. So far all code has
-been manually translated, but a lot more testing is needed. Due to the
-differences between C++ and Java, it is likely that a few bugs have
-sneaked in with respect to the original; any help in catching them
-will be appreciated.
+This is a port of [pfdtk](https://www.pdflabs.com/tools/pdftk-server/)
+into Java. The current goal is to make a translation as faithful as it
+is reasonable, and to leave possible improvements and refactoring for
+later. So far all code has been manually translated and it passes the
+test suite of [php-pdftk](https://github.com/mikehaertl/php-pdftk),
+but a lot more testing is needed. Due to the differences between C++
+and Java, it is likely that a few bugs have sneaked in with respect to
+the original; any help in catching them will be appreciated.
 
 ## Dependencies
 
@@ -49,14 +50,14 @@ $ ant jar
 
 To run:
 ```
-$ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar pdftk
+$ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.pdftk_java.pdftk
 ```
 
 ## Source organization
 
 `pdftk/` contains the original C++ sources for reference.
 
-`java/` contains the translated Java sources. Currently these are a
+`java/com/` contains the translated Java sources. Currently these are a
 few large files, but they should be split into one class per file and
 grouped into a package.
 

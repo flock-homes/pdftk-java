@@ -12,7 +12,7 @@ sourceSets {
     }
 }
 
-mainClassName = 'pdftk'
+mainClassName = 'com.gitlab.pdftk_java.pdftk'
 
 repositories {
     jcenter()

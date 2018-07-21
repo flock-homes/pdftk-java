@@ -21,40 +21,34 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+package com.gitlab.pdftk_java;
 
-class LoadableInt {
-  int ii= -1;
-  boolean success;
-  static int BufferInt( String buff, int buff_ii ) {
+class LoadableString {
+  String ss= null;
+  static String BufferString( String buff, int buff_ii ) {
     //while( buff[buff_ii] && isspace(buff[buff_ii]) ) { ++buff_ii; }
-    Pattern p = Pattern.compile("\\s?(\\d+).*"); // one or no spaces before data
-    Matcher m = p.matcher(buff.substring(buff_ii));
-    if (m.matches()) {
-      return Integer.parseInt(m.group(1));
-    }
-    else {
-      return 0;
-    }
+    if (buff_ii>=buff.length()) return "";
+    if( Character.isWhitespace(buff.charAt(buff_ii)) ) // one or no spaces before data
+      ++buff_ii;
+    return( buff.substring( buff_ii ) );
   }
-  boolean LoadInt(String buff, String label) {
+  boolean LoadString(String buff, String label) {
     int label_len= label.length();
     if ( buff.startsWith(label) ) {
-      if( ii< 0 ) { // uninitialized ints are -1
-        ii= BufferInt( buff, label_len );
+      if( ss== null ) {
+        ss= BufferString( buff, label_len );
       }
       else { // warning
-        System.err.println("pdftk Warning: " + label + " (" + ii + ") not empty when reading new " + label + " (" + BufferInt( buff, label_len ) + ") -- skipping newer item");
+        System.err.println("pdftk Warning: " + label + " (" + ss + ") already loaded when reading new " + label + " (" + BufferString( buff, label_len ) + ") -- skipping newer item");
       }
       return true;
     }
     return false;
   }
-  LoadableInt( int ii ) {
-    this.ii = ii;
+  LoadableString(String ss) {
+    this.ss = ss;
   }
   public String toString() {
-    return Integer.toString(ii);
+    return ss;
   }
 };

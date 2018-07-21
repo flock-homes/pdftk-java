@@ -21,6 +21,8 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+package com.gitlab.pdftk_java;
+
 class PdfBookmark {
   static final String m_prefix= "Bookmark";
   static final String m_begin_mark= "BookmarkBegin";

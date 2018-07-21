@@ -21,6 +21,8 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+package com.gitlab.pdftk_java;
+
 import java.util.ArrayList;
 import java.nio.charset.StandardCharsets;
 
