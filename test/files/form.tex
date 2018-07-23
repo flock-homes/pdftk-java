@@ -1,0 +1,36 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+
+\begin{document}
+
+\begin{Form}
+
+\TextField[name=textfield1]{Text Field 1}\\
+\TextField[password,name=textfield2]{Text Field 2}\\
+\ChoiceMenu[name=choicemenu1]{Choice Menu 1}{%
+  Choice 1=choice1,%
+  Choice 2=choice2,%
+  Choice 3=choice3%
+}\\
+\ChoiceMenu[radio,name=choicemenu2]{Choice Menu 2}{%
+  Choice 1=choice1,%
+  Choice 2=choice2,%
+  Choice 3=choice3%
+}\\
+\ChoiceMenu[combo,name=choicemenu3]{Choice Menu 3}{%
+  Choice 1=choice1,%
+  Choice 2=choice2,%
+  Choice 3=choice3%
+}\\
+\CheckBox[name=checkbox1]{Checkbox 1}\\
+\PushButton[name=button1]{Button 1}\\
+  
+\end{Form}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
