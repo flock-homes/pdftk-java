@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -111,7 +112,7 @@ static class FormField {
   String m_tt = ""; // name
   String m_tu = ""; // alt. name
   int m_ff = 0; // flags
-  HashSet<String> m_vv = new HashSet<String>(); // value -- may be an array
+  Set<String> m_vv = new HashSet<String>(); // value -- may be an array
   String m_dv = ""; // default value
 
   // variable-text features
@@ -123,6 +124,8 @@ static class FormField {
 
   // for checkboxes and such
   Set<String> m_states = new HashSet<String>(); // possible states
+  // states as (value,display) pairs
+  Set<List<String>> m_states_value_display = new HashSet<List<String>>();
   String m_state = "";
 
   FormField () {}
@@ -138,8 +141,38 @@ static class FormField {
     m_rv = Arrays.copyOf( copy.m_rv, copy.m_rv.length );
     m_maxlen = copy.m_maxlen;
     m_states = new HashSet<String>( copy.m_states );
+    m_states_value_display = new HashSet<List<String>>();
+    for (List<String> l : copy.m_states_value_display) {
+      m_states_value_display.add( new ArrayList<String>(l) );
+    }
     m_state = copy.m_state;
   }
+
+  void addOptions(PdfReader reader_p,
+                  PdfArray opts_p,
+                  boolean utf8_b) {
+    ArrayList<PdfObject> opts_a = opts_p.getArrayList();
+    for( PdfObject opts_ii : opts_a ) {
+      PdfObject opt_p= reader_p.getPdfObject( opts_ii );
+      if (opt_p == null) continue;
+      if( opt_p.isString() ) {
+        // Option is a text string
+        m_states.add( OutputPdfString( (PdfString)opt_p, utf8_b ) );
+      }
+      else if ( opt_p.isArray() ) {
+        // Option is an array (value, display)
+        ArrayList<PdfString> opt_value_display_p =
+          ((PdfArray)opt_p).getArrayList();
+        if (opt_value_display_p.size() != 2) continue;
+        ArrayList<String> opt_value_display_a = new ArrayList<String>();
+        for (PdfString subopt_p : opt_value_display_p) {
+          opt_value_display_a.add( OutputPdfString( subopt_p, utf8_b ) );
+        }
+        m_states_value_display.add(opt_value_display_a);
+      }
+    }
+  }
+
 };
 
 static void
@@ -189,6 +222,10 @@ static void
 
   for( String it : ff.m_states ) {
     ofs.println( "FieldStateOption: " + it );
+  }
+  for( List<String> it : ff.m_states_value_display ) {
+    ofs.println( "FieldStateOption: " + it.get(0) );
+    ofs.println( "FieldStateOptionDisplay: " + it.get(1) );
   }
 }
 
@@ -402,17 +439,10 @@ ReportAcroFormFields( PrintStream ofs,
 
         // list-box / combo-box possible states
         if( kid_p.contains( PdfName.OPT ) ) {
-          PdfArray kid_opts_p= (PdfArray)
+          PdfObject kid_opts_p= 
             reader_p.getPdfObject( kid_p.get( PdfName.OPT ) );
           if( kid_opts_p != null && kid_opts_p.isArray() ) {
-            ArrayList<PdfObject> opts_p= kid_opts_p.getArrayList();
-            for( PdfObject opts_ii : opts_p ) {
-              PdfString opt_p= (PdfString)
-                reader_p.getPdfObject( opts_ii );
-              if( opt_p != null && opt_p.isString() ) {
-                acc_state.m_states.add( OutputPdfString( opt_p, utf8_b ) );
-              }
-            }
+            acc_state.addOptions( reader_p, (PdfArray)kid_opts_p, utf8_b );
           }
         }
 
