@@ -208,10 +208,11 @@ public static void main(String[] args) {
 
 static void
 describe_header() {
-  System.out.println();
   System.out.println("pdftk port to java " + PDFTK_VER + " a Handy Tool for Manipulating PDF Documents");
-  System.out.println("Copyright (c) 2017-2018 Marc Vinyals - https://gitlab.com/marcvinyals/pdftk");
+  System.out.println("Copyright (c) 2017-2018 Marc Vinyals - https://gitlab.com/pdftk-java/pdftk");
   System.out.println("Copyright (c) 2003-2013 Steward and Lee, LLC.");
+  System.out.println("pdftk includes a modified version of the iText library.");
+  System.out.println("Copyright (c) 1999-2009 Bruno Lowagie, Paulo Soares, et al.");
   System.out.println("This is free software; see the source code for copying conditions. There is");
   System.out.println("NO warranty, not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.");
 }
@@ -772,7 +773,7 @@ describe_full() {
 "   pdftk in.pdf cat 1-endsouth output out.pdf\n" +
 "\n" +
 "NOTES\n" +
-"       This is a port of pdftk to java. See https://gitlab.com/marcvinyals/pdftk\n" +
+"       This is a port of pdftk to java. See https://gitlab.com/pdftk-java/pdftk\n" +
 "       The original program can be found at www.pdftk.com\n" +
 "\n" +
 "AUTHOR\n" +
