@@ -38,7 +38,7 @@ import java.util.Scanner;
 public class pdftk {
 
 /* TODO: should read from compiler */
-static final String PDFTK_VER = "3.0";
+static final String PDFTK_VER = "3.0.0";
 static final boolean ASK_ABOUT_WARNINGS = false;
 
 static String
