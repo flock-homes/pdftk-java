@@ -55,11 +55,8 @@ $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.p
 
 ## Source organization
 
-`pdftk/` contains the original C++ sources for reference.
-
 `java/com/` contains the translated Java sources. Currently these are a
-few large files, but they should be split into one class per file and
-grouped into a package.
+few large files, but they should be split into one class per file.
 
 `java/pdftk/` contains the sources for an old, yet-to-be-determined
 version of the iText library. They were modified in the original C++
