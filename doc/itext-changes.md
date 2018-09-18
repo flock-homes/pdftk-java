@@ -37,6 +37,24 @@
   * Few changes
 * com/lowagie/text/pdf/PdfString.java
   * Multiple changes
+* com/lowagie/text/pdf/StandardDecryption.java
+
+* com/lowagie/text/pdf/crypto/AESCipher.java
+* com/lowagie/text/pdf/crypto/ARCFOUREncryption.java
+* com/lowagie/text/pdf/crypto/IVGenerator.java
+
+* com/lowagie/text/pdf/interfaces/PdfAnnotations.java
+* com/lowagie/text/pdf/interfaces/PdfDocumentActions.java
+* com/lowagie/text/pdf/interfaces/PdfEncryptionSettings.java
+* com/lowagie/text/pdf/interfaces/PdfPageActions.java
+* com/lowagie/text/pdf/interfaces/PdfRunDirection.java
+* com/lowagie/text/pdf/interfaces/PdfVersion.java
+* com/lowagie/text/pdf/interfaces/PdfViewerPreferences.java
+* com/lowagie/text/pdf/interfaces/PdfXConformance.java
+
+* com/lowagie/text/pdf/internal/PdfVersionImp.java
+* com/lowagie/text/pdf/internal/PdfViewerPreferencesImp.java
+
 
 ## Based on itext-paulo-155
 
@@ -238,21 +256,13 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
     * Marked as `ssteward` and unmarked.
   * Added constants, unmarked
     * Some constants look mismatched
-  
-## Deprecated
-
-* com/lowagie/text/pdf/PangoArabicShapping.java
-
-## Appeared out of the blue
-
-* com/lowagie/text/pdf/ICC_Profile.java
-
-
-## Not reviewed yet
-
 * com/lowagie/text/pdf/PdfXConformanceException.java
 * com/lowagie/text/pdf/Pfm2afm.java
+  * Unmarked changes `private` -> `protected` 
+  * Commented out code
 * com/lowagie/text/pdf/RandomAccessFileOrArray.java
+  * **Multiple changes**
+    * Marked as `//`?
 * com/lowagie/text/pdf/SequenceList.java
 * com/lowagie/text/pdf/ShadingColor.java
 * com/lowagie/text/pdf/SimpleBookmark.java
@@ -262,23 +272,20 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/SimpleXMLParser.java
 * com/lowagie/text/pdf/SpotColor.java
 * com/lowagie/text/pdf/StampContent.java
-* com/lowagie/text/pdf/StandardDecryption.java
-* com/lowagie/text/pdf/TIFFLZWDecoder.java
 * com/lowagie/text/pdf/TextField.java
 * com/lowagie/text/pdf/TrueTypeFont.java
+  * Commented out code
 * com/lowagie/text/pdf/TrueTypeFontSubSet.java
 * com/lowagie/text/pdf/TrueTypeFontUnicode.java
 * com/lowagie/text/pdf/Type1Font.java
+  * Cosmetic type casts
 * com/lowagie/text/pdf/VerticalText.java
 * com/lowagie/text/pdf/XfdfReader.java
-* com/lowagie/text/pdf/codec
-* com/lowagie/text/pdf/codec/postscript
+  * Added rich value handling code
+  * Added reading from stdin
+
 * com/lowagie/text/pdf/codec/postscript/paparser.jj
-* com/lowagie/text/pdf/crypto
-* com/lowagie/text/pdf/crypto/AESCipher.java
-* com/lowagie/text/pdf/crypto/ARCFOUREncryption.java
-* com/lowagie/text/pdf/crypto/IVGenerator.java
-* com/lowagie/text/pdf/fonts
+
 * com/lowagie/text/pdf/fonts/Courier-Bold.afm
 * com/lowagie/text/pdf/fonts/Courier-BoldOblique.afm
 * com/lowagie/text/pdf/fonts/Courier-Oblique.afm
@@ -295,15 +302,18 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/fonts/Times-Italic.afm
 * com/lowagie/text/pdf/fonts/Times-Roman.afm
 * com/lowagie/text/pdf/fonts/ZapfDingbats.afm
-* com/lowagie/text/pdf/interfaces
-* com/lowagie/text/pdf/interfaces/PdfAnnotations.java
-* com/lowagie/text/pdf/interfaces/PdfDocumentActions.java
-* com/lowagie/text/pdf/interfaces/PdfEncryptionSettings.java
-* com/lowagie/text/pdf/interfaces/PdfPageActions.java
-* com/lowagie/text/pdf/interfaces/PdfRunDirection.java
-* com/lowagie/text/pdf/interfaces/PdfVersion.java
-* com/lowagie/text/pdf/interfaces/PdfViewerPreferences.java
-* com/lowagie/text/pdf/interfaces/PdfXConformance.java
-* com/lowagie/text/pdf/internal
-* com/lowagie/text/pdf/internal/PdfVersionImp.java
-* com/lowagie/text/pdf/internal/PdfViewerPreferencesImp.java
+
+
+## Based on Apache Batik?!
+
+* com/lowagie/text/pdf/TIFFLZWDecoder.java
+
+
+## Deprecated
+
+* com/lowagie/text/pdf/PangoArabicShapping.java
+
+
+## Appeared out of the blue
+
+* com/lowagie/text/pdf/ICC_Profile.java
