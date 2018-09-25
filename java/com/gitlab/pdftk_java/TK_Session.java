@@ -1187,16 +1187,16 @@ static keyword is_keyword( StringBuilder ssb ) {
                   // create a new reader; associate this page
                   // with a reader;
                   //
-                  boolean new_association = false;
+                  boolean associated = false;
                   for( InputPdf.PagesReader it : m_input_pdf.get(range_pdf_index).m_readers) {
                     if( !it.first.contains( kk ) ) { // kk not assoc. w/ this reader
                       it.first.add( kk ); // create association
-                      new_association = true;
+                      associated = true;
                       break;
                     }
                   }
                   //
-                  if( new_association ) {
+                  if( !associated ) {
                     // need to create a new reader for kk
                     InputPdf.PagesReader new_reader = add_reader( m_input_pdf.get(range_pdf_index) );
                     if ( new_reader != null) {
