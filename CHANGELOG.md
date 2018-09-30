@@ -1,3 +1,8 @@
+## [3.0.1] - 2018-09-30
+
+### Fixed
+ - Issue reading one file three or more times.
+
 ## [3.0.0] - 2018-09-04
 
 ### Added
