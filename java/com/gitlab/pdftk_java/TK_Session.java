@@ -158,7 +158,16 @@ InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b 
     pr = new InputPdf.PagesReader( reader );
     input_pdf_p.m_readers.add( pr );
 
-    input_pdf_p.m_authorized_b= ( !reader.encrypted || reader.ownerPasswordUsed );
+    input_pdf_p.m_authorized_b= true; // instead of:  ( !reader->encrypted || reader->ownerPasswordUsed );
+
+    if ( open_success_b && reader.encrypted && !reader.ownerPasswordUsed )
+    {
+      System.err.println( "WARNING: The creator of the input PDF:" );
+      System.err.println( "   " + input_pdf_p.m_filename );
+      System.err.println( "   has set an owner password (which is not required to handle this PDF)." );
+      System.err.println( "   You did not supply this password. Please respect any copyright." );
+    }
+
     if( !input_pdf_p.m_authorized_b ) {
       open_success_b= false;
     }
@@ -188,9 +197,8 @@ InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b 
     System.err.println( "The password you supplied for the input PDF:" );
     System.err.println( "   " + input_pdf_p.m_filename );
     System.err.println( "   did not work.  This PDF is encrypted, and you must supply the" );
-    System.err.println( "   owner password to open it.  If it has no owner password, then" );
-    System.err.println( "   enter the user password, instead.  To quit, enter a blank password" );
-    System.err.println( "   at the next prompt." );
+    System.err.println( "   owner or the user password to open it. To quit, enter a blank" );
+    System.err.println( "   password at the next prompt." );
 
     input_pdf_p.m_password = pdftk.prompt_for_password( "open", "the input PDF:\n   "+ input_pdf_p.m_filename );
     if( !input_pdf_p.m_password.isEmpty() ) { // reset flags try again
@@ -204,7 +212,7 @@ InputPdf.PagesReader add_reader( InputPdf input_pdf_p, boolean keep_artifacts_b 
     System.err.println( "Error: Failed to open PDF file: " );
     System.err.println( "   " + input_pdf_p.m_filename );
     if( !input_pdf_p.m_authorized_b ) {
-      System.err.println( "   OWNER PASSWORD REQUIRED, but not given (or incorrect)" );
+      System.err.println( "   OWNER OR USER PASSWORD REQUIRED, but not given (or incorrect)" );
     }
   }
 
@@ -1777,7 +1785,7 @@ void dump_session_data()
         }
 
         if( !it.m_authorized_b ) {
-          System.out.print( ", OWNER PASSWORD REQUIRED, but not given (or incorrect)" );
+          System.out.print( ", OWNER OR USER PASSWORD REQUIRED, but not given (or incorrect)" );
         }
 
         System.out.println();
