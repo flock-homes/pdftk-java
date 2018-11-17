@@ -199,9 +199,12 @@ public static void main(String[] args) {
     }
     catch( java.lang.Throwable t_p ) {
       System.err.println("Unhandled Java Exception in main():");
-        t_p.printStackTrace();
-        ret_val= 2;
+      t_p.printStackTrace();
+      ret_val= 2;
     }
+  }
+  if ( ret_val == 2 ) {
+    describe_bug_report();
   }
   System.exit(ret_val);
 }
@@ -778,6 +781,12 @@ describe_full() {
 "\n" +
 "AUTHOR\n" +
 "       Original author of pdftk is Sid Steward (sid.steward at pdflabs dot com).");
+}
+
+static void describe_bug_report() {
+  System.err.println("There was a problem with pdftk-java. Please report it at");
+  System.err.println("https://gitlab.com/pdftk-java/pdftk/issues");
+  System.err.println("including the message above, the version of pdftk-java (" + PDFTK_VER + "), and if possible steps to reproduce the error.");
 }
 
 };
