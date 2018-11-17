@@ -145,7 +145,7 @@ public static void main(String[] args) {
   boolean help_b= false;
   boolean version_b= false;
   boolean synopsis_b= ( args.length == 0 );
-  int ret_val= 0; // default: no error
+  ErrorCode ret_val= ErrorCode.NO_ERROR; // default: no error
 
   for( String argv : args) {
     version_b = version_b ||
@@ -178,7 +178,7 @@ public static void main(String[] args) {
       }
       else { // error
         System.err.println("Done.  Input errors, so no output created.");
-        ret_val= 1;
+        ret_val= ErrorCode.ERROR;
       }
     }
     // per https://bugs.launchpad.net/ubuntu/+source/pdftk/+bug/544636
@@ -195,18 +195,18 @@ public static void main(String[] args) {
       }
       System.err.println("Java Exception:");
       c_p.printStackTrace();
-      ret_val= 1;
+      ret_val= ErrorCode.ERROR;
     }
     catch( java.lang.Throwable t_p ) {
       System.err.println("Unhandled Java Exception in main():");
       t_p.printStackTrace();
-      ret_val= 2;
+      ret_val= ErrorCode.BUG;
     }
   }
-  if ( ret_val == 2 ) {
+  if ( ret_val == ErrorCode.BUG ) {
     describe_bug_report();
   }
-  System.exit(ret_val);
+  System.exit(ret_val.code);
 }
 
 static void

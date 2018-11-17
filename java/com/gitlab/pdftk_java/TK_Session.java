@@ -2340,8 +2340,8 @@ apply_rotation_to_page( PdfReader reader_p, int page_num, int rotation, boolean 
   }
 }
 
-int create_output_page( PdfCopy writer_p, PageRef page_ref, int output_page_count ) {
-  int ret_val= 0;
+ErrorCode create_output_page( PdfCopy writer_p, PageRef page_ref, int output_page_count ) {
+  ErrorCode ret_val= ErrorCode.NO_ERROR;
 
   // get the reader associated with this page ref.
   if( page_ref.m_input_pdf_index< m_input_pdf.size() ) {
@@ -2385,24 +2385,24 @@ int create_output_page( PdfCopy writer_p, PageRef page_ref, int output_page_coun
         catch (DocumentException e) {
           System.err.print("Internal Error: addPage() failed for: ");
           System.err.println(page_ref.m_page_num + " in file: " + page_pdf.m_filename);
-          ret_val= 2;          
+          ret_val= ErrorCode.BUG;
         }
       }
       catch (IOException e) { // error
         System.err.print("Internal Error: getImportedPage() failed for: ");
         System.err.println(page_ref.m_page_num + " in file: " + page_pdf.m_filename);
-        ret_val= 2;
+        ret_val= ErrorCode.BUG;
       }
     }
     else { // error
       System.err.print("Internal Error: no reader found for page: ");
       System.err.println(page_ref.m_page_num + " in file: " + page_pdf.m_filename);
-      ret_val= 2;
+      ret_val= ErrorCode.BUG;
     }
   }
   else { // error
     System.err.println("Internal Error: Unable to find handle in m_input_pdf.");
-    ret_val= 2;
+    ret_val= ErrorCode.BUG;
   }
 
   return ret_val;
@@ -2432,8 +2432,8 @@ static char GetPdfVersionChar( PdfName version_p ) {
   return version_cc;
 }
 
-int create_output() {
-  int ret_val= 0; // default: no error
+ErrorCode create_output() {
+  ErrorCode ret_val= ErrorCode.NO_ERROR; // default: no error
 
   if( is_valid() ) {
 
@@ -2475,7 +2475,7 @@ int create_output() {
         System.err.println("Error: Owner password used to encrypt output PDF includes");
         System.err.println("   invalid characters.");
         System.err.println("   No output created.");
-        ret_val= 1;
+        ret_val= ErrorCode.ERROR;
       }
     }
 
@@ -2486,11 +2486,11 @@ int create_output() {
         System.err.println("Error: User password used to encrypt output PDF includes");
         System.err.println("   invalid characters.");
         System.err.println("   No output created.");
-        ret_val= 1;
+        ret_val= ErrorCode.ERROR;
       }
     }
 
-    if( ret_val !=0 )
+    if( ret_val != ErrorCode.NO_ERROR )
       return ret_val; // <--- exit
 
     try {
@@ -2505,7 +2505,7 @@ int create_output() {
                              m_ask_about_warnings_b );
 
         if( ofs_p == null ) { // file open error
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
           break;
         }
         PdfCopy writer_p= new PdfCopy( output_doc_p, ofs_p );
@@ -2669,11 +2669,11 @@ int create_output() {
 
           int output_page_count= 0;
           // iterate over ranges
-          for( int ii= 0; ( ii< max_seq_length && ret_val== 0 ); ++ii ) {
+          for( int ii= 0; ( ii< max_seq_length && ret_val== ErrorCode.NO_ERROR ); ++ii ) {
             // iterate over ranges
             for( ArrayList< PageRef > jt : m_page_seq )
               {
-                if (ret_val != 0) break;
+                if (ret_val != ErrorCode.NO_ERROR) break;
                 if( ii< jt.size() ) {
                   ret_val= create_output_page( writer_p, jt.get(ii), output_page_count );
                   ++output_page_count;
@@ -2687,11 +2687,11 @@ int create_output() {
           // iterate over page ranges
           for( ArrayList< PageRef > jt : m_page_seq )
             {
-              if (ret_val != 0) break;
+              if (ret_val != ErrorCode.NO_ERROR) break;
               // iterate over pages in page range
               for( PageRef it : jt )
                 {
-                  if (ret_val != 0) break;
+                  if (ret_val != ErrorCode.NO_ERROR) break;
                   ret_val= create_output_page( writer_p, it, output_page_count );
                   ++output_page_count;
                 }
@@ -2959,7 +2959,7 @@ int create_output() {
         }
         catch (FileNotFoundException e) { // error
           System.err.println("Error: unable to open file for output: doc_data.txt");
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
         }
 
       }
@@ -2972,7 +2972,7 @@ int create_output() {
           System.err.println("Error: Only one input PDF file may be given for this");
           System.err.println("   operation.  Maybe you meant to use the \"cat\" operator?");
           System.err.println("   No output created.");
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
           break;
         }
 
@@ -3000,7 +3000,7 @@ int create_output() {
               catch( IOException ioe2_p ) { // file open error
                 System.err.println("Error: Failed read form data on stdin.");
                 System.err.println("   No output created.");
-                ret_val= 1;
+                ret_val= ErrorCode.ERROR;
                 //ioe_p->printStackTrace(); // debug
                 break;
               }
@@ -3023,7 +3023,7 @@ int create_output() {
                 System.err.println("Error: Failed to open form data file: ");
                 System.err.println("   " + m_form_data_filename);
                 System.err.println("   No output created.");
-                ret_val= 1;
+                ret_val= ErrorCode.ERROR;
                 //ioe_p->printStackTrace(); // debug
                 break;
               }
@@ -3049,7 +3049,7 @@ int create_output() {
             System.err.println("Error: Failed to open background PDF file: ");
             System.err.println("   " + m_background_filename);
             System.err.println("   No output created.");
-            ret_val= 1;
+            ret_val= ErrorCode.ERROR;
             break;
           }
         }
@@ -3070,7 +3070,7 @@ int create_output() {
               System.err.println("Error: Failed to open stamp PDF file: ");
               System.err.println("   " + m_stamp_filename);
               System.err.println("   No output created.");
-              ret_val= 1;
+              ret_val= ErrorCode.ERROR;
               break;
             }
           }
@@ -3080,7 +3080,7 @@ int create_output() {
         OutputStream ofs_p= pdftk.get_output_stream( m_output_filename, m_ask_about_warnings_b );
         if( ofs_p == null ) { // file open error
           System.err.println("Error: unable to open file for output: " + m_output_filename);
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
           break;
         }
 
@@ -3122,7 +3122,7 @@ int create_output() {
           if( m_update_info_filename.equals("-") ) {
             if( !data_import.UpdateInfo( input_reader_p, System.in, m_update_info_utf8_b ) ) {
               System.err.println("Warning: no Info added to output PDF.");
-              ret_val= 3;
+              ret_val= ErrorCode.WARNING;
             }
           }
           else {
@@ -3130,12 +3130,12 @@ int create_output() {
               FileInputStream ifs = new FileInputStream( m_update_info_filename );
               if( !data_import.UpdateInfo( input_reader_p, ifs, m_update_info_utf8_b ) ) {
                 System.err.println("Warning: no Info added to output PDF.");
-                ret_val= 3;
+                ret_val= ErrorCode.WARNING;
               }
             }
             catch ( FileNotFoundException e ) { // error
               System.err.println("Error: unable to open FDF file for input: " + m_update_info_filename);
-              ret_val= 1;
+              ret_val= ErrorCode.ERROR;
               break;
             }
           }
@@ -3232,7 +3232,7 @@ int create_output() {
           }
           else { // warning
             System.err.println("Warning: input PDF is not an acroform, so its fields were not filled.");
-            ret_val= 3;
+            ret_val= ErrorCode.WARNING;
           }
         }
 
@@ -3360,7 +3360,7 @@ int create_output() {
         if( 1< m_input_pdf.size() ) { // error
           System.err.println("Error: Only one input PDF file may be used for the dump_data operation");
           System.err.println("   No output created.");
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
           break;
         }
 
@@ -3409,7 +3409,7 @@ int create_output() {
           //delete writer_p; // OK? GC? -- NOT okay!
         }
         else { // error: get_output_stream() reports error
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
           break;
         }
       }
@@ -3421,7 +3421,7 @@ int create_output() {
         if( 1< m_input_pdf.size() ) { // error
           System.err.println("Error: Only one input PDF file may be given for \"unpack_files\" op.");
           System.err.println("   No output created.");
-          ret_val= 1;
+          ret_val= ErrorCode.ERROR;
           break;
         }
 
@@ -3434,7 +3434,7 @@ int create_output() {
       default:
         // error
         System.err.println("Unexpected pdftk Error in create_output()");
-        ret_val= 2;
+        ret_val= ErrorCode.BUG;
         break;
       }
     }
@@ -3442,11 +3442,11 @@ int create_output() {
       {
         System.err.println("Unhandled Java Exception in create_output():");
         t_p.printStackTrace();
-        ret_val= 2;
+        ret_val= ErrorCode.BUG;
       }
   }
   else { // error
-    ret_val= 1;
+    ret_val= ErrorCode.ERROR;
   }
 
   return ret_val;
