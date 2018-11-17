@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
 
+import com.gitlab.pdftk_java.pdftk;
+
 public class BlackBoxTest {
   @Rule
   public final SystemOutRule systemOutRule =
@@ -17,7 +19,10 @@ public class BlackBoxTest {
   public final ExpectedSystemExit exit = ExpectedSystemExit.none();
 
   public String slurp(String filename) throws IOException {
-    return new String(Files.readAllBytes(Paths.get(filename)));
+    return new String(slurpBytes(filename));
+  }
+  public byte[] slurpBytes(String filename) throws IOException {
+    return Files.readAllBytes(Paths.get(filename));
   }
   
   @Test
@@ -34,8 +39,8 @@ public class BlackBoxTest {
     pdftk.main(new String[]{"test/files/refs.pdf",
                             "test/files/refsalt.pdf",
                             "cat", "output", "-"});
-    String expectedData = slurp("test/files/cat-refs-refsalt.pdf");
-    assertEquals(expectedData, systemOutRule.getLog());    
+    byte[] expectedData = slurpBytes("test/files/cat-refs-refsalt.pdf");
+    assertEquals(expectedData, systemOutRule.getLogAsBytes());
   }
   
 };

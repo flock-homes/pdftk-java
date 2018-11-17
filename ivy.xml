@@ -9,7 +9,7 @@
     <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.51"/>
     <dependency org="org.apache.commons" name="commons-lang3" rev="3.7"/>
     <dependency org="junit" name="junit" rev="4.12" conf="test"/>
-    <dependency org="com.github.stefanbirkner" name="system-rules" rev="1.18.0" conf="test">
+    <dependency org="com.github.stefanbirkner" name="system-rules" rev="1.19.0" conf="test">
     </dependency>
   </dependencies>
 </ivy-module>
