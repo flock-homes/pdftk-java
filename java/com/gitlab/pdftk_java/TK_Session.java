@@ -1045,6 +1045,11 @@ static keyword is_keyword( StringBuilder ssb ) {
               fail_b= true;
               break;
             }
+            else {
+              // reset trailing_keywords again, since none have been handled yet,
+              // but call to 'is_keyword()' above might have consumed one
+              trailing_keywords = new StringBuilder(pre_keywords);
+            }
           }
 
           if( m_input_pdf.get(range_pdf_index).m_num_pages< page_num_beg ) {
