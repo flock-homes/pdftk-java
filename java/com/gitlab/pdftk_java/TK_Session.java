@@ -575,7 +575,7 @@ static keyword is_keyword( String ss ) {
   return keyword.none_k;
 }
 
-static keyword is_keyword( StringBuilder ssb ) {
+static keyword consume_keyword( StringBuilder ssb ) {
   String ss = new String(ssb).toLowerCase();
   // cat range keywords
   if( ss.startsWith( "end" ) ) { // note: strncmp
@@ -1031,11 +1031,10 @@ static keyword is_keyword( StringBuilder ssb ) {
             page_num_beg= Integer.parseInt(pre_range);
           }
           else if( !pre_keywords.isEmpty() ) { // look for usable keyword
-            arg_keyword= is_keyword( trailing_keywords );
+            arg_keyword= consume_keyword( trailing_keywords );
 
             if( arg_keyword== keyword.end_k ) { // may be a single page ref or beg of range
               page_num_beg= m_input_pdf.get(range_pdf_index).m_num_pages;
-              // consume keyword
             }
             else if ( !hyphen.isEmpty() ) {
               // error: can't have numbers ~and~ a keyword at the beginning of range
@@ -1080,11 +1079,10 @@ static keyword is_keyword( StringBuilder ssb ) {
               page_num_end= Integer.parseInt(post_range);
             }
             else if( !post_keywords.isEmpty() ) { // look for usable keyword
-              arg_keyword= is_keyword( trailing_keywords );
+              arg_keyword= consume_keyword( trailing_keywords );
               
               if( arg_keyword== keyword.end_k ) {
                 page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages;
-                // consume keyword
               }
               else { // error: hyphen but no range end
                 System.err.println("Error: Unexpected range end; expected a page");
@@ -1113,7 +1111,7 @@ static keyword is_keyword( StringBuilder ssb ) {
           while( trailing_keywords.length() > 0 ) { // possibly more than one keyword, e.g., 3-endevenwest
 
             // read keyword
-            arg_keyword= is_keyword( trailing_keywords );
+            arg_keyword= consume_keyword( trailing_keywords );
 
             if( arg_keyword== keyword.even_k ) {
               even_pages_b= true;
