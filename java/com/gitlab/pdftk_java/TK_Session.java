@@ -287,7 +287,6 @@ boolean open_input_pdf_readers() {
     attach_file_to_page_k,
 
     // cat page range keywords
-    end_k,
     even_k,
     odd_k,
 
@@ -427,9 +426,6 @@ static keyword is_keyword( String ss ) {
   }
   
   // cat range keywords
-  else if( ss.startsWith( "end" ) ) { // note: strncmp
-    return keyword.end_k;
-  }
   else if( ss.startsWith( "even" ) ) { // note: strncmp
     return keyword.even_k;
   }
@@ -578,11 +574,7 @@ static keyword is_keyword( String ss ) {
 static keyword consume_keyword( StringBuilder ssb ) {
   String ss = new String(ssb).toLowerCase();
   // cat range keywords
-  if( ss.startsWith( "end" ) ) { // note: strncmp
-    ssb.delete(0,3);
-    return keyword.end_k;
-  }
-  else if( ss.startsWith( "even" ) ) { // note: strncmp
+  if( ss.startsWith( "even" ) ) { // note: strncmp
     ssb.delete(0,4);
     return keyword.even_k;
   }
@@ -680,8 +672,7 @@ static keyword consume_keyword( StringBuilder ssb ) {
 
     // these keywords can be false hits because of their loose matching requirements;
     // since they are suffixes to page ranges, their appearance here is most likely a false match;
-    if( arg_keyword== keyword.end_k ||
-        arg_keyword== keyword.even_k ||
+    if( arg_keyword== keyword.even_k ||
         arg_keyword== keyword.odd_k )
       {
         arg_keyword= keyword.none_k;
@@ -977,24 +968,22 @@ static keyword consume_keyword( StringBuilder ssb ) {
       if( arg_keyword== keyword.output_k ) {
         arg_state= ArgState.output_filename_e; // advance state
       }
-      else if( arg_keyword== keyword.none_k || 
-               arg_keyword== keyword.end_k )
+      else if( arg_keyword== keyword.none_k )
         { // treat argv[ii] like a page sequence
 
           boolean even_pages_b= false;
           boolean odd_pages_b= false;
 
-          Pattern p = Pattern.compile("([A-Z]*)(r?)([0-9]*)([^-]*)(-?)(r?)([0-9]*)(.*)");
+          Pattern p = Pattern.compile("([A-Z]*)(r?)(end|[0-9]*)(-(r?)(end|[0-9]*))?(.*)");
           Matcher m = p.matcher(argv);
           m.matches();
           String handle = m.group(1);
           String pre_reverse = m.group(2);
           String pre_range = m.group(3);
-          String pre_keywords = m.group(4);
-          String hyphen = m.group(5);
-          String post_reverse = m.group(6);
-          String post_range = m.group(7);
-          String post_keywords = m.group(8);
+          String hyphen = m.group(4);
+          String post_reverse = m.group(5);
+          String post_range = m.group(6);
+          String keywords = m.group(7);
 
           int range_pdf_index= 0; { // defaults to first input document
             if( !handle.isEmpty() ) {
@@ -1014,99 +1003,17 @@ static keyword consume_keyword( StringBuilder ssb ) {
             }
           }
 
-          // DF declare rotate vars
-          PageRotate page_rotate= PageRotate.NORTH;
-          boolean page_rotate_absolute= false;
-
-          ////
-          // beginning of page range
-
-          boolean reverse_b= ( !pre_reverse.isEmpty() ); // single lc 'r' before page range
-
-          // parse digits
-          int page_num_beg= 0;
-          boolean page_num_beg_out_of_range_b= false;
-          StringBuilder trailing_keywords= new StringBuilder(pre_keywords);
-          if ( !pre_range.isEmpty() ) {
-            page_num_beg= Integer.parseInt(pre_range);
-          }
-          else if( !pre_keywords.isEmpty() ) { // look for usable keyword
-            arg_keyword= consume_keyword( trailing_keywords );
-
-            if( arg_keyword== keyword.end_k ) { // may be a single page ref or beg of range
-              page_num_beg= m_input_pdf.get(range_pdf_index).m_num_pages;
-            }
-            else if ( !hyphen.isEmpty() ) {
-              // error: can't have numbers ~and~ a keyword at the beginning of range
-              System.err.println("Error: Unexpected combination of digits and text in");
-              System.err.println("   page range start, here: " + argv);
-              System.err.println("   Exiting.");
-              fail_b= true;
-              break;
-            }
-            else {
-              // reset trailing_keywords again, since none have been handled yet,
-              // but call to 'is_keyword()' above might have consumed one
-              trailing_keywords = new StringBuilder(pre_keywords);
-            }
-          }
-
-          if( m_input_pdf.get(range_pdf_index).m_num_pages< page_num_beg ) {
-            // error: page number out of range
-            System.err.println("Error: Range start page number exceeds size of PDF");
-            System.err.println("   here: " + argv);
-            System.err.println("   input PDF has: " + m_input_pdf.get(range_pdf_index).m_num_pages + " pages.");
-            System.err.println("   Exiting.");
+          PageRange page_num = new PageRange(m_input_pdf.get(range_pdf_index).m_num_pages, argv);
+          if (!page_num.parse(pre_reverse, pre_range, post_reverse, post_range)) {
             fail_b= true;
             break;
           }
 
-          if( reverse_b ) // above test ensures good value here
-            page_num_beg= m_input_pdf.get(range_pdf_index).m_num_pages- page_num_beg+ 1;
+          // DF declare rotate vars
+          PageRotate page_rotate= PageRotate.NORTH;
+          boolean page_rotate_absolute= false;
 
-          ////
-          // end of page range
-
-          int page_num_end= page_num_beg; // default value
-          if( !hyphen.isEmpty() ) { // process second half of page range
-
-            trailing_keywords = new StringBuilder(post_keywords);
-            
-            reverse_b= ( !post_reverse.isEmpty() ); // single lc 'r' before page range
-
-            // parse digits
-            if ( !post_range.isEmpty() ) {
-              page_num_end= Integer.parseInt(post_range);
-            }
-            else if( !post_keywords.isEmpty() ) { // look for usable keyword
-              arg_keyword= consume_keyword( trailing_keywords );
-              
-              if( arg_keyword== keyword.end_k ) {
-                page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages;
-              }
-              else { // error: hyphen but no range end
-                System.err.println("Error: Unexpected range end; expected a page");
-                System.err.println("   number or legal keyword, here: " + argv);
-                System.err.println("   Exiting.");
-                fail_b= true;
-                break;
-              }
-            }
-
-            if( m_input_pdf.get(range_pdf_index).m_num_pages< page_num_end ) {
-              // error: page number out of range
-              System.err.println("Error: Range end page number exceeds size of PDF");
-              System.err.println("   input PDF has: " + m_input_pdf.get(range_pdf_index).m_num_pages + " pages.");
-              System.err.println("   Exiting.");
-              fail_b= true;
-              break;
-            }
-
-            if( reverse_b ) // above test ensures good value here
-              page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages- page_num_end+ 1;
-
-          }
-
+          StringBuilder trailing_keywords = new StringBuilder(keywords);
           // trailing keywords (excluding "end" which should have been handled above)
           while( trailing_keywords.length() > 0 ) { // possibly more than one keyword, e.g., 3-endevenwest
 
@@ -1162,14 +1069,14 @@ static keyword consume_keyword( StringBuilder ssb ) {
           ////
           // pack this range into our m_page_seq; 
 
-          if( page_num_beg== 0 && page_num_end== 0 ) { // ref the entire document
-            page_num_beg= 1;
-            page_num_end= m_input_pdf.get(range_pdf_index).m_num_pages;
+          if( page_num.beg== 0 && page_num.end== 0 ) { // ref the entire document
+            page_num.beg= 1;
+            page_num.end= m_input_pdf.get(range_pdf_index).m_num_pages;
 
             // test that it's a /full/ pdf
             m_cat_full_pdfs_b= m_cat_full_pdfs_b && ( !even_pages_b && !odd_pages_b );
           }
-          else if( page_num_beg== 0 || page_num_end== 0 ) { // error
+          else if( page_num.beg== 0 || page_num.end== 0 ) { // error
             System.err.println("Error: Input page numbers include 0 (zero)");
             System.err.println("   The first PDF page is 1 (one)");
             System.err.println("   Exiting.");
@@ -1180,14 +1087,14 @@ static keyword consume_keyword( StringBuilder ssb ) {
             m_cat_full_pdfs_b= false;
 
           ArrayList< PageRef > temp_page_seq = new ArrayList< PageRef >();
-          boolean reverse_sequence_b= ( page_num_end< page_num_beg );
+          boolean reverse_sequence_b= ( page_num.end< page_num.beg );
           if( reverse_sequence_b ) { // swap
-            int temp= page_num_end;
-            page_num_end= page_num_beg;
-            page_num_beg= temp;
+            int temp= page_num.end;
+            page_num.end= page_num.beg;
+            page_num.beg= temp;
           }
 
-          for( int kk= page_num_beg; kk<= page_num_end; ++kk ) {
+          for( int kk= page_num.beg; kk<= page_num.end; ++kk ) {
             if( (!even_pages_b || ((kk % 2) == 0)) &&
                 (!odd_pages_b || ((kk % 2) == 1)) )
               {
