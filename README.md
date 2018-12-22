@@ -12,7 +12,7 @@ the original; any help in catching them will be appreciated.
  - jdk >= 1.7
  - commons-lang3
  - bcprov
- - gradle or ant (build time)
+ - gradle >= 4.0 or ant (build time)
  - ivy (optionally for ant, for resolving dependencies at build time)
 
 ## Building and running with Gradle
@@ -27,11 +27,11 @@ This can then be run with just java installed like:
 java -jar build/libs/pdftk-all.jar
 ```
 
-The build configuration is relatively simple so it should work with most 
-versions of gradle (tested from 3.4 to 4.8) but if you have problems try
+The build configuration is relatively simple so it should work with most
+versions of gradle since 4.0 (tested 4.0, 4.10.3 and 5.0) but if you have problems try
 installing gradle wrapper at a particular version and then running the wrapper:
 ```
-gradle wrapper --gradle-version 4.8
+gradle wrapper --gradle-version 5.0
 ./gradlew shadowJar
 ```
 
@@ -55,8 +55,8 @@ $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.p
 
 ## Source organization
 
-`java/com/` contains the translated Java sources. Currently these are a
-few large files, but they should be split into one class per file.
+`java/com/` contains the translated Java sources. Currently these are
+a few large files, but they should be split into one class per file.
 
 `java/pdftk/` contains the sources for an old, yet-to-be-determined
 version of the iText library. They were modified in the original C++
