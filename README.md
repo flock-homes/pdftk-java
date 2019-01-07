@@ -7,6 +7,18 @@ but a lot more testing is needed. Due to the differences between C++
 and Java, it is likely that a few bugs have sneaked in with respect to
 the original; any help in catching them will be appreciated.
 
+## Installation on Debian/Ubuntu
+
+An official `pdftk-java` package is available for Debian >= 10 and
+Ubuntu >= 18.10. There is also a package in a third-party repository
+intended for *earlier* OS releases that can be installed as follows:
+
+```
+sudo add-apt-repository ppa:malteworld/ppa
+sudo apt update
+sudo apt install pdftk
+```
+
 ## Dependencies
 
  - jdk >= 1.7
@@ -14,17 +26,6 @@ the original; any help in catching them will be appreciated.
  - bcprov
  - gradle >= 4.0 or ant (build time)
  - ivy (optionally for ant, for resolving dependencies at build time)
-
-## Installation on Debian/Ubuntu
-
-A package is available. It contains a wrapper so that `/usr/bin/pdftk`
-works as before.
-
-```
-sudo add-apt-repository ppa:malteworld/ppa
-sudo apt update
-sudo apt install pdftk
-```
 
 ## Building and running with Gradle
 
