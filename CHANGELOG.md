@@ -1,3 +1,9 @@
+## [3.0.3] - 2019-01-15
+
+### Fixed
+ - Bug that corrupts images in PDF files with (de)compress option
+ - Crash with incomplete records
+
 ## [3.0.2] - 2018-12-05
 
 ### Fixed
