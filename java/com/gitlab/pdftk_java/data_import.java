@@ -98,6 +98,7 @@ static PdfData
 
       // reset
       buff_prev= "";
+      buff_prev_len= 0;
       //
       info= new PdfInfo();
       info_b= false;

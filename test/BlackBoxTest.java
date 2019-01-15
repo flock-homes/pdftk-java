@@ -3,6 +3,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,6 +18,10 @@ public class BlackBoxTest {
 
   @Rule
   public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+
+  @Rule
+  public final TextFromStandardInputStream systemInMock
+    = TextFromStandardInputStream.emptyStandardInputStream();
 
   public String slurp(String filename) throws IOException {
     return new String(slurpBytes(filename));
@@ -77,6 +82,13 @@ public class BlackBoxTest {
                             "cat", "1-1east", "output", "-"});
     byte[] expectedData = slurpBytes("test/files/blank.pdf");
     assertEquals(expectedData, systemOutRule.getLogAsBytes());
+  }
+
+  @Test
+  public void update_info_incomplete_record() {
+    exit.expectSystemExitWithStatus(0);
+    systemInMock.provideLines("InfoBegin", "InfoKey: Title", " ","InfoBegin", "InfoKey: Author", " ");
+    pdftk.main(new String[]{"test/files/blank.pdf", "update_info", "-", "output", "-"});
   }
 
 };
