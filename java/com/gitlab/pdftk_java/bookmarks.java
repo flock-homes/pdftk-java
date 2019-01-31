@@ -233,11 +233,9 @@ ReadOutlines( ArrayList<PdfBookmark> bookmark_data,
         ArrayList<PRIndirectReference> array_list_p= ((PdfArray)destination_p).getArrayList();
         if( array_list_p != null && !array_list_p.isEmpty() ) {
 
-          PdfDictionary page_p= (PdfDictionary)
-            reader_p.getPdfObject( array_list_p.get(0) );
-
-          if( page_p !=null && page_p.isDictionary() ) {
-            bookmark.m_page_num= GetPageNumber(page_p, reader_p, cache)+ 1;
+          PdfObject page_p= reader_p.getPdfObject( array_list_p.get(0) );
+          if( page_p instanceof PdfDictionary ) {
+            bookmark.m_page_num= GetPageNumber((PdfDictionary) page_p, reader_p, cache)+ 1;
           }
           else { // error
             fail_b= true;
