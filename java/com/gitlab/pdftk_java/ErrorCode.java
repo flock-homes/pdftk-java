@@ -18,7 +18,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.gitlab.pdftk_java;
 
@@ -29,6 +29,7 @@ enum ErrorCode {
   WARNING(3);
 
   final int code;
+
   ErrorCode(int code) {
     this.code = code;
   }
