@@ -42,3 +42,8 @@ gradle-4.0:
   extends: gradle
   variables:
     GRADLE_VERSION: "4.0"
+
+spotless:
+  extends: gradle
+  script:
+    - gradle spotlessCheck

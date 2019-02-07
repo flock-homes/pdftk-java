@@ -1,5 +1,4 @@
 /*
- *
  *   This file is part of the pdftk port to java
  *
  *   Copyright (c) Marc Vinyals 2017-2018
@@ -19,7 +18,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package com.gitlab.pdftk_java;
 
@@ -29,12 +28,12 @@ class PageRange {
   final String m_argv;
 
   PageRange(int num_pages, String argv) {
-    m_num_pages= num_pages;
-    m_argv= argv;
+    m_num_pages = num_pages;
+    m_argv = argv;
   }
 
   int parse_bound(String bound) {
-    if ( bound.equals( "end" )) return m_num_pages;
+    if (bound.equals("end")) return m_num_pages;
     return Integer.parseInt(bound);
   }
 
@@ -47,34 +46,34 @@ class PageRange {
 
   boolean parse(String pre_reverse, String pre_range, String post_reverse, String post_range) {
 
-    beg= 0; // default value
-    if ( !pre_range.isEmpty() ) {
-      beg= parse_bound(pre_range);
+    beg = 0; // default value
+    if (!pre_range.isEmpty()) {
+      beg = parse_bound(pre_range);
 
-      if( m_num_pages< beg ) {
+      if (m_num_pages < beg) {
         // error: page number out of range
         out_of_range_error("start");
         return false;
       }
 
-      boolean pre_reverse_b= ( !pre_reverse.isEmpty() ); // single lc 'r' before page range
-      if( pre_reverse_b ) // above test ensures good value here
-        beg= m_num_pages- beg+ 1;
+      boolean pre_reverse_b = (!pre_reverse.isEmpty()); // single lc 'r' before page range
+      if (pre_reverse_b) // above test ensures good value here
+      beg = m_num_pages - beg + 1;
     }
 
-    end= beg; // default value
-    if ( post_range!=null && !post_range.isEmpty() ) {
-      end= parse_bound(post_range);
+    end = beg; // default value
+    if (post_range != null && !post_range.isEmpty()) {
+      end = parse_bound(post_range);
 
-      if( m_num_pages< end ) {
+      if (m_num_pages < end) {
         // error: page number out of range
         out_of_range_error("end");
         return false;
       }
 
-      boolean post_reverse_b= ( !post_reverse.isEmpty() ); // single lc 'r' before page range
-      if( post_reverse_b ) // above test ensures good value here
-        end= m_num_pages- end+ 1;
+      boolean post_reverse_b = (!post_reverse.isEmpty()); // single lc 'r' before page range
+      if (post_reverse_b) // above test ensures good value here
+      end = m_num_pages - end + 1;
     }
 
     return true;
