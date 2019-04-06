@@ -10,6 +10,10 @@ sourceSets {
         java {
             srcDirs = ['java']
         }
+        resources {
+            srcDirs = ['java']
+            include "**/*.afm"
+        }
     }
 }
 
