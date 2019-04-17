@@ -148,6 +148,18 @@ class report {
         }
       }
     }
+
+    void addApStates(PdfReader reader_p, PdfDictionary ap_p, PdfName state_name) {
+      if (ap_p.contains(state_name)) {
+        PdfObject n_p = reader_p.getPdfObject(ap_p.get(state_name));
+        if (n_p != null && n_p.isDictionary()) {
+          Set<PdfName> n_set_p = ((PdfDictionary) n_p).getKeys();
+          for (PdfName key_p : n_set_p) {
+            m_states.add(OutputPdfName(key_p));
+          }
+        }
+      }
+    }
   };
 
   static void OutputFormField(PrintStream ofs, FormField ff) {
@@ -210,12 +222,13 @@ class report {
     if (kids_p != null) {
       for (PRIndirectReference kids_ii : kids_p) {
 
-        PdfDictionary kid_p = (PdfDictionary) reader_p.getPdfObject(kids_ii);
-        if (kid_p != null && kid_p.isDictionary()) {
+        PdfObject kid_po = reader_p.getPdfObject(kids_ii);
+        if (kid_po != null && kid_po.isDictionary()) {
+          PdfDictionary kid_p = (PdfDictionary) kid_po;
 
           // field type
           if (kid_p.contains(PdfName.FT)) {
-            PdfName ft_p = (PdfName) reader_p.getPdfObject(kid_p.get(PdfName.FT));
+            PdfObject ft_p = reader_p.getPdfObject(kid_p.get(PdfName.FT));
             if (ft_p != null && ft_p.isName()) {
 
               if (ft_p.equals(PdfName.BTN)) { // button
@@ -235,20 +248,21 @@ class report {
 
           // field name; special inheritance rule: prepend parent name
           if (kid_p.contains(PdfName.T)) {
-            PdfString pdfs_p = (PdfString) reader_p.getPdfObject(kid_p.get(PdfName.T));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.T));
             if (pdfs_p != null && pdfs_p.isString()) {
               if (!acc_state.m_tt.isEmpty()) {
                 acc_state.m_tt = acc_state.m_tt + ".";
               }
-              acc_state.m_tt = acc_state.m_tt + OutputPdfString(pdfs_p, utf8_b);
+              acc_state.m_tt = acc_state.m_tt +
+                OutputPdfString((PdfString) pdfs_p, utf8_b);
             }
           }
 
           // field alt. name
           if (kid_p.contains(PdfName.TU)) {
-            PdfString pdfs_p = (PdfString) reader_p.getPdfObject(kid_p.get(PdfName.TU));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.TU));
             if (pdfs_p != null && pdfs_p.isString()) {
-              acc_state.m_tu = OutputPdfString(pdfs_p, utf8_b);
+              acc_state.m_tu = OutputPdfString((PdfString) pdfs_p, utf8_b);
             }
           } else {
             acc_state.m_tu = "";
@@ -256,9 +270,9 @@ class report {
 
           // field flags; inheritable
           if (kid_p.contains(PdfName.FF)) {
-            PdfNumber pdfs_p = (PdfNumber) reader_p.getPdfObject(kid_p.get(PdfName.FF));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.FF));
             if (pdfs_p != null && pdfs_p.isNumber()) {
-              acc_state.m_ff = pdfs_p.intValue();
+              acc_state.m_ff = ((PdfNumber) pdfs_p).intValue();
             }
           }
 
@@ -274,9 +288,9 @@ class report {
               // multiple selections
               ArrayList<PRIndirectReference> vv_p = ((PdfArray) pdfs_p).getArrayList();
               for (PRIndirectReference vv_ii : vv_p) {
-                PdfObject pdfs_p_2 = (PdfObject) reader_p.getPdfObject(vv_ii);
+                PdfObject pdfs_p_2 = reader_p.getPdfObject(vv_ii);
                 String maybe_output_2 = OutputPdfStringOrName(pdfs_p_2, utf8_b);
-                if (maybe_output != null) {
+                if (maybe_output_2 != null) {
                   acc_state.m_vv.add(maybe_output_2);
                 }
               }
@@ -285,7 +299,7 @@ class report {
 
           // default value; inheritable
           if (kid_p.contains(PdfName.DV)) {
-            PdfObject pdfs_p = (PdfObject) reader_p.getPdfObject(kid_p.get(PdfName.DV));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.DV));
             String maybe_output = OutputPdfStringOrName(pdfs_p, utf8_b);
             if (maybe_output != null) {
               acc_state.m_dv = maybe_output;
@@ -294,18 +308,17 @@ class report {
 
           // quadding; inheritable
           if (kid_p.contains(PdfName.Q)) {
-            PdfNumber pdfs_p = (PdfNumber) reader_p.getPdfObject(kid_p.get(PdfName.Q));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.Q));
             if (pdfs_p != null && pdfs_p.isNumber()) {
-
-              acc_state.m_qq = pdfs_p.intValue();
+              acc_state.m_qq = ((PdfNumber) pdfs_p).intValue();
             }
           }
 
           // default style
           if (kid_p.contains(PdfName.DS)) {
-            PdfString pdfs_p = (PdfString) reader_p.getPdfObject(kid_p.get(PdfName.DS));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.DS));
             if (pdfs_p != null && pdfs_p.isString()) {
-              acc_state.m_ds = OutputPdfString(pdfs_p, utf8_b);
+              acc_state.m_ds = OutputPdfString((PdfString) pdfs_p, utf8_b);
             }
           } else {
             acc_state.m_ds = "";
@@ -313,14 +326,12 @@ class report {
 
           // rich text value; may be a string or a stream
           if (kid_p.contains(PdfName.RV)) {
-            PdfObject pdfo_p = (PdfObject) reader_p.getPdfObject(kid_p.get(PdfName.RV));
+            PdfObject pdfo_p = reader_p.getPdfObject(kid_p.get(PdfName.RV));
             if (pdfo_p != null && pdfo_p.isString()) { // string
-              PdfString pdfs_p = (PdfString) pdfo_p;
-              String name_oss = OutputPdfString(pdfs_p, utf8_b);
+              String name_oss = OutputPdfString((PdfString) pdfo_p, utf8_b);
               acc_state.m_rv = name_oss.getBytes(StandardCharsets.UTF_8);
             } else if (pdfo_p != null && pdfo_p.isStream()) { // stream
-              PRStream pdfs_p = (PRStream) pdfo_p;
-              acc_state.m_rv = pdfs_p.getBytes();
+              acc_state.m_rv = ((PRStream) pdfo_p).getBytes();
             }
           } else {
             acc_state.m_rv = new byte[0];
@@ -328,53 +339,23 @@ class report {
 
           // maximum length; inheritable
           if (kid_p.contains(PdfName.MAXLEN)) {
-            PdfNumber pdfs_p = (PdfNumber) reader_p.getPdfObject(kid_p.get(PdfName.MAXLEN));
+            PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.MAXLEN));
             if (pdfs_p != null && pdfs_p.isNumber()) {
-
-              acc_state.m_maxlen = pdfs_p.intValue();
+              acc_state.m_maxlen = ((PdfNumber) pdfs_p).intValue();
             }
           }
 
           // available states
           if (kid_p.contains(PdfName.AP)) {
-            PdfDictionary ap_p = (PdfDictionary) reader_p.getPdfObject(kid_p.get(PdfName.AP));
-            if (ap_p != null && ap_p.isDictionary()) {
+            PdfObject ap_po = reader_p.getPdfObject(kid_p.get(PdfName.AP));
+            if (ap_po != null && ap_po.isDictionary()) {
+              PdfDictionary ap_p = (PdfDictionary) ap_po;
 
               // this is one way to cull button option names: iterate over
               // appearance state names
-
-              // N
-              if (ap_p.contains(PdfName.N)) {
-                PdfObject n_p = reader_p.getPdfObject(ap_p.get(PdfName.N));
-                if (n_p != null && n_p.isDictionary()) {
-                  Set<PdfName> n_set_p = ((PdfDictionary) n_p).getKeys();
-                  for (PdfName key_p : n_set_p) {
-                    acc_state.m_states.add(OutputPdfName(key_p));
-                  }
-                }
-              }
-
-              // D
-              if (ap_p.contains(PdfName.D)) {
-                PdfObject n_p = reader_p.getPdfObject(ap_p.get(PdfName.D));
-                if (n_p != null && n_p.isDictionary()) {
-                  Set<PdfName> n_set_p = ((PdfDictionary) n_p).getKeys();
-                  for (PdfName key_p : n_set_p) {
-                    acc_state.m_states.add(OutputPdfName(key_p));
-                  }
-                }
-              }
-
-              // R
-              if (ap_p.contains(PdfName.R)) {
-                PdfObject n_p = reader_p.getPdfObject(ap_p.get(PdfName.N));
-                if (n_p != null && n_p.isDictionary()) {
-                  Set<PdfName> n_set_p = ((PdfDictionary) n_p).getKeys();
-                  for (PdfName key_p : n_set_p) {
-                    acc_state.m_states.add(OutputPdfName(key_p));
-                  }
-                }
-              }
+              acc_state.addApStates(reader_p, ap_p, PdfName.N);
+              acc_state.addApStates(reader_p, ap_p, PdfName.D);
+              acc_state.addApStates(reader_p, ap_p, PdfName.R);
             }
           }
 
@@ -387,11 +368,11 @@ class report {
           }
 
           if (kid_p.contains(PdfName.KIDS)) { // recurse
-            PdfArray kid_kids_p = (PdfArray) reader_p.getPdfObject(kid_p.get(PdfName.KIDS));
+            PdfObject kid_kids_p = reader_p.getPdfObject(kid_p.get(PdfName.KIDS));
             if (kid_kids_p != null && kid_kids_p.isArray()) {
 
               boolean kids_have_names_b =
-                  ReportAcroFormFields(ofs, kid_kids_p, acc_state, reader_p, utf8_b);
+                ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
 
               if (!kids_have_names_b && kid_p.contains(PdfName.T)) {
                 // dump form field
@@ -425,16 +406,15 @@ class report {
     PdfDictionary catalog_p = reader_p.catalog;
     if (catalog_p != null && catalog_p.isDictionary()) {
 
-      PdfDictionary acro_form_p =
-          (PdfDictionary) reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
+      PdfObject acro_form_p = reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
       if (acro_form_p != null && acro_form_p.isDictionary()) {
 
-        PdfArray fields_p = (PdfArray) reader_p.getPdfObject(acro_form_p.get(PdfName.FIELDS));
+        PdfObject fields_p = reader_p.getPdfObject(((PdfDictionary) acro_form_p).get(PdfName.FIELDS));
         if (fields_p != null && fields_p.isArray()) {
 
           // enter recursion
           FormField root_field_state = new FormField();
-          ReportAcroFormFields(ofs, fields_p, root_field_state, reader_p, utf8_b);
+          ReportAcroFormFields(ofs, (PdfArray) fields_p, root_field_state, reader_p, utf8_b);
         }
       }
     } else { // error
@@ -445,7 +425,7 @@ class report {
   static void ReportAction(
       PrintStream ofs, PdfReader reader_p, PdfDictionary action_p, boolean utf8_b, String prefix) {
     if (action_p.contains(PdfName.S)) {
-      PdfName s_p = (PdfName) reader_p.getPdfObject(action_p.get(PdfName.S));
+      PdfObject s_p = reader_p.getPdfObject(action_p.get(PdfName.S));
 
       // URI action
       if (s_p.equals(PdfName.URI)) {
@@ -453,34 +433,40 @@ class report {
 
         // report URI
         if (action_p.contains(PdfName.URI)) {
-          PdfString uri_p = (PdfString) reader_p.getPdfObject(action_p.get(PdfName.URI));
+          PdfObject uri_p = reader_p.getPdfObject(action_p.get(PdfName.URI));
           if (uri_p != null && uri_p.isString()) {
 
-            ofs.println(prefix + "ActionURI: " + OutputPdfString(uri_p, utf8_b));
+            ofs.println(prefix + "ActionURI: " +
+                        OutputPdfString((PdfString) uri_p, utf8_b));
           }
         }
 
         // report IsMap
         if (action_p.contains(PdfName.ISMAP)) {
-          PdfBoolean ismap_p = (PdfBoolean) reader_p.getPdfObject(action_p.get(PdfName.ISMAP));
-          if (ismap_p != null && ismap_p.isBoolean())
-            if (ismap_p.booleanValue()) ofs.println(prefix + "ActionIsMap: true");
-            else ofs.println(prefix + "ActionIsMap: false");
-        } else ofs.println(prefix + "ActionIsMap: false");
+          PdfObject ismap_p = reader_p.getPdfObject(action_p.get(PdfName.ISMAP));
+          if (ismap_p != null &&
+              ismap_p.isBoolean() &&
+              ((PdfBoolean) ismap_p).booleanValue()) {
+            ofs.println(prefix + "ActionIsMap: true");
+          }
+          else {
+            ofs.println(prefix + "ActionIsMap: false");
+          }
+        }
       }
     }
 
     // subsequent actions? can be a single action or an array
     if (action_p.contains(PdfName.NEXT)) {
       PdfObject next_p = reader_p.getPdfObject(action_p.get(PdfName.NEXT));
-      if (next_p.isDictionary()) {
+      if (next_p != null && next_p.isDictionary()) {
         ReportAction(ofs, reader_p, (PdfDictionary) next_p, utf8_b, prefix);
-      } else if (next_p.isArray()) {
+      } else if (next_p != null && next_p.isArray()) {
         ArrayList<PRIndirectReference> actions_p = ((PdfArray) next_p).getArrayList();
         for (PRIndirectReference ii : actions_p) {
-          PdfDictionary next_action_p = (PdfDictionary) reader_p.getPdfObject(ii);
+          PdfObject next_action_p = reader_p.getPdfObject(ii);
           if (next_action_p != null && next_action_p.isDictionary())
-            ReportAction(ofs, reader_p, next_action_p, utf8_b, prefix); // recurse
+            ReportAction(ofs, reader_p, (PdfDictionary) next_action_p, utf8_b, prefix); // recurse
         }
       }
     }
@@ -501,9 +487,9 @@ class report {
     // report things common to all annots
 
     // subtype
-    PdfName subtype_p = (PdfName) reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
+    PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
     if (subtype_p != null && subtype_p.isName()) {
-      ofs.println("AnnotSubtype: " + OutputPdfName(subtype_p));
+      ofs.println("AnnotSubtype: " + OutputPdfName((PdfName) subtype_p));
     }
 
     ////
@@ -511,15 +497,19 @@ class report {
 
     // get raw rect from annot
     float[] rect = {0.0f, 0.0f, 0.0f, 0.0f};
-    PdfArray rect_p = (PdfArray) reader_p.getPdfObject(annot_p.get(PdfName.RECT));
+    PdfObject rect_p = reader_p.getPdfObject(annot_p.get(PdfName.RECT));
     if (rect_p != null && rect_p.isArray()) {
-      ArrayList<PRIndirectReference> rect_al_p = rect_p.getArrayList();
-      if (rect_al_p != null && rect_al_p.size() == 4) {
+      ArrayList<PRIndirectReference> rect_al_p = ((PdfArray) rect_p).getArrayList();
+      if (rect_al_p.size() == 4) {
 
         for (int ii = 0; ii < 4; ++ii) {
-          PdfNumber coord_p = (PdfNumber) reader_p.getPdfObject(rect_al_p.get(ii));
-          if (coord_p != null && coord_p.isNumber()) rect[ii] = (float) coord_p.floatValue();
-          else rect[ii] = -1; // error value
+          PdfObject coord_p = reader_p.getPdfObject(rect_al_p.get(ii));
+          if (coord_p != null && coord_p.isNumber()) {
+            rect[ii] = (float) ((PdfNumber) coord_p).floatValue();
+          }
+          else {
+            rect[ii] = -1; // error value
+          }
         }
       }
     }
@@ -587,12 +577,12 @@ class report {
     ofs.println("NumberOfPages: " + (int) reader_p.getNumberOfPages());
 
     // document base url
-    PdfDictionary uri_p = (PdfDictionary) reader_p.getPdfObject(reader_p.catalog.get(PdfName.URI));
+    PdfObject uri_p = reader_p.getPdfObject(reader_p.catalog.get(PdfName.URI));
     if (uri_p != null && uri_p.isDictionary()) {
 
-      PdfString base_p = (PdfString) reader_p.getPdfObject(uri_p.get(PdfName.BASE));
+      PdfObject base_p = reader_p.getPdfObject(((PdfDictionary) uri_p).get(PdfName.BASE));
       if (base_p != null && base_p.isString()) {
-        ofs.println("PdfUriBase: " + OutputPdfString(base_p, utf8_b));
+        ofs.println("PdfUriBase: " + OutputPdfString((PdfString) base_p, utf8_b));
       }
     }
 
@@ -602,38 +592,36 @@ class report {
     for (int ii = 1; ii <= reader_p.getNumberOfPages(); ++ii) {
       PdfDictionary page_p = reader_p.getPageN(ii);
 
-      PdfArray annots_p = (PdfArray) reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
+      PdfObject annots_p = reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
       if (annots_p != null && annots_p.isArray()) {
 
-        ArrayList<PRIndirectReference> annots_al_p = annots_p.getArrayList();
-        if (annots_al_p != null) {
+        ArrayList<PRIndirectReference> annots_al_p = ((PdfArray) annots_p).getArrayList();
 
-          // iterate over annotations
-          for (PRIndirectReference jj : annots_al_p) {
+        // iterate over annotations
+        for (PRIndirectReference jj : annots_al_p) {
 
-            PdfDictionary annot_p = (PdfDictionary) reader_p.getPdfObject(jj);
-            if (annot_p != null && annot_p.isDictionary()) {
+          PdfObject annot_po = reader_p.getPdfObject(jj);
+          if (annot_po != null && annot_po.isDictionary()) {
+            PdfDictionary annot_p = (PdfDictionary) annot_po;
 
-              PdfName type_p = (PdfName) reader_p.getPdfObject(annot_p.get(PdfName.TYPE));
-              if (type_p.equals(PdfName.ANNOT)) {
+            PdfObject type_p = reader_p.getPdfObject(annot_p.get(PdfName.TYPE));
+            if (type_p.equals(PdfName.ANNOT)) {
 
-                PdfName subtype_p = (PdfName) reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
+              PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
-                // link annotation
-                if (subtype_p.equals(PdfName.LINK)) {
+              // link annotation
+              if (subtype_p.equals(PdfName.LINK)) {
 
-                  ofs.println("---"); // delim
-                  ReportAnnot(ofs, reader_p, ii, page_p, annot_p, utf8_b); // base annot items
-                  ofs.println("AnnotPageNumber: " + ii);
+                ofs.println("---"); // delim
+                ReportAnnot(ofs, reader_p, ii, page_p, annot_p, utf8_b); // base annot items
+                ofs.println("AnnotPageNumber: " + ii);
 
-                  // link-specific items
-                  if (annot_p.contains(PdfName.A)) { // action
-                    PdfDictionary action_p =
-                        (PdfDictionary) reader_p.getPdfObject(annot_p.get(PdfName.A));
-                    if (action_p != null && action_p.isDictionary()) {
+                // link-specific items
+                if (annot_p.contains(PdfName.A)) { // action
+                  PdfObject action_p = reader_p.getPdfObject(annot_p.get(PdfName.A));
+                  if (action_p != null && action_p.isDictionary()) {
 
-                      ReportAction(ofs, reader_p, action_p, utf8_b, "Annot");
-                    }
+                    ReportAction(ofs, reader_p, (PdfDictionary) action_p, utf8_b, "Annot");
                   }
                 }
               }
@@ -707,94 +695,92 @@ class report {
         // else if *numtree_node_p has Kids, recurse
         // output 1-based page numbers; that's what we do for bookmarks
       {
-    PdfArray nums_p = (PdfArray) reader_p.getPdfObject(numtree_node_p.get(PdfName.NUMS));
+    PdfObject nums_p = reader_p.getPdfObject(numtree_node_p.get(PdfName.NUMS));
     if (nums_p != null && nums_p.isArray()) {
       // report page numbers
 
-      ArrayList<PRIndirectReference> labels_p = nums_p.getArrayList();
-      if (labels_p != null) {
-        for (Iterator<PRIndirectReference> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
+      ArrayList<PRIndirectReference> labels_p = ((PdfArray) nums_p).getArrayList();
+      for (Iterator<PRIndirectReference> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
 
-          // label index
-          PdfNumber index_p = (PdfNumber) reader_p.getPdfObject(labels_ii.next());
+        // label index
+        PdfObject index_p = reader_p.getPdfObject(labels_ii.next());
 
-          // label dictionary
-          PdfDictionary label_p = (PdfDictionary) reader_p.getPdfObject(labels_ii.next());
+        // label dictionary
+        PdfObject label_po = reader_p.getPdfObject(labels_ii.next());
 
-          if (index_p != null && index_p.isNumber() && label_p != null && label_p.isDictionary()) {
-            ofs.println(PdfPageLabel.m_begin_mark);
+        if (index_p != null &&
+            index_p.isNumber() &&
+            label_po != null &&
+            label_po.isDictionary()) {
+          PdfDictionary label_p = (PdfDictionary) label_po;
+          ofs.println(PdfPageLabel.m_begin_mark);
 
-            // PageLabelNewIndex
-            ofs.println("PageLabelNewIndex: " + (long) (index_p.intValue()) + 1);
+          // PageLabelNewIndex
+          ofs.println("PageLabelNewIndex: " + (long) (((PdfNumber) index_p).intValue()) + 1);
 
-            { // PageLabelStart
-              ofs.print("PageLabelStart: ");
-              PdfNumber start_p = (PdfNumber) reader_p.getPdfObject(label_p.get(PdfName.ST));
-              if (start_p != null && start_p.isNumber()) {
-                ofs.println((long) (start_p.intValue()));
-              } else {
-                ofs.println("1"); // the default
-              }
+          { // PageLabelStart
+            ofs.print("PageLabelStart: ");
+            PdfObject start_p = reader_p.getPdfObject(label_p.get(PdfName.ST));
+            if (start_p != null && start_p.isNumber()) {
+              ofs.println((long) ((PdfNumber) start_p).intValue());
+            } else {
+              ofs.println("1"); // the default
             }
-
-            { // PageLabelPrefix
-              PdfString prefix_p = (PdfString) reader_p.getPdfObject(label_p.get(PdfName.P));
-              if (prefix_p != null && prefix_p.isString()) {
-                ofs.println("PageLabelPrefix: " + OutputPdfString(prefix_p, utf8_b));
-              }
-            }
-
-            { // PageLabelNumStyle
-              PdfName r_p = new PdfName("r");
-              PdfName a_p = new PdfName("a");
-
-              PdfName style_p = (PdfName) reader_p.getPdfObject(label_p.get(PdfName.S));
-              ofs.print("PageLabelNumStyle: ");
-              if (style_p != null && style_p.isName()) {
-                if (style_p.equals(PdfName.D)) {
-                  ofs.println("DecimalArabicNumerals");
-                } else if (style_p.equals(PdfName.R)) {
-                  ofs.println("UppercaseRomanNumerals");
-                } else if (style_p.equals(r_p)) {
-                  ofs.println("LowercaseRomanNumerals");
-                } else if (style_p.equals(PdfName.A)) {
-                  ofs.println("UppercaseLetters");
-                } else if (style_p.equals(a_p)) {
-                  ofs.println("LowercaseLetters");
-                } else { // error
-                  ofs.println("[PDFTK ERROR]");
-                }
-              } else { // default
-                ofs.println("NoNumber");
-              }
-            }
-
-          } else { // error
-            ofs.println("[PDFTK ERROR: INVALID label_p IN ReportPageLabelNode]");
           }
+
+          { // PageLabelPrefix
+            PdfObject prefix_p = reader_p.getPdfObject(label_p.get(PdfName.P));
+            if (prefix_p != null && prefix_p.isString()) {
+              ofs.println("PageLabelPrefix: " + OutputPdfString((PdfString) prefix_p, utf8_b));
+            }
+          }
+
+          { // PageLabelNumStyle
+            PdfName r_p = new PdfName("r");
+            PdfName a_p = new PdfName("a");
+
+            PdfObject style_p = reader_p.getPdfObject(label_p.get(PdfName.S));
+            ofs.print("PageLabelNumStyle: ");
+            if (style_p != null && style_p.isName()) {
+              if (style_p.equals(PdfName.D)) {
+                ofs.println("DecimalArabicNumerals");
+              } else if (style_p.equals(PdfName.R)) {
+                ofs.println("UppercaseRomanNumerals");
+              } else if (style_p.equals(r_p)) {
+                ofs.println("LowercaseRomanNumerals");
+              } else if (style_p.equals(PdfName.A)) {
+                ofs.println("UppercaseLetters");
+              } else if (style_p.equals(a_p)) {
+                ofs.println("LowercaseLetters");
+              } else { // error
+                ofs.println("[PDFTK ERROR]");
+              }
+            } else { // default
+              ofs.println("NoNumber");
+            }
+          }
+
         }
-      } else { // error
-        ofs.println("[PDFTK ERROR: INVALID labels_p IN ReportPageLabelNode]");
+        else { // error
+          ofs.println("[PDFTK ERROR: INVALID label_p IN ReportPageLabelNode]");
+        }
       }
-    } else { // try recursing
-      PdfArray kids_p = (PdfArray) reader_p.getPdfObject(numtree_node_p.get(PdfName.KIDS));
+    }
+    else { // try recursing
+      PdfObject kids_p = reader_p.getPdfObject(numtree_node_p.get(PdfName.KIDS));
       if (kids_p != null && kids_p.isArray()) {
 
-        ArrayList<PRIndirectReference> kids_ar_p = kids_p.getArrayList();
-        if (kids_ar_p != null) {
-          for (PRIndirectReference kids_ii : kids_ar_p) {
+        ArrayList<PRIndirectReference> kids_ar_p = ((PdfArray) kids_p).getArrayList();
+        for (PRIndirectReference kids_ii : kids_ar_p) {
 
-            PdfDictionary kid_p = (PdfDictionary) reader_p.getPdfObject(kids_ii);
-            if (kid_p != null && kid_p.isDictionary()) {
+          PdfObject kid_p = reader_p.getPdfObject(kids_ii);
+          if (kid_p != null && kid_p.isDictionary()) {
 
               // recurse
-              ReportPageLabels(ofs, kid_p, reader_p, utf8_b);
-            } else { // error
-              ofs.println("[PDFTK ERROR: INVALID kid_p]");
-            }
+            ReportPageLabels(ofs, (PdfDictionary) kid_p, reader_p, utf8_b);
+          } else { // error
+            ofs.println("[PDFTK ERROR: INVALID kid_p]");
           }
-        } else { // error
-          ofs.println("[PDFTK ERROR: INVALID kids_ar_p]");
         }
       } else { // error; a number tree must have one or the other
         ofs.println("[PDFTK ERROR: INVALID PAGE LABEL NUMBER TREE]");
@@ -804,47 +790,46 @@ class report {
 
   static void ReportOnPdf(PrintStream ofs, PdfReader reader_p, boolean utf8_b) {
     { // trailer data
-      PdfDictionary trailer_p = reader_p.getTrailer();
-      if (trailer_p != null && trailer_p.isDictionary()) {
+      PdfObject trailer_po = reader_p.getTrailer();
+      if (trailer_po != null && trailer_po.isDictionary()) {
+        PdfDictionary trailer_p = (PdfDictionary) trailer_po;
 
         { // metadata
-          PdfDictionary info_p = (PdfDictionary) reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
+          PdfObject info_p = reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
           if (info_p != null && info_p.isDictionary()) {
 
-            ReportInfo(ofs, reader_p, info_p, utf8_b);
+            ReportInfo(ofs, reader_p, (PdfDictionary) info_p, utf8_b);
           } else { // warning
             System.err.println("Warning: no info dictionary found");
           }
         }
 
         { // pdf ID; optional
-          PdfArray id_p = (PdfArray) reader_p.getPdfObject(trailer_p.get(PdfName.ID));
+          PdfObject id_p = reader_p.getPdfObject(trailer_p.get(PdfName.ID));
           if (id_p != null && id_p.isArray()) {
 
-            ArrayList<PRIndirectReference> id_al_p = id_p.getArrayList();
-            if (id_al_p != null) {
+            ArrayList<PRIndirectReference> id_al_p = ((PdfArray) id_p).getArrayList();
 
-              for (int ii = 0; ii < id_al_p.size(); ++ii) {
-                ofs.print("PdfID" + ii + ": ");
+            for (int ii = 0; ii < id_al_p.size(); ++ii) {
+              ofs.print("PdfID" + ii + ": ");
 
-                PdfString id_ss_p = (PdfString) reader_p.getPdfObject(id_al_p.get(ii));
-                if (id_ss_p != null && id_ss_p.isString()) {
+              PdfObject id_ss_p = reader_p.getPdfObject(id_al_p.get(ii));
+              if (id_ss_p != null && id_ss_p.isString()) {
 
-                  byte[] bb = id_ss_p.getBytes();
-                  if (bb != null && bb.length > 0) {
-                    for (byte bb_ss : bb) {
-                      ofs.printf("%02x", bb_ss);
-                    }
+                byte[] bb = ((PdfString) id_ss_p).getBytes();
+                if (bb != null && bb.length > 0) {
+                  for (byte bb_ss : bb) {
+                    ofs.printf("%02x", bb_ss);
                   }
-                } else { // error
-                  System.err.println("pdftk Error in ReportOnPdf(): invalid pdf id array string;");
                 }
-
-                ofs.println();
+              } else { // error
+                System.err.println("pdftk Error in ReportOnPdf(): invalid pdf id array string;");
               }
-            } else { // error
-              System.err.println("pdftk Error in ReportOnPdf(): invalid ID ArrayList");
+
+              ofs.println();
             }
+          } else { // error
+            System.err.println("pdftk Error in ReportOnPdf(): invalid ID ArrayList");
           }
         }
 
@@ -856,7 +841,7 @@ class report {
     int numPages = reader_p.getNumberOfPages();
 
     { // number of pages and outlines
-      PdfDictionary catalog_p = reader_p.catalog;
+      PdfObject catalog_p = reader_p.catalog;
       if (catalog_p != null && catalog_p.isDictionary()) {
 
         // number of pages
@@ -882,15 +867,15 @@ class report {
         ofs.println("NumberOfPages: " + numPages);
 
         // outlines; optional
-        PdfDictionary outlines_p =
-            (PdfDictionary) reader_p.getPdfObject(catalog_p.get(PdfName.OUTLINES));
+        PdfObject outlines_p =
+          reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
         if (outlines_p != null && outlines_p.isDictionary()) {
 
-          PdfDictionary top_outline_p =
-              (PdfDictionary) reader_p.getPdfObject(outlines_p.get(PdfName.FIRST));
+          PdfObject top_outline_p =
+            reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
           if (top_outline_p != null && top_outline_p.isDictionary()) {
 
-            ReportOutlines(ofs, top_outline_p, reader_p, utf8_b);
+            ReportOutlines(ofs, (PdfDictionary) top_outline_p, reader_p, utf8_b);
           } else { // error
             // okay, not a big deal
             // cerr << "Internal Error: invalid top_outline_p in ReportOnPdf()" << endl;
@@ -959,13 +944,13 @@ class report {
 
     { // page labels (a/k/a logical page numbers)
       PdfDictionary catalog_p = reader_p.catalog;
-      if (catalog_p != null && catalog_p.isDictionary()) {
+      if (catalog_p != null) {
 
-        PdfDictionary pagelabels_p =
-            (PdfDictionary) reader_p.getPdfObject(catalog_p.get(PdfName.PAGELABELS));
+        PdfObject pagelabels_p =
+reader_p.getPdfObject(catalog_p.get(PdfName.PAGELABELS));
         if (pagelabels_p != null && pagelabels_p.isDictionary()) {
 
-          ReportPageLabels(ofs, pagelabels_p, reader_p, utf8_b);
+          ReportPageLabels(ofs, (PdfDictionary) pagelabels_p, reader_p, utf8_b);
         }
       } else { // error
         System.err.println("pdftk Error in ReportOnPdf(): couldn't find catalog (2);");
