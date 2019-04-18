@@ -1765,20 +1765,23 @@ class TK_Session {
             float corner_top = crop_box_p.top() - margin;
             float corner_left = crop_box_p.left() + margin;
 
-            PdfArray annots_p = (PdfArray) input_reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
+            PdfObject annots_po = input_reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
             boolean annots_new_b = false;
-            if (annots_p == null) { // create Annots array
-              annots_p = new PdfArray();
+            if (annots_po == null) { // create Annots array
+              annots_po = new PdfArray();
               annots_new_b = true;
-            } else { // grab corner_top and corner_left from the bottom right of the newest annot
+            }
+            if (annots_po.isArray()) {
+              // grab corner_top and corner_left from the bottom right of the newest annot
+              PdfArray annots_p = (PdfArray) annots_po;
               ArrayList<PdfObject> annots_array_p = annots_p.getArrayList();
               for (PdfObject ii : annots_array_p) {
-                PdfDictionary annot_p = (PdfDictionary) input_reader_p.getPdfObject(ii);
+                PdfObject annot_p = input_reader_p.getPdfObject(ii);
                 if (annot_p != null && annot_p.isDictionary()) {
-                  PdfArray annot_bbox_p =
-                      (PdfArray) input_reader_p.getPdfObject(annot_p.get(PdfName.RECT));
+                  PdfObject annot_bbox_p =
+                      input_reader_p.getPdfObject(((PdfDictionary) annot_p).get(PdfName.RECT));
                   if (annot_bbox_p != null && annot_bbox_p.isArray()) {
-                    ArrayList<PdfObject> bbox_array_p = annot_bbox_p.getArrayList();
+                    ArrayList<PdfObject> bbox_array_p = ((PdfArray) annot_bbox_p).getArrayList();
                     if (bbox_array_p.size() == 4) {
                       corner_top = ((PdfNumber) bbox_array_p.get(1)).floatValue();
                       corner_left = ((PdfNumber) bbox_array_p.get(2)).floatValue();
@@ -1786,8 +1789,6 @@ class TK_Session {
                   }
                 }
               }
-            }
-            if (annots_p != null && annots_p.isArray()) {
               for (String vit : m_input_attach_file_filename) {
                 if (vit.equals("PROMPT")) {
                   vit = pdftk.prompt_for_filename("Please enter a filename for attachment:");
@@ -1840,22 +1841,22 @@ class TK_Session {
         if (catalog_p != null && catalog_p.isDictionary()) {
 
           // the Names dict
-          PdfDictionary names_p =
-              (PdfDictionary) input_reader_p.getPdfObject(catalog_p.get(PdfName.NAMES));
+          PdfObject names_po = input_reader_p.getPdfObject(catalog_p.get(PdfName.NAMES));
           boolean names_new_b = false;
-          if (names_p == null) { // create Names dict
-            names_p = new PdfDictionary();
+          if (names_po == null) { // create Names dict
+            names_po = new PdfDictionary();
             names_new_b = true;
           }
-          if (names_p != null && names_p.isDictionary()) {
+          if (names_po != null && names_po.isDictionary()) {
+            PdfDictionary names_p = (PdfDictionary) names_po;
 
             // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
-            PdfDictionary emb_files_tree_p =
-                (PdfDictionary) input_reader_p.getPdfObject(names_p.get(PdfName.EMBEDDEDFILES));
+            PdfObject emb_files_tree_p =
+                input_reader_p.getPdfObject(names_p.get(PdfName.EMBEDDEDFILES));
             HashMap<String, PdfIndirectReference> emb_files_map_p = null;
             boolean emb_files_tree_new_b = false;
             if (emb_files_tree_p != null) { // read current name tree of attachments into a map
-              emb_files_map_p = PdfNameTree.readTree(emb_files_tree_p);
+              emb_files_map_p = PdfNameTree.readTree((PdfDictionary) emb_files_tree_p);
             } else { // create material
               emb_files_map_p = new HashMap<String, PdfIndirectReference>();
               emb_files_tree_new_b = true;
@@ -1912,7 +1913,7 @@ class TK_Session {
                 names_p.put(PdfName.EMBEDDEDFILES, ref_p);
               } else if (emb_files_tree_p != null && emb_files_tree_new_p != null) {
                 // supplementing old material
-                emb_files_tree_p.merge(emb_files_tree_new_p);
+                ((PdfDictionary) emb_files_tree_p).merge(emb_files_tree_new_p);
               } else { // error
                 System.err.println("Internal Error: no valid EmbeddedFiles tree to add to PDF.");
               }
@@ -1944,24 +1945,23 @@ class TK_Session {
       if (catalog_p != null && catalog_p.isDictionary()) {
 
         // the Names dict
-        PdfDictionary names_p =
-            (PdfDictionary) input_reader_p.getPdfObject(catalog_p.get(PdfName.NAMES));
+        PdfObject names_p = input_reader_p.getPdfObject(catalog_p.get(PdfName.NAMES));
         if (names_p != null && names_p.isDictionary()) {
 
           // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
-          PdfDictionary emb_files_tree_p =
-              (PdfDictionary) input_reader_p.getPdfObject(names_p.get(PdfName.EMBEDDEDFILES));
+          PdfObject emb_files_tree_p =
+              input_reader_p.getPdfObject(((PdfDictionary) names_p).get(PdfName.EMBEDDEDFILES));
           HashMap<Object, PdfObject> emb_files_map_p = null;
           if (emb_files_tree_p != null && emb_files_tree_p.isDictionary()) {
             // read current name tree of attachments into a map
-            emb_files_map_p = PdfNameTree.readTree(emb_files_tree_p);
+            emb_files_map_p = PdfNameTree.readTree((PdfDictionary) emb_files_tree_p);
 
             for (PdfObject value_p : emb_files_map_p.values()) {
-              PdfDictionary filespec_p = (PdfDictionary) input_reader_p.getPdfObject(value_p);
+              PdfObject filespec_p = input_reader_p.getPdfObject(value_p);
               if (filespec_p != null && filespec_p.isDictionary()) {
 
                 attachments.unpack_file(
-                    input_reader_p, filespec_p, output_pathname, m_ask_about_warnings_b);
+                    input_reader_p, (PdfDictionary) filespec_p, output_pathname, m_ask_about_warnings_b);
               }
             }
           }
@@ -1976,26 +1976,24 @@ class TK_Session {
         PdfDictionary page_p = input_reader_p.getPageN(ii);
         if (page_p != null && page_p.isDictionary()) {
 
-          PdfArray annots_p = (PdfArray) input_reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
+          PdfObject annots_p = input_reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
           if (annots_p != null && annots_p.isArray()) {
 
-            ArrayList<PdfObject> annots_array_p = annots_p.getArrayList();
+            ArrayList<PdfObject> annots_array_p = ((PdfArray)annots_p).getArrayList();
             for (PdfObject jj : annots_array_p) {
-              PdfDictionary annot_p = (PdfDictionary) input_reader_p.getPdfObject(jj);
-              if (annot_p != null && annot_p.isDictionary()) {
+              PdfObject annot_po = input_reader_p.getPdfObject(jj);
+              if (annot_po != null && annot_po.isDictionary()) {
+                PdfDictionary annot_p = (PdfDictionary) annot_po;
 
-                PdfName subtype_p =
-                    (PdfName) input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
-                if (subtype_p != null
-                    && subtype_p.isName()
-                    && subtype_p.equals(PdfName.FILEATTACHMENT)) {
+                PdfObject subtype_p =
+input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
+                if (subtype_p != null && subtype_p.equals(PdfName.FILEATTACHMENT)) {
 
-                  PdfDictionary filespec_p =
-                      (PdfDictionary) input_reader_p.getPdfObject(annot_p.get(PdfName.FS));
+                  PdfObject filespec_p = input_reader_p.getPdfObject(annot_p.get(PdfName.FS));
                   if (filespec_p != null && filespec_p.isDictionary()) {
 
                     attachments.unpack_file(
-                        input_reader_p, filespec_p, output_pathname, m_ask_about_warnings_b);
+                        input_reader_p, (PdfDictionary) filespec_p, output_pathname, m_ask_about_warnings_b);
                   }
                 }
               }
@@ -2256,8 +2254,7 @@ class TK_Session {
 
                 PdfDictionary trailer_p = input_reader_p.getTrailer();
 
-                PdfArray file_id_p =
-                    (PdfArray) input_reader_p.getPdfObject(trailer_p.get(PdfName.ID));
+                PdfObject file_id_p = input_reader_p.getPdfObject(trailer_p.get(PdfName.ID));
                 if (file_id_p != null && file_id_p.isArray()) {
 
                   writer_p.setFileID(file_id_p);
@@ -2297,19 +2294,18 @@ class TK_Session {
                 // PDF extensions
 
                 if (catalog_p.contains(PdfName.EXTENSIONS)) {
-                  PdfDictionary extensions_p =
-                      (PdfDictionary) reader_p.getPdfObject(catalog_p.get(PdfName.EXTENSIONS));
-                  if (extensions_p != null && extensions_p.isDictionary()) {
+                  PdfObject extensions_po = reader_p.getPdfObject(catalog_p.get(PdfName.EXTENSIONS));
+                  if (extensions_po != null && extensions_po.isDictionary()) {
+                    PdfDictionary extensions_p = (PdfDictionary) extensions_po;
 
                     // iterate over developers
                     Set<PdfObject> keys_p = extensions_p.getKeys();
-                    Iterator<PdfObject> kit = keys_p.iterator();
-                    while (kit.hasNext()) {
-                      PdfName developer_p = (PdfName) reader_p.getPdfObject(kit.next());
+                    for (PdfObject kit : keys_p) {
+                      PdfName developer_p = (PdfName) reader_p.getPdfObject(kit);
 
-                      PdfDictionary dev_exts_p =
-                          (PdfDictionary) reader_p.getPdfObject(extensions_p.get(developer_p));
-                      if (dev_exts_p != null && dev_exts_p.isDictionary()) {
+                      PdfObject dev_exts_po = reader_p.getPdfObject(extensions_p.get(developer_p));
+                      if (dev_exts_po != null && dev_exts_po.isDictionary()) {
+                        PdfDictionary dev_exts_p = (PdfDictionary) dev_exts_po;
 
                         if (dev_exts_p.contains(PdfName.BASEVERSION)
                             && dev_exts_p.contains(PdfName.EXTENSIONLEVEL)) {
@@ -2455,18 +2451,16 @@ class TK_Session {
                     // pdf bookmarks -> children
                     {
                       PdfDictionary catalog_p = reader_p.getCatalog();
-                      PdfDictionary outlines_p =
-                          (PdfDictionary) reader_p.getPdfObject(catalog_p.get(PdfName.OUTLINES));
+                      PdfObject outlines_p = reader_p.getPdfObject(catalog_p.get(PdfName.OUTLINES));
                       if (outlines_p != null && outlines_p.isDictionary()) {
 
-                        PdfDictionary top_outline_p =
-                            (PdfDictionary) reader_p.getPdfObject(outlines_p.get(PdfName.FIRST));
+                        PdfObject top_outline_p =
+                            reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
                         if (top_outline_p != null && top_outline_p.isDictionary()) {
 
                           ArrayList<PdfBookmark> bookmark_data = new ArrayList<PdfBookmark>();
-                          int rr =
-                              bookmarks.ReadOutlines(
-                                  bookmark_data, top_outline_p, 0, reader_p, true);
+                          int rr = bookmarks.ReadOutlines(
+                              bookmark_data, (PdfDictionary) top_outline_p, 0, reader_p, true);
                           if (rr == 0 && !bookmark_data.isEmpty()) {
 
                             // passed in by reference, so must use variable:
@@ -2571,14 +2565,12 @@ class TK_Session {
               PdfDictionary input_info_p = null;
               {
                 PdfDictionary input_trailer_p = input_reader_p.getTrailer();
-                if (input_trailer_p != null && input_trailer_p.isDictionary()) {
-                  input_info_p =
-                      (PdfDictionary)
-                          input_reader_p.getPdfObject(input_trailer_p.get(PdfName.INFO));
-                  if (input_info_p != null && input_info_p.isDictionary()) {
+                if (input_trailer_p != null) {
+                  PdfObject input_info_po =
+                      input_reader_p.getPdfObject(input_trailer_p.get(PdfName.INFO));
+                  if (input_info_po != null && input_info_po.isDictionary()) {
                     // success
-                  } else {
-                    input_info_p = null;
+                    input_info_p = (PdfDictionary) input_info_po;
                   }
                 }
               }
@@ -2789,11 +2781,11 @@ class TK_Session {
                 PdfDictionary catalog_p = input_reader_p.catalog;
                 if (catalog_p != null && catalog_p.isDictionary()) {
 
-                  PdfDictionary acro_form_p =
-                      (PdfDictionary) input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
+                  PdfObject acro_form_p =
+                      input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
                   if (acro_form_p != null && acro_form_p.isDictionary()) {
 
-                    acro_form_p.remove(PdfName.XFA);
+                    ((PdfDictionary) acro_form_p).remove(PdfName.XFA);
                   }
                 }
               }
@@ -2801,7 +2793,7 @@ class TK_Session {
               // drop the xmp?
               if (m_output_drop_xmp_b) {
                 PdfDictionary catalog_p = input_reader_p.catalog;
-                if (catalog_p != null && catalog_p.isDictionary()) {
+                if (catalog_p != null) {
 
                   catalog_p.remove(PdfName.METADATA);
                 }
@@ -2935,10 +2927,10 @@ class TK_Session {
               if (m_output_need_appearances_b) {
                 PdfDictionary catalog_p = input_reader_p.catalog;
                 if (catalog_p != null && catalog_p.isDictionary()) {
-                  PdfDictionary acro_form_p =
-                      (PdfDictionary) input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
+                  PdfObject acro_form_p =
+                      input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
                   if (acro_form_p != null && acro_form_p.isDictionary()) {
-                    acro_form_p.put(PdfName.NEEDAPPEARANCES, PdfBoolean.PDFTRUE);
+                    ((PdfDictionary) acro_form_p).put(PdfName.NEEDAPPEARANCES, PdfBoolean.PDFTRUE);
                   }
                 }
               }
