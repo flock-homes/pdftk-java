@@ -173,7 +173,7 @@ class data_import {
 
       { // trailer data
         PdfDictionary trailer_p = reader_p.getTrailer();
-        if (trailer_p != null && trailer_p.isDictionary()) {
+        if (trailer_p != null) {
 
           // bookmarks
           if (!pdf_data.m_bookmarks.isEmpty()) {
@@ -192,24 +192,28 @@ class data_import {
                       0,
                       utf8_b);
 
-              PdfDictionary root_p =
-                  (PdfDictionary) reader_p.getPdfObject(trailer_p.get(PdfName.ROOT));
-              if (root_p.contains(PdfName.OUTLINES)) {
-                // erase old bookmarks
-                PdfDictionary old_outlines_p =
-                    (PdfDictionary) reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
-                bookmarks.RemoveBookmarks(reader_p, old_outlines_p);
+              PdfObject root_po = reader_p.getPdfObject(trailer_p.get(PdfName.ROOT));
+              if (root_po != null && root_po.isDictionary()) {
+                PdfDictionary root_p = (PdfDictionary) root_po;
+                if (root_p.contains(PdfName.OUTLINES)) {
+                  // erase old bookmarks
+                  PdfObject old_outlines_p =
+reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
+                  if (old_outlines_p != null && old_outlines_p.isDictionary()) {
+                    bookmarks.RemoveBookmarks(reader_p, (PdfDictionary) old_outlines_p);
+                  }
+                }
+                // insert into document
+                root_p.put(PdfName.OUTLINES, outlines_ref_p);
               }
-              // insert into document
-              root_p.put(PdfName.OUTLINES, (PdfObject) outlines_ref_p);
             }
           }
 
           // metadata
           if (!pdf_data.m_info.isEmpty()) {
-            PdfDictionary info_p =
-                (PdfDictionary) reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
-            if (info_p != null && info_p.isDictionary()) {
+            PdfObject info_po = reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
+            if (info_po != null && info_po.isDictionary()) {
+              PdfDictionary info_p = (PdfDictionary) info_po;
 
               for (PdfInfo it : pdf_data.m_info) {
                 if (it.m_value.isEmpty()) {

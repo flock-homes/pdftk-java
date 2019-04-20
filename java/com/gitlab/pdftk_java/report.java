@@ -790,9 +790,8 @@ class report {
 
   static void ReportOnPdf(PrintStream ofs, PdfReader reader_p, boolean utf8_b) {
     { // trailer data
-      PdfObject trailer_po = reader_p.getTrailer();
-      if (trailer_po != null && trailer_po.isDictionary()) {
-        PdfDictionary trailer_p = (PdfDictionary) trailer_po;
+      PdfDictionary trailer_p = reader_p.getTrailer();
+      if (trailer_p != null) {
 
         { // metadata
           PdfObject info_p = reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
