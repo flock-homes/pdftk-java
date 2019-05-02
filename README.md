@@ -33,6 +33,7 @@ If you have gradle installed you can produce a standalone jar with:
 ```
 gradle shadowJar
 ```
+Alternatively, a [pre-built jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/libs/pdftk-all.jar?job=gradle) is also available.
 
 This can then be run with just java installed like:
 ```
