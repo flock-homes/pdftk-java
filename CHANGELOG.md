@@ -1,3 +1,8 @@
+## [3.0.4] - 2019-05-02
+
+### Fixed
+ - Crashes with type casting (java.lang.ClassCastException)
+
 ## [3.0.3] - 2019-01-15
 
 ### Fixed
