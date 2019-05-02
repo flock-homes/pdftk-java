@@ -1,11 +1,12 @@
-image: openjdk:11
-
-before_script:
+.ant-job:
+  stage: test
+  image: openjdk:11
+  before_script:
   - apt-get update -yqq
   - apt-get install ant ivy -yqq
 
 php-pdftk:
-  stage: test
+  extends: .ant-job
   script:
     - ant -lib /usr/share/java
     - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.51.jar:'`pwd`'/lib/commons-lang3-3.7.jar com.gitlab.pdftk_java.pdftk "$@"' > /usr/bin/pdftk
@@ -18,14 +19,13 @@ php-pdftk:
     - phpunit
 
 test:
-  stage: test
+  extends: .ant-job
   script:
     - ant -lib /usr/share/java test
 
-gradle:
+.gradle-job:
   stage: test
   image: gradle:latest
-  before_script: []
   variables:
     GRADLE_VERSION: "5.0"
   script:
@@ -33,17 +33,24 @@ gradle:
     - ./gradlew shadowJar
     - java -jar build/libs/pdftk-all.jar --version
 
+gradle:
+  extends: .gradle-job
+  artifacts:
+    paths:
+    - build/libs/pdftk-all.jar
+    expire_in: 1 month
+
 gradle-4.10.3:
-  extends: gradle
+  extends: .gradle-job
   variables:
     GRADLE_VERSION: "4.10.3"
 
 gradle-4.0:
-  extends: gradle
+  extends: .gradle-job
   variables:
     GRADLE_VERSION: "4.0"
 
 spotless:
-  extends: gradle
+  extends: .gradle-job
   script:
     - gradle spotlessCheck
