@@ -1,3 +1,9 @@
+## [3.0.5] - 2019-05-20
+
+### Fixed
+ - Do not print error if PdfID is missing.
+ - Crash in burst with certain inputs (java.lang.NullPointerException).
+
 ## [3.0.4] - 2019-05-02
 
 ### Fixed
