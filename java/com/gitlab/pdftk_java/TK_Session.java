@@ -2583,7 +2583,6 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 Document output_doc_p = new Document();
                 FileOutputStream ofs_p = new FileOutputStream(jv_output_filename_p);
                 PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
-                writer_p.setFromReader(input_reader_p);
 
                 output_doc_p.addCreator(jv_creator_p);
 
@@ -2609,6 +2608,10 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 }
 
                 output_doc_p.open(); // must open writer before copying (possibly) indirect object
+                // Call setFromReader() after open(),
+                // otherwise topPageParent is not properly set.
+                // See https://gitlab.com/pdftk-java/pdftk/issues/18
+                writer_p.setFromReader(input_reader_p);
 
                 { // copy the Info dictionary metadata
                   if (input_info_p != null) {
