@@ -827,8 +827,6 @@ class report {
 
               ofs.println();
             }
-          } else { // error
-            System.err.println("pdftk Error in ReportOnPdf(): invalid ID ArrayList");
           }
         }
 
