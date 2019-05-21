@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.gitlab.pdftk_java.pdftk;
 
-public class DataTest extends BlackBoxTest {
+public class DataTest extends BlackBox {
   @Test
   public void dump_data() throws IOException {
     exit.expectSystemExitWithStatus(0);

@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import com.gitlab.pdftk_java.pdftk;
 
-public class BurstTest extends BlackBoxTest {
+public class BurstTest extends BlackBox {
   @Rule
   public final TemporaryFolder tmpDirectory = new TemporaryFolder();
 

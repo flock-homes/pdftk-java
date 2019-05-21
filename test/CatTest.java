@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.gitlab.pdftk_java.pdftk;
 
-public class CatTest extends BlackBoxTest {
+public class CatTest extends BlackBox {
   @Test
   public void cat() throws IOException {
     exit.expectSystemExitWithStatus(0);
