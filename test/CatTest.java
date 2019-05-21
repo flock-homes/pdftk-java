@@ -1,43 +1,10 @@
 import static org.junit.Assert.assertEquals;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.SystemOutRule;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.io.IOException;
 
 import com.gitlab.pdftk_java.pdftk;
 
-public class BlackBoxTest {
-  @Rule
-  public final SystemOutRule systemOutRule =
-    new SystemOutRule().muteForSuccessfulTests();
-
-  @Rule
-  public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-
-  @Rule
-  public final TextFromStandardInputStream systemInMock
-    = TextFromStandardInputStream.emptyStandardInputStream();
-
-  public String slurp(String filename) throws IOException {
-    return new String(slurpBytes(filename));
-  }
-  public byte[] slurpBytes(String filename) throws IOException {
-    return Files.readAllBytes(Paths.get(filename));
-  }
-  
-  @Test
-  public void dump_data() throws IOException {
-    exit.expectSystemExitWithStatus(0);
-    pdftk.main(new String[]{"test/files/blank.pdf", "dump_data_utf8"});
-    String expectedData = slurp("test/files/blank.data");
-    assertEquals(expectedData, systemOutRule.getLog());    
-  }
-
+public class CatTest extends BlackBoxTest {
   @Test
   public void cat() throws IOException {
     exit.expectSystemExitWithStatus(0);
@@ -83,12 +50,4 @@ public class BlackBoxTest {
     byte[] expectedData = slurpBytes("test/files/blank.pdf");
     assertEquals(expectedData, systemOutRule.getLogAsBytes());
   }
-
-  @Test
-  public void update_info_incomplete_record() {
-    exit.expectSystemExitWithStatus(0);
-    systemInMock.provideLines("InfoBegin", "InfoKey: Title", " ","InfoBegin", "InfoKey: Author", " ");
-    pdftk.main(new String[]{"test/files/blank.pdf", "update_info", "-", "output", "-"});
-  }
-
 };
