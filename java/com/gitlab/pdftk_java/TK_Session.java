@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import pdftk.com.lowagie.text.Document;
@@ -2545,6 +2546,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
               if (1 < m_input_pdf.size()) { // error
                 System.err.println("Error: Only one input PDF file may be given for \"burst\" op.");
                 System.err.println("   No output created.");
+                ret_val = ErrorCode.ERROR;
                 break;
               }
 
@@ -2559,6 +2561,16 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
               }
               if (m_output_filename.isEmpty()) {
                 m_output_filename = "pg_%04d.pdf";
+              }
+              try {
+                String.format(m_output_filename, 1);
+              }
+              catch(UnknownFormatConversionException e) {
+                System.err.println("Error: Invalid output pattern:");
+                System.err.println("   " + m_output_filename);
+                System.err.println("   No output created.");
+                ret_val = ErrorCode.ERROR;
+                break;
               }
 
               // locate the input PDF Info dictionary that holds metadata
@@ -3086,6 +3098,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 System.err.println(
                     "Error: Only one input PDF file may be used for the generate_fdf operation");
                 System.err.println("   No output created.");
+                ret_val = ErrorCode.ERROR;
                 break;
               }
 
