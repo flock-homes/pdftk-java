@@ -12,4 +12,12 @@ public class DataFieldsTest extends BlackBox {
     String expectedData = slurp("test/files/issue19.data");
     assertEquals(expectedData, systemOutRule.getLog());
   }
+
+  @Test
+  public void escape_unicode() throws IOException {
+    exit.expectSystemExitWithStatus(0);
+    pdftk.main(new String[]{"test/files/issue21.pdf", "dump_data_fields"});
+    String expectedData = slurp("test/files/issue21.data");
+    assertEquals(expectedData, systemOutRule.getLog());
+  }
 };
