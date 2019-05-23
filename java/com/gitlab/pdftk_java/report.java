@@ -385,6 +385,9 @@ class report {
 
               // reset state;
               acc_state.copyFrom(prev_state);
+
+              // record field names found in subtree
+              ret_val_b |= kids_have_names_b;
             } else { // error
             }
           } else if (kid_p.contains(PdfName.T)) {
