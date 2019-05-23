@@ -1,6 +1,8 @@
 This is a port of [pfdtk](https://www.pdflabs.com/tools/pdftk-server/)
 into Java. The current goal is to make a translation as faithful as it
-is reasonable, and to leave possible improvements and refactoring for
+is reasonable and to fix any issues present in the original
+(correctness takes precedence over compatibility),
+leaving possible improvements and refactoring for
 later. So far all code has been manually translated and it passes the
 test suite of [php-pdftk](https://github.com/mikehaertl/php-pdftk),
 but a lot more testing is needed. Due to the differences between C++
