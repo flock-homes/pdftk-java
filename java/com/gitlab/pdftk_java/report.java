@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
+import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
 import pdftk.com.lowagie.text.Rectangle;
 import pdftk.com.lowagie.text.pdf.PRIndirectReference;
 import pdftk.com.lowagie.text.pdf.PRStream;
@@ -48,8 +50,14 @@ import pdftk.com.lowagie.text.pdf.PdfString;
 
 class report {
 
+  // Escape both Xml and Unicode entities
+  // see https://commons.apache.org/proper/commons-lang/javadocs/api-3.6/org/apache/commons/lang3/StringEscapeUtils.html#escapeXml-java.lang.String-
+  static CharSequenceTranslator XmlUnicodeEscaper =
+    StringEscapeUtils.ESCAPE_XML10.with(
+      NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
+
   static String OutputXmlString(String jss_p) {
-    return StringEscapeUtils.escapeXml10(jss_p);
+    return XmlUnicodeEscaper.translate(jss_p);
   }
 
   static String OutputUtf8String(String jss_p) {
