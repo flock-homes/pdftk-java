@@ -1,7 +1,7 @@
 This is a port of [pfdtk](https://www.pdflabs.com/tools/pdftk-server/)
 into Java. The current goal is to make a translation as faithful as it
 is reasonable and to fix any issues present in the original
-(correctness takes precedence over compatibility),
+(correctness takes precedence over compatibility, see the [differences](#known-differences-with-pdftk)),
 leaving possible improvements and refactoring for
 later. So far all code has been manually translated and it passes the
 test suite of [php-pdftk](https://github.com/mikehaertl/php-pdftk),
@@ -67,6 +67,15 @@ To run:
 ```
 $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.pdftk_java.pdftk
 ```
+
+## Known differences with pdftk
+
+The following differences with respect to the original version of
+pdftk are intended. Issue reports about other differences are welcome.
+
+- Does not ask for owner password if not needed.
+- Does not report some structure-only form fields.
+- Reports some missing values in multi-valued form fields.
 
 ## Source organization
 
