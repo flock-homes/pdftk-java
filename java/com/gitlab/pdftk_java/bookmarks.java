@@ -67,9 +67,9 @@ class bookmarks {
           // Kids may be Pages or Page Tree Nodes
 
           // iterate over *dict_p's parent's kids until we run into *dict_p
-          ArrayList<PRIndirectReference> kids_p = ((PdfArray) parent_kids_p).getArrayList();
+          ArrayList<PdfObject> kids_p = ((PdfArray) parent_kids_p).getArrayList();
           if (kids_p != null) {
-            for (PRIndirectReference kids_ii : kids_p) {
+            for (PdfObject kids_ii : kids_p) {
 
               PdfObject kid_po = reader_p.getPdfObject(kids_ii);
               if (kid_po != null && kid_po.isDictionary()) {
@@ -201,7 +201,7 @@ class bookmarks {
         // destination is an array
         if (destination_p != null && destination_p.isArray()) {
 
-          ArrayList<PRIndirectReference> array_list_p = ((PdfArray) destination_p).getArrayList();
+          ArrayList<PdfObject> array_list_p = ((PdfArray) destination_p).getArrayList();
           if (array_list_p != null && !array_list_p.isEmpty()) {
 
             PdfObject page_p = reader_p.getPdfObject(array_list_p.get(0));

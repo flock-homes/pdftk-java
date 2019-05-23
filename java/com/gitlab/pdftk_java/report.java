@@ -142,12 +142,14 @@ class report {
           m_states.add(OutputPdfString((PdfString) opt_p, utf8_b));
         } else if (opt_p.isArray()) {
           // Option is an array (value, display)
-          ArrayList<PdfString> opt_value_display_p = ((PdfArray) opt_p).getArrayList();
-          if (opt_value_display_p.size() != 2) continue;
+          ArrayList<PdfObject> opt_value_display_p = ((PdfArray) opt_p).getArrayList();
           ArrayList<String> opt_value_display_a = new ArrayList<String>();
-          for (PdfString subopt_p : opt_value_display_p) {
-            opt_value_display_a.add(OutputPdfString(subopt_p, utf8_b));
+          for (PdfObject subopt_p : opt_value_display_p) {
+            if (subopt_p.isString()) {
+              opt_value_display_a.add(OutputPdfString((PdfString) subopt_p, utf8_b));
+            }
           }
+          if (opt_value_display_a.size() != 2) continue;
           m_states_value_display.add(opt_value_display_a);
         }
       }
@@ -222,9 +224,9 @@ class report {
     FormField prev_state = new FormField(acc_state);
     boolean ret_val_b = false;
 
-    ArrayList<PRIndirectReference> kids_p = kids_array_p.getArrayList();
+    ArrayList<PdfObject> kids_p = kids_array_p.getArrayList();
     if (kids_p != null) {
-      for (PRIndirectReference kids_ii : kids_p) {
+      for (PdfObject kids_ii : kids_p) {
 
         PdfObject kid_po = reader_p.getPdfObject(kids_ii);
         if (kid_po != null && kid_po.isDictionary()) {
@@ -290,8 +292,8 @@ class report {
               acc_state.m_vv.add(maybe_output);
             } else if (pdfs_p.isArray()) {
               // multiple selections
-              ArrayList<PRIndirectReference> vv_p = ((PdfArray) pdfs_p).getArrayList();
-              for (PRIndirectReference vv_ii : vv_p) {
+              ArrayList<PdfObject> vv_p = ((PdfArray) pdfs_p).getArrayList();
+              for (PdfObject vv_ii : vv_p) {
                 PdfObject pdfs_p_2 = reader_p.getPdfObject(vv_ii);
                 String maybe_output_2 = OutputPdfStringOrName(pdfs_p_2, utf8_b);
                 if (maybe_output_2 != null) {
@@ -469,8 +471,8 @@ class report {
       if (next_p != null && next_p.isDictionary()) {
         ReportAction(ofs, reader_p, (PdfDictionary) next_p, utf8_b, prefix);
       } else if (next_p != null && next_p.isArray()) {
-        ArrayList<PRIndirectReference> actions_p = ((PdfArray) next_p).getArrayList();
-        for (PRIndirectReference ii : actions_p) {
+        ArrayList<PdfObject> actions_p = ((PdfArray) next_p).getArrayList();
+        for (PdfObject ii : actions_p) {
           PdfObject next_action_p = reader_p.getPdfObject(ii);
           if (next_action_p != null && next_action_p.isDictionary())
             ReportAction(ofs, reader_p, (PdfDictionary) next_action_p, utf8_b, prefix); // recurse
@@ -506,7 +508,7 @@ class report {
     float[] rect = {0.0f, 0.0f, 0.0f, 0.0f};
     PdfObject rect_p = reader_p.getPdfObject(annot_p.get(PdfName.RECT));
     if (rect_p != null && rect_p.isArray()) {
-      ArrayList<PRIndirectReference> rect_al_p = ((PdfArray) rect_p).getArrayList();
+      ArrayList<PdfObject> rect_al_p = ((PdfArray) rect_p).getArrayList();
       if (rect_al_p.size() == 4) {
 
         for (int ii = 0; ii < 4; ++ii) {
@@ -602,10 +604,10 @@ class report {
       PdfObject annots_p = reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
       if (annots_p != null && annots_p.isArray()) {
 
-        ArrayList<PRIndirectReference> annots_al_p = ((PdfArray) annots_p).getArrayList();
+        ArrayList<PdfObject> annots_al_p = ((PdfArray) annots_p).getArrayList();
 
         // iterate over annotations
-        for (PRIndirectReference jj : annots_al_p) {
+        for (PdfObject jj : annots_al_p) {
 
           PdfObject annot_po = reader_p.getPdfObject(jj);
           if (annot_po != null && annot_po.isDictionary()) {
@@ -706,8 +708,8 @@ class report {
     if (nums_p != null && nums_p.isArray()) {
       // report page numbers
 
-      ArrayList<PRIndirectReference> labels_p = ((PdfArray) nums_p).getArrayList();
-      for (Iterator<PRIndirectReference> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
+      ArrayList<PdfObject> labels_p = ((PdfArray) nums_p).getArrayList();
+      for (Iterator<PdfObject> labels_ii = labels_p.iterator(); labels_ii.hasNext(); ) {
 
         // label index
         PdfObject index_p = reader_p.getPdfObject(labels_ii.next());
@@ -777,8 +779,8 @@ class report {
       PdfObject kids_p = reader_p.getPdfObject(numtree_node_p.get(PdfName.KIDS));
       if (kids_p != null && kids_p.isArray()) {
 
-        ArrayList<PRIndirectReference> kids_ar_p = ((PdfArray) kids_p).getArrayList();
-        for (PRIndirectReference kids_ii : kids_ar_p) {
+        ArrayList<PdfObject> kids_ar_p = ((PdfArray) kids_p).getArrayList();
+        for (PdfObject kids_ii : kids_ar_p) {
 
           PdfObject kid_p = reader_p.getPdfObject(kids_ii);
           if (kid_p != null && kid_p.isDictionary()) {
@@ -814,7 +816,7 @@ class report {
           PdfObject id_p = reader_p.getPdfObject(trailer_p.get(PdfName.ID));
           if (id_p != null && id_p.isArray()) {
 
-            ArrayList<PRIndirectReference> id_al_p = ((PdfArray) id_p).getArrayList();
+            ArrayList<PdfObject> id_al_p = ((PdfArray) id_p).getArrayList();
 
             for (int ii = 0; ii < id_al_p.size(); ++ii) {
               ofs.print("PdfID" + ii + ": ");
