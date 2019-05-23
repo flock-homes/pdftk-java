@@ -109,7 +109,7 @@ class report {
 
     FormField() {}
 
-    FormField(FormField copy) {
+    void copyFrom(FormField copy) {
       m_ft = copy.m_ft;
       m_tt = copy.m_tt;
       m_tu = copy.m_tu;
@@ -126,6 +126,10 @@ class report {
         m_states_value_display.add(new ArrayList<String>(l));
       }
       m_state = copy.m_state;
+    }
+
+    FormField(FormField copy) {
+      copyFrom(copy);
     }
 
     void addOptions(PdfReader reader_p, PdfArray opts_p, boolean utf8_b) {
@@ -380,7 +384,7 @@ class report {
               }
 
               // reset state;
-              acc_state = new FormField(prev_state);
+              acc_state.copyFrom(prev_state);
             } else { // error
             }
           } else if (kid_p.contains(PdfName.T)) {
@@ -388,7 +392,7 @@ class report {
             OutputFormField(ofs, acc_state);
 
             // reset state;
-            acc_state = new FormField(prev_state);
+            acc_state.copyFrom(prev_state);
 
             // record presense of field name
             ret_val_b = true;
