@@ -1,4 +1,6 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" default="main">
+<project name="pdftk-java" default="main"
+         xmlns:ivy="antlib:org.apache.ivy.ant"
+         xmlns:jacoco="antlib:org.jacoco.ant">
 
   <presetdef name="javac">
     <javac encoding="UTF-8" includeantruntime="false" debug="true"/>
@@ -47,23 +49,42 @@
   </target>
 
   <target name="test-run" depends="test-compile">
-    <junit>
-      <classpath>
-        <fileset dir="lib" includes="*.jar"/>
-        <pathelement path="build/classes"/>
-        <pathelement path="build/test"/>
-      </classpath>
-      <formatter type="plain" usefile="false" />
-      <batchtest>
-        <fileset dir="test" includes="*Test.java" />
-      </batchtest>
-    </junit>
+    <jacoco:coverage>
+      <junit fork="true" forkmode="once">
+        <classpath>
+          <fileset dir="lib" includes="*.jar"/>
+          <pathelement path="build/classes"/>
+          <pathelement path="build/test"/>
+        </classpath>
+        <formatter type="plain" usefile="false" />
+        <batchtest>
+          <fileset dir="test" includes="*Test.java" />
+        </batchtest>
+      </junit>
+    </jacoco:coverage>
   </target>
 
   <target name="test-resolve">
     <ivy:retrieve conf="test"/>
   </target>  
 
-  <target name="test" depends="test-resolve,test-run" />
+  <target name="coverage-report">
+    <jacoco:report>
+      <executiondata>
+        <file file="jacoco.exec"/>
+      </executiondata>
+      <structure name="pdftk-java">
+        <classfiles>
+          <fileset dir="build/classes/com"/>
+        </classfiles>
+        <sourcefiles>
+          <fileset dir="java"/>
+        </sourcefiles>
+      </structure>
+      <html destdir="coverage"/>
+    </jacoco:report>
+  </target>
+
+  <target name="test" depends="test-resolve,test-run,coverage-report" />
   
 </project>
