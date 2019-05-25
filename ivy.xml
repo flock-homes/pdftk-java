@@ -1,5 +1,5 @@
 <ivy-module version="2.2">
-  <info organisation="com.gitlab.marcvinyals" module="pdftk"/>
+  <info organisation="com.gitlab.pdftk_java" module="pdftk"/>
   <configurations defaultconf="build"
                   defaultconfmapping="build->default;test->default">
     <conf name="build"/>
@@ -9,7 +9,7 @@
     <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.51"/>
     <dependency org="org.apache.commons" name="commons-lang3" rev="3.7"/>
     <dependency org="junit" name="junit" rev="4.12" conf="test"/>
-    <dependency org="com.github.stefanbirkner" name="system-rules" rev="1.19.0" conf="test">
-    </dependency>
+    <dependency org="com.github.stefanbirkner" name="system-rules" rev="1.19.0" conf="test"/>
+    <dependency org="org.jacoco" name="org.jacoco.ant" rev="0.8.4" conf="test"/>
   </dependencies>
 </ivy-module>
