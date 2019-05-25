@@ -21,7 +21,20 @@ php-pdftk:
 test:
   extends: .ant-job
   script:
-    - ant -lib /usr/share/java -lib lib test
+    - ant -lib /usr/share/java -lib ./lib test
+  artifacts:
+    paths:
+      - coverage/
+
+pages:
+  stage: deploy
+  dependencies:
+    - test
+  script:
+    - mv coverage/ public/
+  artifacts:
+    paths:
+      - public/
 
 .gradle-job:
   stage: test
