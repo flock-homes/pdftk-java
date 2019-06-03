@@ -50,7 +50,7 @@
 
   <target name="test-run" depends="test-compile">
     <jacoco:coverage>
-      <junit fork="true" forkmode="once">
+      <junit fork="true" forkmode="once" failureproperty="tests.failed">
         <classpath>
           <fileset dir="lib" includes="*.jar"/>
           <pathelement path="build/classes"/>
@@ -85,6 +85,8 @@
     </jacoco:report>
   </target>
 
-  <target name="test" depends="test-resolve,test-run,coverage-report" />
+  <target name="test" depends="test-resolve,test-run,coverage-report">
+    <fail if="tests.failed" />
+  </target>
   
 </project>
