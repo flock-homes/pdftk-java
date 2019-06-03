@@ -125,6 +125,10 @@ public class pdftk {
   }
 
   public static void main(String[] args) {
+    System.exit(main_noexit(args));
+  }
+
+  public static int main_noexit(String[] args) {
     boolean help_b = false;
     boolean version_b = false;
     boolean synopsis_b = (args.length == 0);
@@ -178,7 +182,7 @@ public class pdftk {
     if (ret_val == ErrorCode.BUG) {
       describe_bug_report();
     }
-    System.exit(ret_val.code);
+    return ret_val.code;
   }
 
   static void describe_header() {
