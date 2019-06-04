@@ -3,7 +3,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.SystemOutRule;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.junit.rules.TemporaryFolder;
 
@@ -24,14 +23,11 @@ import com.gitlab.pdftk_java.pdftk;
 // command line and look at the output.
 public class BlackBox {
   @Rule
-  public final SystemOutRule systemOutRule =
+  public final SystemOutRule systemOut =
     new SystemOutRule().enableLog().muteForSuccessfulTests();
 
   @Rule
-  public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-
-  @Rule
-  public final TextFromStandardInputStream systemInMock
+  public final TextFromStandardInputStream systemIn
     = TextFromStandardInputStream.emptyStandardInputStream();
 
   @Rule
