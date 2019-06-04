@@ -2166,8 +2166,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
         System.out.println("Creating Output ...");
       }
 
-      String creator = "pdftk " + pdftk.PDFTK_VER + " - www.pdftk.com";
-      String jv_creator_p = creator;
+      String creator = "pdftk-java " + pdftk.PDFTK_VER;
 
       if (m_output_owner_pw.equals("PROMPT")) {
         m_output_owner_pw = pdftk.prompt_for_password("owner", "the output PDF");
@@ -2220,7 +2219,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
               char max_version_cc = PdfWriter.VERSION_1_2;
 
               //
-              output_doc_p.addCreator(jv_creator_p);
+              output_doc_p.addCreator(creator);
 
               // un/compress output streams?
               if (m_output_uncompress_b) {
@@ -2596,7 +2595,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 FileOutputStream ofs_p = new FileOutputStream(jv_output_filename_p);
                 PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
-                output_doc_p.addCreator(jv_creator_p);
+                output_doc_p.addCreator(creator);
 
                 // un/compress output streams?
                 if (m_output_uncompress_b) {
