@@ -256,280 +256,6 @@ class TK_Session {
   boolean m_update_info_utf8_b = false;
   String m_update_xmp_filename = "";
 
-  enum keyword {
-    none_k,
-
-    // the operations
-    cat_k, // combine pages from input PDFs into a single output
-    shuffle_k, // like cat, but interleaves pages from input ranges
-    burst_k, // split a single, input PDF into individual pages
-    barcode_burst_k, // barcode_burst project
-    filter_k, // apply 'filters' to a single, input PDF based on output args
-    dump_data_k, // no PDF output
-    dump_data_utf8_k,
-    dump_data_fields_k,
-    dump_data_fields_utf8_k,
-    dump_data_annots_k,
-    generate_fdf_k,
-    unpack_files_k, // unpack files from input; no PDF output
-
-    // these are treated the same as operations,
-    // but they are processed using the filter operation
-    fill_form_k, // read FDF file and fill PDF form fields
-    attach_file_k, // attach files to output
-    update_info_k,
-    update_info_utf8_k, // if info isn't utf-8, it is encoded using xml entities
-    update_xmp_k,
-    background_k, // promoted from output option to operation in pdftk 1.10
-    multibackground_k, // feature added by Bernhard R. Link <brlink@debian.org>, Johann Felix Soden
-    // <johfel@gmx.de>
-    stamp_k,
-    multistamp_k, // feature added by Bernhard R. Link <brlink@debian.org>, Johann Felix Soden
-    // <johfel@gmx.de>
-    rotate_k, // rotate given pages as directed
-
-    // optional attach_file argument
-    attach_file_to_page_k,
-
-    // cat page range keywords
-    even_k,
-    odd_k,
-
-    output_k,
-
-    // encryption & decryption
-    input_pw_k,
-    owner_pw_k,
-    user_pw_k,
-    user_perms_k,
-
-    // output arg.s, only
-    encrypt_40bit_k,
-    encrypt_128bit_k,
-
-    // user permissions
-    perm_printing_k,
-    perm_modify_contents_k,
-    perm_copy_contents_k,
-    perm_modify_annotations_k,
-    perm_fillin_k,
-    perm_screen_readers_k,
-    perm_assembly_k,
-    perm_degraded_printing_k,
-    perm_all_k,
-
-    // filters
-    filt_uncompress_k,
-    filt_compress_k,
-
-    // forms
-    flatten_k,
-    need_appearances_k,
-    drop_xfa_k,
-    drop_xmp_k,
-    keep_first_id_k,
-    keep_final_id_k,
-
-    // pdftk options
-    verbose_k,
-    dont_ask_k,
-    do_ask_k,
-
-    // page rotation
-    rot_north_k,
-    rot_east_k,
-    rot_south_k,
-    rot_west_k,
-    rot_left_k,
-    rot_right_k,
-    rot_upside_down_k
-  };
-
-  static keyword is_keyword(String ss) {
-    ss = ss.toLowerCase();
-
-    // operations
-    if (ss.equals("cat")) {
-      return keyword.cat_k;
-    } else if (ss.equals("shuffle")) {
-      return keyword.shuffle_k;
-    } else if (ss.equals("burst")) {
-      return keyword.burst_k;
-    } else if (ss.equals("filter")) {
-      return keyword.filter_k;
-    } else if (ss.equals("dump_data")
-        || ss.equals("dumpdata")
-        || ss.equals("data_dump")
-        || ss.equals("datadump")) {
-      return keyword.dump_data_k;
-    } else if (ss.equals("dump_data_utf8")) {
-      return keyword.dump_data_utf8_k;
-    } else if (ss.equals("dump_data_fields")) {
-      return keyword.dump_data_fields_k;
-    } else if (ss.equals("dump_data_fields_utf8")) {
-      return keyword.dump_data_fields_utf8_k;
-    } else if (ss.equals("dump_data_annots")) {
-      return keyword.dump_data_annots_k;
-    } else if (ss.equals("generate_fdf")
-        || ss.equals("fdfgen")
-        || ss.equals("fdfdump")
-        || ss.equals("dump_data_fields_fdf")) {
-      return keyword.generate_fdf_k;
-    } else if (ss.equals("fill_form") || ss.equals("fillform")) {
-      return keyword.fill_form_k;
-    } else if (ss.equals("attach_file") || ss.equals("attach_files") || ss.equals("attachfile")) {
-      return keyword.attach_file_k;
-    } else if (ss.equals("unpack_file") || ss.equals("unpack_files") || ss.equals("unpackfiles")) {
-      return keyword.unpack_files_k;
-    } else if (ss.equals("update_info") || ss.equals("undateinfo")) {
-      return keyword.update_info_k;
-    } else if (ss.equals("update_info_utf8") || ss.equals("undateinfoutf8")) {
-      return keyword.update_info_utf8_k;
-    }
-    /* requires more testing and work
-    else if( strcmp( ss_copy, "update_xmp" ) ||
-             strcmp( ss_copy, "undatexmp" ) ) {
-      return update_xmp_k;
-    }
-    */
-    else if (ss.equals("background")) {
-      // pdftk 1.10: making background an operation
-      // (and preserving old behavior for backwards compatibility)
-      return keyword.background_k;
-    } else if (ss.equals("multibackground")) {
-      return keyword.multibackground_k;
-    } else if (ss.equals("multistamp")) {
-      return keyword.multistamp_k;
-    } else if (ss.equals("stamp")) {
-      return keyword.stamp_k;
-    } else if (ss.equals("rotate")) {
-      return keyword.rotate_k;
-    }
-
-    // cat range keywords
-    else if (ss.startsWith("even")) { // note: strncmp
-      return keyword.even_k;
-    } else if (ss.startsWith("odd")) { // note: strncmp
-      return keyword.odd_k;
-    }
-
-    // file attachment option
-    else if (ss.equals("to_page") || ss.equals("topage")) {
-      return keyword.attach_file_to_page_k;
-    } else if (ss.equals("output")) {
-      return keyword.output_k;
-    }
-
-    // encryption & decryption; depends on context
-    else if (ss.equals("owner_pw") || ss.equals("ownerpw")) {
-      return keyword.owner_pw_k;
-    } else if (ss.equals("user_pw") || ss.equals("userpw")) {
-      return keyword.user_pw_k;
-    } else if (ss.equals("input_pw") || ss.equals("inputpw")) {
-      return keyword.input_pw_k;
-    } else if (ss.equals("allow")) {
-      return keyword.user_perms_k;
-    }
-
-    // expect these only in output section
-    else if (ss.equals("encrypt_40bit")
-        || ss.equals("encrypt_40bits")
-        || ss.equals("encrypt40bit")
-        || ss.equals("encrypt40bits")
-        || ss.equals("encrypt40_bit")
-        || ss.equals("encrypt40_bits")
-        || ss.equals("encrypt_40_bit")
-        || ss.equals("encrypt_40_bits")) {
-      return keyword.encrypt_40bit_k;
-    } else if (ss.equals("encrypt_128bit")
-        || ss.equals("encrypt_128bits")
-        || ss.equals("encrypt128bit")
-        || ss.equals("encrypt128bits")
-        || ss.equals("encrypt128_bit")
-        || ss.equals("encrypt128_bits")
-        || ss.equals("encrypt_128_bit")
-        || ss.equals("encrypt_128_bits")) {
-      return keyword.encrypt_128bit_k;
-    }
-
-    // user permissions; must follow user_perms_k;
-    else if (ss.equals("printing")) {
-      return keyword.perm_printing_k;
-    } else if (ss.equals("modifycontents")) {
-      return keyword.perm_modify_contents_k;
-    } else if (ss.equals("copycontents")) {
-      return keyword.perm_copy_contents_k;
-    } else if (ss.equals("modifyannotations")) {
-      return keyword.perm_modify_annotations_k;
-    } else if (ss.equals("fillin")) {
-      return keyword.perm_fillin_k;
-    } else if (ss.equals("screenreaders")) {
-      return keyword.perm_screen_readers_k;
-    } else if (ss.equals("assembly")) {
-      return keyword.perm_assembly_k;
-    } else if (ss.equals("degradedprinting")) {
-      return keyword.perm_degraded_printing_k;
-    } else if (ss.equals("allfeatures")) {
-      return keyword.perm_all_k;
-    } else if (ss.equals("uncompress")) {
-      return keyword.filt_uncompress_k;
-    } else if (ss.equals("compress")) {
-      return keyword.filt_compress_k;
-    } else if (ss.equals("flatten")) {
-      return keyword.flatten_k;
-    } else if (ss.equals("need_appearances")) {
-      return keyword.need_appearances_k;
-    } else if (ss.equals("drop_xfa")) {
-      return keyword.drop_xfa_k;
-    } else if (ss.equals("drop_xmp")) {
-      return keyword.drop_xmp_k;
-    } else if (ss.equals("keep_first_id")) {
-      return keyword.keep_first_id_k;
-    } else if (ss.equals("keep_final_id")) {
-      return keyword.keep_final_id_k;
-    } else if (ss.equals("verbose")) {
-      return keyword.verbose_k;
-    } else if (ss.equals("dont_ask") || ss.equals("dontask")) {
-      return keyword.dont_ask_k;
-    } else if (ss.equals("do_ask")) {
-      return keyword.do_ask_k;
-    }
-
-    // more cat range keywords
-    else if (ss.equals("north")) {
-      return keyword.rot_north_k;
-    } else if (ss.equals("south")) {
-      return keyword.rot_south_k;
-    } else if (ss.equals("east")) {
-      return keyword.rot_east_k;
-    } else if (ss.equals("west")) {
-      return keyword.rot_west_k;
-    } else if (ss.equals("left")) {
-      return keyword.rot_left_k;
-    } else if (ss.equals("right")) {
-      return keyword.rot_right_k;
-    } else if (ss.equals("down")) {
-      return keyword.rot_upside_down_k;
-    }
-
-    return keyword.none_k;
-  }
-
-  static keyword consume_keyword(StringBuilder ssb) {
-    String ss = new String(ssb).toLowerCase();
-    // cat range keywords
-    if (ss.startsWith("even")) { // note: strncmp
-      ssb.delete(0, 4);
-      return keyword.even_k;
-    } else if (ss.startsWith("odd")) { // note: strncmp
-      ssb.delete(0, 3);
-      return keyword.odd_k;
-    } else {
-      ssb.setLength(0);
-      return is_keyword(ss);
-    }
-  }
-
   keyword m_operation = keyword.none_k;
 
   class PageRef {
@@ -563,6 +289,8 @@ class TK_Session {
   boolean m_output_utf8_b = false;
   String m_output_owner_pw = "";
   String m_output_user_pw = "";
+  byte[] output_owner_pw_p = new byte[0];
+  byte[] output_user_pw_p = new byte[0];
   int m_output_user_perms = 0;
   boolean m_multistamp_b = false; // use all pages of input stamp PDF, not just the first
   boolean m_multibackground_b = false; // use all pages of input background PDF, not just the first
@@ -599,7 +327,7 @@ class TK_Session {
     // first, look for our "dont_ask" or "do_ask" keywords, since this
     // setting must be known before we begin opening documents, etc.
     for (String argv : args) {
-      keyword kw = is_keyword(argv);
+      keyword kw = Keywords.is_keyword(argv);
       if (kw == keyword.dont_ask_k) {
         m_ask_about_warnings_b = false;
       } else if (kw == keyword.do_ask_k) {
@@ -611,7 +339,7 @@ class TK_Session {
     for (String argv : args) {
 
       if (fail_b || arg_state == ArgState.done_e) break;
-      keyword arg_keyword = is_keyword(argv);
+      keyword arg_keyword = Keywords.is_keyword(argv);
 
       // these keywords can be false hits because of their loose matching requirements;
       // since they are suffixes to page ranges, their appearance here is most likely a false match;
@@ -928,7 +656,7 @@ class TK_Session {
                   > 0) { // possibly more than one keyword, e.g., 3-endevenwest
 
                 // read keyword
-                arg_keyword = consume_keyword(trailing_keywords);
+                arg_keyword = Keywords.consume_keyword(trailing_keywords);
 
                 if (arg_keyword == keyword.even_k) {
                   even_pages_b = true;
@@ -1502,40 +1230,57 @@ class TK_Session {
   }
 
   boolean is_valid() {
-    return (m_valid_b
-        && (m_operation == keyword.dump_data_k
-            || m_operation == keyword.dump_data_fields_k
-            || m_operation == keyword.dump_data_annots_k
-            || m_operation == keyword.generate_fdf_k
-            || m_authorized_b)
-        && !m_input_pdf.isEmpty()
-        && m_input_pdf_readers_opened_b
-        && (m_operation == keyword.cat_k
-            || m_operation == keyword.shuffle_k
-            || m_operation == keyword.burst_k
-            || m_operation == keyword.filter_k
-            || m_operation == keyword.dump_data_k
-            || m_operation == keyword.dump_data_utf8_k
-            || m_operation == keyword.dump_data_fields_k
-            || m_operation == keyword.dump_data_fields_utf8_k
-            || m_operation == keyword.dump_data_annots_k
-            || m_operation == keyword.generate_fdf_k
-            || m_operation == keyword.unpack_files_k)
-        &&
-
-        // these op.s require a single input PDF file
-        (!(m_operation == keyword.burst_k || m_operation == keyword.filter_k)
-            || (m_input_pdf.size() == 1))
-        &&
-
-        // these op.s do not require an output filename
-        (m_operation == keyword.burst_k
-            || m_operation == keyword.dump_data_k
-            || m_operation == keyword.dump_data_fields_k
-            || m_operation == keyword.dump_data_annots_k
-            || m_operation == keyword.generate_fdf_k
-            || m_operation == keyword.unpack_files_k
-            || !m_output_filename.isEmpty()));
+    if (!m_valid_b) return false;
+    if (!(m_operation == keyword.dump_data_k
+          || m_operation == keyword.dump_data_fields_k
+          || m_operation == keyword.dump_data_annots_k
+          || m_operation == keyword.generate_fdf_k
+          || m_authorized_b)) {
+      System.err.println("Not authorized");
+      return false;
+    }
+    if (m_input_pdf.isEmpty()) {
+      System.err.println("No input PDF given");
+      return false;
+    }
+    if (!m_input_pdf_readers_opened_b) {
+      System.err.println("Could not open inputs");
+      return false;
+    }
+    if (!(m_operation == keyword.cat_k
+          || m_operation == keyword.shuffle_k
+          || m_operation == keyword.burst_k
+          || m_operation == keyword.filter_k
+          || m_operation == keyword.dump_data_k
+          || m_operation == keyword.dump_data_fields_k
+          || m_operation == keyword.dump_data_annots_k
+          || m_operation == keyword.generate_fdf_k
+          || m_operation == keyword.unpack_files_k))
+      return false;
+    // these op.s require a single input PDF file
+    if ((m_operation == keyword.burst_k
+         || m_operation == keyword.filter_k
+         || m_operation == keyword.dump_data_fields_k
+         || m_operation == keyword.dump_data_annots_k
+         || m_operation == keyword.dump_data_k
+         || m_operation == keyword.generate_fdf_k
+         || m_operation == keyword.unpack_files_k)
+        && (m_input_pdf.size() != 1)) {
+      System.err.println("Only one input file may be given");
+      return false;
+    }
+    // these op.s do not require an output filename
+    if (!(m_operation == keyword.burst_k
+          || m_operation == keyword.dump_data_k
+          || m_operation == keyword.dump_data_fields_k
+          || m_operation == keyword.dump_data_annots_k
+          || m_operation == keyword.generate_fdf_k
+          || m_operation == keyword.unpack_files_k
+          || !m_output_filename.isEmpty())) {
+      System.err.println("No output file given");
+      return false;
+    }
+    return true;
   }
 
   void dump_session_data() {
@@ -2140,78 +1885,15 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
     return version_cc;
   }
 
-  ErrorCode create_output() {
-    ErrorCode ret_val = ErrorCode.NO_ERROR; // default: no error
-
-    if (is_valid()) {
-
-      /*
-      bool rdfcat_available_b= false;
-      { // is rdfcat available?  first character should be a digit;
-        // grab stderr to keep messages appearing to user;
-        // 2>&1 might not work on older versions of Windows (e.g., 98);
-        FILE* pp= popen( "rdfcat --version 2>&1", "r" );
-        if( pp ) {
-          int cc= fgetc( pp );
-          if( '0'<= cc && cc<= '9' ) {
-            rdfcat_available_b= true;
-          }
-          pclose( pp );
-        }
-      }
-      */
-
-      if (m_verbose_reporting_b) {
-        System.out.println();
-        System.out.println("Creating Output ...");
-      }
-
-      String creator = "pdftk-java " + pdftk.PDFTK_VER;
-
-      if (m_output_owner_pw.equals("PROMPT")) {
-        m_output_owner_pw = pdftk.prompt_for_password("owner", "the output PDF");
-      }
-      if (m_output_user_pw.equals("PROMPT")) {
-        m_output_user_pw = pdftk.prompt_for_password("user", "the output PDF");
-      }
-
-      byte[] output_owner_pw_p = new byte[0];
-      if (!m_output_owner_pw.isEmpty()) {
-        output_owner_pw_p = passwords.utf8_password_to_pdfdoc(m_output_owner_pw, true);
-        if (output_owner_pw_p == null) { // error
-          System.err.println("Error: Owner password used to encrypt output PDF includes");
-          System.err.println("   invalid characters.");
-          System.err.println("   No output created.");
-          ret_val = ErrorCode.ERROR;
-        }
-      }
-
-      byte[] output_user_pw_p = new byte[0];
-      if (!m_output_user_pw.isEmpty()) {
-        output_user_pw_p = passwords.utf8_password_to_pdfdoc(m_output_user_pw, true);
-        if (output_user_pw_p == null) { // error
-          System.err.println("Error: User password used to encrypt output PDF includes");
-          System.err.println("   invalid characters.");
-          System.err.println("   No output created.");
-          ret_val = ErrorCode.ERROR;
-        }
-      }
-
-      if (ret_val != ErrorCode.NO_ERROR) return ret_val; // <--- exit
-
-      try {
-        switch (m_operation) {
-          case cat_k:
-          case shuffle_k:
-            { // catenate pages or shuffle pages
+  // catenate pages or shuffle pages
+  ErrorCode concatenate() throws IOException, DocumentException {
               Document output_doc_p = new Document();
 
               OutputStream ofs_p =
                   pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
 
               if (ofs_p == null) { // file open error
-                ret_val = ErrorCode.ERROR;
-                break;
+                return ErrorCode.ERROR;
               }
               PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
@@ -2219,7 +1901,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
               char max_version_cc = PdfWriter.VERSION_1_2;
 
               //
-              output_doc_p.addCreator(creator);
+              output_doc_p.addCreator(pdftk.creator);
 
               // un/compress output streams?
               if (m_output_uncompress_b) {
@@ -2368,13 +2050,13 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
                 int output_page_count = 0;
                 // iterate over ranges
-                for (int ii = 0; (ii < max_seq_length && ret_val == ErrorCode.NO_ERROR); ++ii) {
+                for (int ii = 0; ii < max_seq_length; ++ii) {
                   // iterate over ranges
                   for (ArrayList<PageRef> jt : m_page_seq) {
-                    if (ret_val != ErrorCode.NO_ERROR) break;
                     if (ii < jt.size()) {
-                      ret_val = create_output_page(writer_p, jt.get(ii), output_page_count);
+                      ErrorCode ret_val = create_output_page(writer_p, jt.get(ii), output_page_count);
                       ++output_page_count;
+                      if (ret_val != ErrorCode.NO_ERROR) return ret_val;
                     }
                   }
                 }
@@ -2383,12 +2065,11 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 int output_page_count = 0;
                 // iterate over page ranges
                 for (ArrayList<PageRef> jt : m_page_seq) {
-                  if (ret_val != ErrorCode.NO_ERROR) break;
                   // iterate over pages in page range
                   for (PageRef it : jt) {
-                    if (ret_val != ErrorCode.NO_ERROR) break;
-                    ret_val = create_output_page(writer_p, it, output_page_count);
+                    ErrorCode ret_val = create_output_page(writer_p, it, output_page_count);
                     ++output_page_count;
+                    if (ret_val != ErrorCode.NO_ERROR) return ret_val;
                   }
                 }
 
@@ -2535,20 +2216,11 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
               output_doc_p.close();
               writer_p.close();
-            }
-            break;
+              return ErrorCode.NO_ERROR;
+  }
 
-          case burst_k:
-            { // burst input into pages
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println("Error: Only one input PDF file may be given for \"burst\" op.");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
+  // burst input into pages
+  ErrorCode burst() throws IOException, DocumentException {
               // grab the first reader, since there's only one
               PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
               int input_num_pages = m_input_pdf.get(0).m_num_pages;
@@ -2568,8 +2240,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 System.err.println("Error: Invalid output pattern:");
                 System.err.println("   " + m_output_filename);
                 System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
+                return ErrorCode.ERROR;
               }
 
               // locate the input PDF Info dictionary that holds metadata
@@ -2595,7 +2266,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 FileOutputStream ofs_p = new FileOutputStream(jv_output_filename_p);
                 PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
-                output_doc_p.addCreator(creator);
+                output_doc_p.addCreator(pdftk.creator);
 
                 // un/compress output streams?
                 if (m_output_uncompress_b) {
@@ -2663,23 +2334,14 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
               } catch (FileNotFoundException e) { // error
                 System.err.println("Error: unable to open file for output: doc_data.txt");
-                ret_val = ErrorCode.ERROR;
+                return ErrorCode.ERROR;
               }
-            }
-            break;
+              return ErrorCode.NO_ERROR;
+}
 
-          case filter_k:
-            { // apply operations to given PDF file
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println("Error: Only one input PDF file may be given for this");
-                System.err.println("   operation.  Maybe you meant to use the \"cat\" operator?");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
+// apply operations to given PDF file
+ErrorCode filter() throws IOException, DocumentException {
+  ErrorCode ret_val = ErrorCode.NO_ERROR;
               // try opening the FDF file before we get too involved;
               // if input is stdin ("-"), don't pass it to both the FDF and XFDF readers
               FdfReader fdf_reader_p = null;
@@ -2705,9 +2367,8 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                     } catch (IOException ioe2_p) { // file open error
                       System.err.println("Error: Failed read form data on stdin.");
                       System.err.println("   No output created.");
-                      ret_val = ErrorCode.ERROR;
+                      return ErrorCode.ERROR;
                       // ioe_p->printStackTrace(); // debug
-                      break;
                     }
                   }
                 } else { // form data file
@@ -2723,9 +2384,8 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                       System.err.println("Error: Failed to open form data file: ");
                       System.err.println("   " + m_form_data_filename);
                       System.err.println("   No output created.");
-                      ret_val = ErrorCode.ERROR;
+                      return ErrorCode.ERROR;
                       // ioe_p->printStackTrace(); // debug
-                      break;
                     }
                   }
                 }
@@ -2750,8 +2410,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                   System.err.println("Error: Failed to open background PDF file: ");
                   System.err.println("   " + m_background_filename);
                   System.err.println("   No output created.");
-                  ret_val = ErrorCode.ERROR;
-                  break;
+                  return ErrorCode.ERROR;
                 }
               }
               //
@@ -2772,8 +2431,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                     System.err.println("Error: Failed to open stamp PDF file: ");
                     System.err.println("   " + m_stamp_filename);
                     System.err.println("   No output created.");
-                    ret_val = ErrorCode.ERROR;
-                    break;
+                    return ErrorCode.ERROR;
                   }
                 }
               }
@@ -2783,8 +2441,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                   pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
               if (ofs_p == null) { // file open error
                 System.err.println("Error: unable to open file for output: " + m_output_filename);
-                ret_val = ErrorCode.ERROR;
-                break;
+                return ErrorCode.ERROR;
               }
 
               //
@@ -2838,8 +2495,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                   } catch (FileNotFoundException e) { // error
                     System.err.println(
                         "Error: unable to open FDF file for input: " + m_update_info_filename);
-                    ret_val = ErrorCode.ERROR;
-                    break;
+                    return ErrorCode.ERROR;
                   }
                 }
               }
@@ -3055,22 +2711,81 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
               // done; write output
               writer_p.close();
-            }
+              return ret_val;
+}
+
+  ErrorCode create_output() {
+    ErrorCode ret_val = ErrorCode.NO_ERROR; // default: no error
+
+    if (!is_valid()) return ErrorCode.ERROR;
+
+      /*
+      bool rdfcat_available_b= false;
+      { // is rdfcat available?  first character should be a digit;
+        // grab stderr to keep messages appearing to user;
+        // 2>&1 might not work on older versions of Windows (e.g., 98);
+        FILE* pp= popen( "rdfcat --version 2>&1", "r" );
+        if( pp ) {
+          int cc= fgetc( pp );
+          if( '0'<= cc && cc<= '9' ) {
+            rdfcat_available_b= true;
+          }
+          pclose( pp );
+        }
+      }
+      */
+
+      if (m_verbose_reporting_b) {
+        System.out.println();
+        System.out.println("Creating Output ...");
+      }
+
+      if (m_output_owner_pw.equals("PROMPT")) {
+        m_output_owner_pw = pdftk.prompt_for_password("owner", "the output PDF");
+      }
+      if (m_output_user_pw.equals("PROMPT")) {
+        m_output_user_pw = pdftk.prompt_for_password("user", "the output PDF");
+      }
+
+      if (!m_output_owner_pw.isEmpty()) {
+        output_owner_pw_p = passwords.utf8_password_to_pdfdoc(m_output_owner_pw, true);
+        if (output_owner_pw_p == null) { // error
+          System.err.println("Error: Owner password used to encrypt output PDF includes");
+          System.err.println("   invalid characters.");
+          System.err.println("   No output created.");
+          return ErrorCode.ERROR;
+        }
+      }
+
+      if (!m_output_user_pw.isEmpty()) {
+        output_user_pw_p = passwords.utf8_password_to_pdfdoc(m_output_user_pw, true);
+        if (output_user_pw_p == null) { // error
+          System.err.println("Error: User password used to encrypt output PDF includes");
+          System.err.println("   invalid characters.");
+          System.err.println("   No output created.");
+          return ErrorCode.ERROR;
+        }
+      }
+
+      try {
+        switch (m_operation) {
+          case cat_k:
+          case shuffle_k:
+            ret_val = concatenate();
+            break;
+
+          case burst_k:
+            ret_val = burst();
+            break;
+
+          case filter_k:
+            ret_val = filter();
             break;
 
           case dump_data_fields_k:
           case dump_data_annots_k:
           case dump_data_k:
             { // report on input document
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println(
-                    "Error: Only one input PDF file may be used for the dump_data operation");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
 
               PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
 
@@ -3091,15 +2806,6 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
           case generate_fdf_k:
             { // create a dummy FDF file that would work with the input PDF form
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println(
-                    "Error: Only one input PDF file may be used for the generate_fdf operation");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
 
               PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
 
@@ -3122,18 +2828,9 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
           case unpack_files_k:
             { // copy PDF file attachments into current directory
 
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println(
-                    "Error: Only one input PDF file may be given for \"unpack_files\" op.");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
               PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
 
-              this.unpack_files(input_reader_p);
+              unpack_files(input_reader_p);
             }
             break;
           default:
@@ -3147,9 +2844,6 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
         t_p.printStackTrace();
         ret_val = ErrorCode.BUG;
       }
-    } else { // error
-      ret_val = ErrorCode.ERROR;
-    }
 
     return ret_val;
   }
@@ -3186,7 +2880,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
   }
 
   // convenience function; return true iff handled
-  private boolean handle_some_output_options(TK_Session.keyword kw, ArgStateMutable arg_state_p) {
+  private boolean handle_some_output_options(keyword kw, ArgStateMutable arg_state_p) {
     switch (kw) {
       case output_k:
         // added this case for the burst operation and "output" support;

@@ -37,6 +37,7 @@ public class pdftk {
   /* TODO: should read from compiler */
   static final String PDFTK_VER = "3.0.6";
   static final boolean ASK_ABOUT_WARNINGS = false;
+  static final String creator = "pdftk-java " + PDFTK_VER;
 
   static String prompt_for_password(String pass_name, String pass_app) {
     System.out.println("Please enter the " + pass_name + " password to use on " + pass_app + ".");
