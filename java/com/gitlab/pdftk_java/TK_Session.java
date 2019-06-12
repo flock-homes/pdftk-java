@@ -1885,6 +1885,44 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
     return version_cc;
   }
 
+  // set compression and encryption options
+  // reader_p is optional, if not-null will add/remove marks
+  // returns the minimum Pdf version that supports these options
+  char setWriterOptions(PdfWriter writer_p, PdfReader reader_p)
+    throws DocumentException {
+    char max_version_cc = PdfWriter.VERSION_1_2;
+
+    // un/compress output streams?
+    if (m_output_uncompress_b) {
+      if (reader_p != null) add_marks_to_pages(reader_p);
+      writer_p.filterStreams = true;
+      writer_p.compressStreams = false;
+    } else if (m_output_compress_b) {
+      if (reader_p != null) remove_marks_from_pages(reader_p);
+      writer_p.filterStreams = false;
+      writer_p.compressStreams = true;
+    }
+
+    // encrypt output?
+    if (m_output_encryption_strength != encryption_strength.none_enc
+        || !m_output_owner_pw.isEmpty()
+        || !m_output_user_pw.isEmpty()) {
+
+      // if no stregth is given, default to 128 bit,
+      // (which is incompatible w/ Acrobat 4)
+      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
+
+      writer_p.setEncryption(
+          output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
+
+      if (bit128_b) max_version_cc = PdfWriter.VERSION_1_4;
+      else // 1.1 probably okay, here
+        max_version_cc = PdfWriter.VERSION_1_3;
+    }
+
+    return max_version_cc;
+  }
+
   // catenate pages or shuffle pages
   ErrorCode concatenate() throws IOException, DocumentException {
     Document output_doc_p = new Document();
@@ -1897,35 +1935,10 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
     }
     PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
-    // update to suit any features that we add, e.g. encryption;
-    char max_version_cc = PdfWriter.VERSION_1_2;
-
-    //
     output_doc_p.addCreator(pdftk.creator);
 
-    // un/compress output streams?
-    if (m_output_uncompress_b) {
-      writer_p.filterStreams = true;
-      writer_p.compressStreams = false;
-    } else if (m_output_compress_b) {
-      writer_p.filterStreams = false;
-      writer_p.compressStreams = true;
-    }
-
-    // encrypt output?
-    if (m_output_encryption_strength != encryption_strength.none_enc
-        || !m_output_owner_pw.isEmpty()
-        || !m_output_user_pw.isEmpty()) {
-      // if no stregth is given, default to 128 bit,
-      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-      writer_p.setEncryption(
-          output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
-
-      if (bit128_b) max_version_cc = PdfWriter.VERSION_1_4;
-      else // 1.1 probably okay, here
-        max_version_cc = PdfWriter.VERSION_1_3;
-    }
+    // update to suit any features that we add, e.g. encryption;
+    char max_version_cc = setWriterOptions(writer_p, null);
 
     // copy file ID?
     if (m_output_keep_first_id_b || m_output_keep_final_id_b) {
@@ -2264,27 +2277,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
       PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
       output_doc_p.addCreator(pdftk.creator);
-
-      // un/compress output streams?
-      if (m_output_uncompress_b) {
-        writer_p.filterStreams = true;
-        writer_p.compressStreams = false;
-      } else if (m_output_compress_b) {
-        writer_p.filterStreams = false;
-        writer_p.compressStreams = true;
-      }
-
-      // encrypt output?
-      if (m_output_encryption_strength != encryption_strength.none_enc
-          || !m_output_owner_pw.isEmpty()
-          || !m_output_user_pw.isEmpty()) {
-        // if no stregth is given, default to 128 bit,
-        boolean bit128_b =
-          (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-        writer_p.setEncryption(
-            output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
-      }
+      setWriterOptions(writer_p, null);
 
       output_doc_p.open(); // must open writer before copying (possibly) indirect object
       // Call setFromReader() after open(),
@@ -2526,29 +2519,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
       }
     }
 
-    // un/compress output streams?
-    if (m_output_uncompress_b) {
-      add_marks_to_pages(input_reader_p);
-      writer_p.filterStreams = true;
-      writer_p.compressStreams = false;
-    } else if (m_output_compress_b) {
-      remove_marks_from_pages(input_reader_p);
-      writer_p.filterStreams = false;
-      writer_p.compressStreams = true;
-    }
-
-    // encrypt output?
-    if (m_output_encryption_strength != encryption_strength.none_enc
-        || !m_output_owner_pw.isEmpty()
-        || !m_output_user_pw.isEmpty()) {
-
-      // if no stregth is given, default to 128 bit,
-      // (which is incompatible w/ Acrobat 4)
-      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-      writer_p.setEncryption(
-          output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
-    }
+    setWriterOptions(writer_p, input_reader_p);
 
     // fill form fields?
     if (fdf_reader_p != null || xfdf_reader_p != null) {
