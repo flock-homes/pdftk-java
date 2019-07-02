@@ -381,14 +381,14 @@ class TK_Session {
       return keyword.attach_file_k;
     } else if (ss.equals("unpack_file") || ss.equals("unpack_files") || ss.equals("unpackfiles")) {
       return keyword.unpack_files_k;
-    } else if (ss.equals("update_info") || ss.equals("undateinfo")) {
+    } else if (ss.equals("update_info") || ss.equals("updateinfo")) {
       return keyword.update_info_k;
-    } else if (ss.equals("update_info_utf8") || ss.equals("undateinfoutf8")) {
+    } else if (ss.equals("update_info_utf8") || ss.equals("updateinfoutf8")) {
       return keyword.update_info_utf8_k;
     }
     /* requires more testing and work
     else if( strcmp( ss_copy, "update_xmp" ) ||
-             strcmp( ss_copy, "undatexmp" ) ) {
+             strcmp( ss_copy, "updatexmp" ) ) {
       return update_xmp_k;
     }
     */
