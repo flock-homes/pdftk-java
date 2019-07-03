@@ -57,8 +57,8 @@ class report {
   static String OutputXmlString(String jss_p) {
     if (XmlUnicodeEscaper == null) {
       XmlUnicodeEscaper =
-          StringEscapeUtils.ESCAPE_XML10.with(
-              NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
+    StringEscapeUtils.ESCAPE_XML10.with(
+      NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
     }
     return XmlUnicodeEscaper.translate(jss_p);
   }
@@ -388,7 +388,7 @@ class report {
             if (kid_kids_p != null && kid_kids_p.isArray()) {
 
               boolean kids_have_names_b =
-                  ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
+                ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
 
               if (!kids_have_names_b && kid_p.contains(PdfName.T)) {
                 // dump form field
@@ -650,16 +650,9 @@ class report {
   }
 
   //
-  static class PdfPageLabel {
-    static final String m_prefix = "PageLabel";
-    static final String m_begin_mark = "PageLabelBegin";
-    // TODO
-  };
-
-  //
   class PdfPageMedia {
-    static final String m_prefix = "PageMedia";
-    static final String m_begin_mark = "PageMediaBegin";
+    static final String PREFIX = "PageMedia";
+    static final String BEGIN_MARK = "PageMediaBegin";
     // TODO
   };
 
@@ -689,12 +682,12 @@ class report {
         if (0 < key_len
             && value_p.isString()
             && 0 < ((PdfString) value_p).toUnicodeString().length()) { // ouput
-          ofs.println(data_import.PdfInfo.m_begin_mark);
+          ofs.println(data_import.PdfInfo.BEGIN_MARK);
 
-          ofs.println(data_import.PdfInfo.m_key_label + " " + OutputPdfName(key_p));
+          ofs.println(data_import.PdfInfo.KEY_LABEL + " " + OutputPdfName(key_p));
 
           ofs.println(
-              data_import.PdfInfo.m_value_label
+              data_import.PdfInfo.VALUE_LABEL
                   + " "
                   + OutputPdfString((PdfString) value_p, utf8_b));
         }
@@ -725,25 +718,24 @@ class report {
 
         if (index_p != null && index_p.isNumber() && label_po != null && label_po.isDictionary()) {
           PdfDictionary label_p = (PdfDictionary) label_po;
-          ofs.println(PdfPageLabel.m_begin_mark);
+          PdfPageLabel pagelabel = new PdfPageLabel();
 
           // PageLabelNewIndex
-          ofs.println("PageLabelNewIndex: " + (long) (((PdfNumber) index_p).intValue()) + 1);
+          pagelabel.m_new_index = ((PdfNumber) index_p).intValue() + 1;
 
           { // PageLabelStart
-            ofs.print("PageLabelStart: ");
             PdfObject start_p = reader_p.getPdfObject(label_p.get(PdfName.ST));
             if (start_p != null && start_p.isNumber()) {
-              ofs.println((long) ((PdfNumber) start_p).intValue());
+              pagelabel.m_start = ((PdfNumber) start_p).intValue();
             } else {
-              ofs.println("1"); // the default
+              pagelabel.m_start = 1; // the default
             }
           }
 
           { // PageLabelPrefix
             PdfObject prefix_p = reader_p.getPdfObject(label_p.get(PdfName.P));
             if (prefix_p != null && prefix_p.isString()) {
-              ofs.println("PageLabelPrefix: " + OutputPdfString((PdfString) prefix_p, utf8_b));
+              pagelabel.m_prefix = OutputPdfString((PdfString) prefix_p, utf8_b);
             }
           }
 
@@ -752,25 +744,26 @@ class report {
             PdfName a_p = new PdfName("a");
 
             PdfObject style_p = reader_p.getPdfObject(label_p.get(PdfName.S));
-            ofs.print("PageLabelNumStyle: ");
             if (style_p != null && style_p.isName()) {
               if (style_p.equals(PdfName.D)) {
-                ofs.println("DecimalArabicNumerals");
+                pagelabel.m_num_style = "DecimalArabicNumerals";
               } else if (style_p.equals(PdfName.R)) {
-                ofs.println("UppercaseRomanNumerals");
+                pagelabel.m_num_style = "UppercaseRomanNumerals";
               } else if (style_p.equals(r_p)) {
-                ofs.println("LowercaseRomanNumerals");
+                pagelabel.m_num_style = "LowercaseRomanNumerals";
               } else if (style_p.equals(PdfName.A)) {
-                ofs.println("UppercaseLetters");
+                pagelabel.m_num_style = "UppercaseLetters";
               } else if (style_p.equals(a_p)) {
-                ofs.println("LowercaseLetters");
+                pagelabel.m_num_style = "LowercaseLetters";
               } else { // error
-                ofs.println("[PDFTK ERROR]");
+                pagelabel.m_num_style = "[PDFTK ERROR]";
               }
             } else { // default
-              ofs.println("NoNumber");
+              pagelabel.m_num_style = "NoNumber";
             }
           }
+
+          ofs.print(pagelabel);
 
         } else { // error
           ofs.println("[PDFTK ERROR: INVALID label_p IN ReportPageLabelNode]");
@@ -786,7 +779,7 @@ class report {
           PdfObject kid_p = reader_p.getPdfObject(kids_ii);
           if (kid_p != null && kid_p.isDictionary()) {
 
-            // recurse
+              // recurse
             ReportPageLabels(ofs, (PdfDictionary) kid_p, reader_p, utf8_b);
           } else { // error
             ofs.println("[PDFTK ERROR: INVALID kid_p]");
@@ -875,11 +868,11 @@ class report {
 
         // outlines; optional
         PdfObject outlines_p =
-            reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
+          reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
         if (outlines_p != null && outlines_p.isDictionary()) {
 
           PdfObject top_outline_p =
-              reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
+            reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
           if (top_outline_p != null && top_outline_p.isDictionary()) {
 
             ReportOutlines(ofs, (PdfDictionary) top_outline_p, reader_p, utf8_b);
@@ -898,7 +891,7 @@ class report {
       for (int ii = 1; ii <= numPages; ++ii) {
         PdfDictionary page_p = reader_p.getPageN(ii);
 
-        ofs.println(PdfPageMedia.m_begin_mark);
+        ofs.println(PdfPageMedia.BEGIN_MARK);
         ofs.println("PageMediaNumber: " + ii);
 
         ofs.println("PageMediaRotation: " + reader_p.getPageRotation(page_p));

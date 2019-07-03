@@ -173,7 +173,7 @@ public class PdfPageLabels implements Comparator {
     /** Gets the page label dictionary to insert into the document.
      * @return the page label dictionary
      */    
-    PdfDictionary getDictionary() {
+    public PdfDictionary getDictionary() {
         PdfDictionary dic = new PdfDictionary();
         PdfArray array = new PdfArray();
         for (Iterator it = map.values().iterator(); it.hasNext();) {

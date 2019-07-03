@@ -50,6 +50,9 @@ class data_import {
     PdfBookmark bookmark = new PdfBookmark();
     boolean bookmark_b = false;
 
+    PdfPageLabel pagelabel = new PdfPageLabel();
+    boolean pagelabel_b = false;
+
     boolean eof = !ifs.hasNextLine();
 
     while (!eof) {
@@ -58,9 +61,9 @@ class data_import {
       else buff = ifs.nextLine();
 
       if (eof
-          || buff.startsWith(PdfInfo.m_begin_mark)
-          || buff.startsWith(PdfBookmark.m_begin_mark)
-          || buff.startsWith(report.PdfPageLabel.m_begin_mark)
+          || buff.startsWith(PdfInfo.BEGIN_MARK)
+          || buff.startsWith(PdfBookmark.BEGIN_MARK)
+          || buff.startsWith(PdfPageLabel.BEGIN_MARK)
           || !buff_prev.isEmpty()
               && !buff.startsWith(buff_prev)) { // start of a new record or end of file
         // pack data and reset
@@ -79,6 +82,13 @@ class data_import {
             System.err.println("pdftk Warning: data bookmark record not valid -- skipped; data:");
             System.err.print(bookmark);
           }
+        } else if (pagelabel_b) {
+          if (pagelabel.valid()) {
+            pdf_data_p.m_pagelabels.add(pagelabel);
+          } else { // warning
+            System.err.println("pdftk Warning: page label record not valid -- skipped; data:");
+            System.err.print(pagelabel);
+          }
         }
 
         // reset
@@ -90,6 +100,9 @@ class data_import {
         //
         bookmark = new PdfBookmark();
         bookmark_b = false;
+        //
+        pagelabel = new PdfPageLabel();
+        pagelabel_b = false;
       }
 
       // whitespace or comment; skip
@@ -98,11 +111,13 @@ class data_import {
       }
 
       // info record
-      else if (buff.startsWith(PdfInfo.m_prefix)) {
-        buff_prev_len = PdfInfo.m_prefix.length();
+      else if (buff.startsWith(PdfInfo.PREFIX)) {
+        buff_prev_len = PdfInfo.PREFIX.length();
         info_b = true;
 
-        if (buff.startsWith(PdfInfo.m_begin_mark) || info.loadKey(buff) || info.loadValue(buff)) {
+        if (buff.startsWith(PdfInfo.BEGIN_MARK)
+            || info.loadKey(buff)
+            || info.loadValue(buff)) {
           // success
         } else { // warning
           System.err.println("pdftk Warning: unexpected Info case in LoadDataFile(); continuing");
@@ -110,11 +125,11 @@ class data_import {
       }
 
       // bookmark record
-      else if (buff.startsWith(PdfBookmark.m_prefix)) {
-        buff_prev_len = PdfBookmark.m_prefix.length();
+      else if (buff.startsWith(PdfBookmark.PREFIX)) {
+        buff_prev_len = PdfBookmark.PREFIX.length();
         bookmark_b = true;
 
-        if (buff.startsWith(PdfBookmark.m_begin_mark)
+        if (buff.startsWith(PdfBookmark.BEGIN_MARK)
             || bookmark.loadTitle(buff)
             || bookmark.loadLevel(buff)
             || bookmark.loadPageNum(buff)) {
@@ -126,19 +141,30 @@ class data_import {
       }
 
       // page label record
-      else if (buff.startsWith(report.PdfPageLabel.m_prefix)) {
-        buff_prev_len = 0;
-        // TODO
+      else if (buff.startsWith(PdfPageLabel.PREFIX)) {
+        buff_prev_len = PdfPageLabel.PREFIX.length();
+        pagelabel_b = true;
+
+        if (buff.startsWith(PdfPageLabel.BEGIN_MARK)
+            || pagelabel.loadNewIndex(buff)
+            || pagelabel.loadStart(buff)
+            || pagelabel.loadPrefix(buff)
+            || pagelabel.loadNumStyle(buff)) {
+          // success
+        } else { // warning
+          System.err.println(
+              "pdftk Warning: unexpected PageLabel case in LoadDataFile(); continuing");
+        }
       }
 
       // page media record
-      else if (buff.startsWith(report.PdfPageMedia.m_prefix)) {
+      else if (buff.startsWith(report.PdfPageMedia.PREFIX)) {
         buff_prev_len = 0;
         // TODO
       }
 
       // pdf id
-      else if (buff.startsWith(PdfData.m_prefix)) {
+      else if (buff.startsWith(PdfData.PREFIX)) {
         buff_prev_len = 0; // not a record
 
         if (pdf_data_p.loadID0(buff) || pdf_data_p.loadID1(buff)) {
@@ -175,26 +201,27 @@ class data_import {
         PdfDictionary trailer_p = reader_p.getTrailer();
         if (trailer_p != null) {
 
-          // bookmarks
-          if (!pdf_data.m_bookmarks.isEmpty()) {
+          PdfObject root_po = reader_p.getPdfObject(trailer_p.get(PdfName.ROOT));
+          if (root_po != null && root_po.isDictionary()) {
+            PdfDictionary root_p = (PdfDictionary) root_po;
 
-            // build bookmarks
-            PdfDictionary outlines_p = new PdfDictionary(PdfName.OUTLINES);
-            if (outlines_p != null) {
-              PRIndirectReference outlines_ref_p = reader_p.getPRIndirectReference(outlines_p);
+            // bookmarks
+            if (!pdf_data.m_bookmarks.isEmpty()) {
 
-              int num_bookmarks_total =
-                  bookmarks.BuildBookmarks(
-                      reader_p,
-                      pdf_data.m_bookmarks.listIterator(),
-                      outlines_p,
-                      outlines_ref_p,
-                      0,
-                      utf8_b);
+              // build bookmarks
+              PdfDictionary outlines_p = new PdfDictionary(PdfName.OUTLINES);
+              if (outlines_p != null) {
+                PRIndirectReference outlines_ref_p = reader_p.getPRIndirectReference(outlines_p);
 
-              PdfObject root_po = reader_p.getPdfObject(trailer_p.get(PdfName.ROOT));
-              if (root_po != null && root_po.isDictionary()) {
-                PdfDictionary root_p = (PdfDictionary) root_po;
+                int num_bookmarks_total =
+                    bookmarks.BuildBookmarks(
+                        reader_p,
+                        pdf_data.m_bookmarks.listIterator(),
+                        outlines_p,
+                        outlines_ref_p,
+                        0,
+                        utf8_b);
+
                 if (root_p.contains(PdfName.OUTLINES)) {
                   // erase old bookmarks
                   PdfObject old_outlines_p = reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
@@ -206,6 +233,18 @@ class data_import {
                 root_p.put(PdfName.OUTLINES, outlines_ref_p);
               }
             }
+
+            // page labels
+            if (!pdf_data.m_pagelabels.isEmpty()) {
+              PdfDictionary pagelabels_p = PdfPageLabel.BuildPageLabels(pdf_data.m_pagelabels);
+              PRIndirectReference pagelabels_ref_p = reader_p.getPRIndirectReference(pagelabels_p);
+              root_p.put(PdfName.PAGELABELS, pagelabels_ref_p);
+            }
+
+
+          } else { // error
+            System.err.println("pdftk Error in UpdateInfo(): no Root dictionary found;");
+            ret_val_b = false;
           }
 
           // metadata
@@ -253,10 +292,10 @@ class data_import {
 
   //
   static class PdfInfo {
-    static final String m_prefix = "Info";
-    static final String m_begin_mark = "InfoBegin";
-    static final String m_key_label = "InfoKey:";
-    static final String m_value_label = "InfoValue:";
+    static final String PREFIX = "Info";
+    static final String BEGIN_MARK = "InfoBegin";
+    static final String KEY_LABEL = "InfoKey:";
+    static final String VALUE_LABEL = "InfoValue:";
 
     String m_key = null;
     String m_value = null;
@@ -266,13 +305,13 @@ class data_import {
     }
 
     public String toString() {
-      return m_begin_mark
+      return BEGIN_MARK
           + System.lineSeparator()
-          + m_key_label
+          + KEY_LABEL
           + " "
           + m_key
           + System.lineSeparator()
-          + m_value_label
+          + VALUE_LABEL
           + " "
           + m_value
           + System.lineSeparator();
@@ -280,14 +319,14 @@ class data_import {
 
     boolean loadKey(String buff) {
       LoadableString loader = new LoadableString(m_key);
-      boolean success = loader.LoadString(buff, m_key_label);
+      boolean success = loader.LoadString(buff, KEY_LABEL);
       m_key = loader.ss;
       return success;
     }
 
     boolean loadValue(String buff) {
       LoadableString loader = new LoadableString(m_value);
-      boolean success = loader.LoadString(buff, m_value_label);
+      boolean success = loader.LoadString(buff, VALUE_LABEL);
       m_value = loader.ss;
       return success;
     }
@@ -296,11 +335,12 @@ class data_import {
   static class PdfData {
     ArrayList<PdfInfo> m_info = new ArrayList<PdfInfo>();
     ArrayList<PdfBookmark> m_bookmarks = new ArrayList<PdfBookmark>();
+    ArrayList<PdfPageLabel> m_pagelabels = new ArrayList<PdfPageLabel>();
 
-    static final String m_prefix = "PdfID";
-    static final String m_id_0_label = "PdfID0:";
-    static final String m_id_1_label = "PdfID1:";
-    static final String m_num_pages_label = "NumberOfPages:";
+    static final String PREFIX = "PdfID";
+    static final String ID_0_LABEL = "PdfID0:";
+    static final String ID_1_LABEL = "PdfID1:";
+    static final String NUM_PAGES_LABEL = "NumberOfPages:";
 
     int m_num_pages = -1;
 
@@ -312,9 +352,9 @@ class data_import {
       for (PdfInfo vit : m_info) {
         ss.append(vit);
       }
-      ss.append("PdfID0: " + m_id_0 + System.lineSeparator());
-      ss.append("PdfID1: " + m_id_1 + System.lineSeparator());
-      ss.append("NumberOfPages: " + m_num_pages + System.lineSeparator());
+      ss.append(ID_0_LABEL + " " + m_id_0 + System.lineSeparator());
+      ss.append(ID_1_LABEL + " " + m_id_1 + System.lineSeparator());
+      ss.append(NUM_PAGES_LABEL + " " + m_num_pages + System.lineSeparator());
       for (PdfBookmark vit : m_bookmarks) {
         ss.append(vit);
       }
@@ -323,21 +363,21 @@ class data_import {
 
     boolean loadNumPages(String buff) {
       LoadableInt loader = new LoadableInt(m_num_pages);
-      boolean success = loader.LoadInt(buff, m_num_pages_label);
+      boolean success = loader.LoadInt(buff, NUM_PAGES_LABEL);
       m_num_pages = loader.ii;
       return success;
     }
 
     boolean loadID0(String buff) {
       LoadableString loader = new LoadableString(m_id_0);
-      boolean success = loader.LoadString(buff, m_id_0_label);
+      boolean success = loader.LoadString(buff, ID_0_LABEL);
       m_id_0 = loader.ss;
       return success;
     }
 
     boolean loadID1(String buff) {
       LoadableString loader = new LoadableString(m_id_1);
-      boolean success = loader.LoadString(buff, m_id_1_label);
+      boolean success = loader.LoadString(buff, ID_1_LABEL);
       m_id_1 = loader.ss;
       return success;
     }

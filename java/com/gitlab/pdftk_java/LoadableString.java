@@ -22,6 +22,8 @@
 
 package com.gitlab.pdftk_java;
 
+import java.util.Set;
+
 class LoadableString {
   String ss = null;
 
@@ -52,6 +54,17 @@ class LoadableString {
       }
       return true;
     }
+    return false;
+  }
+
+  boolean LoadEnum(String buff, String label, Set<String> keys) {
+    if (!LoadString(buff, label)) return false;
+    if (keys.contains(ss)) return true;
+    System.err.println(
+        "pdftk Warning: "
+        + label
+        + "invalid value "
+        + ss);
     return false;
   }
 
