@@ -25,6 +25,7 @@ package com.gitlab.pdftk_java;
 import java.util.ArrayList;
 import java.util.HashMap;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
+import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfPageLabels;
 
 class PdfPageLabel {
@@ -36,23 +37,35 @@ class PdfPageLabel {
   static final String NUM_STYLE_LABEL = "PageLabelNumStyle:";
 
   enum NumberingStyle {
-    DECIMAL_ARABIC_NUMERALS(PdfPageLabels.DECIMAL_ARABIC_NUMERALS, "DecimalArabicNumerals"),
-    UPPERCASE_ROMAN_NUMERALS(PdfPageLabels.UPPERCASE_ROMAN_NUMERALS, "UppercaseRomanNumerals"),
-    LOWERCASE_ROMAN_NUMERALS(PdfPageLabels.LOWERCASE_ROMAN_NUMERALS, "LowercaseRomanNumerals"),
-    UPPERCASE_LETTERS(PdfPageLabels.UPPERCASE_LETTERS, "UppercaseLetters"),
-    LOWERCASE_LETTERS(PdfPageLabels.LOWERCASE_LETTERS, "LowercaseLetters"),
-    EMPTY(PdfPageLabels.EMPTY, "NoNumber");
+    DECIMAL_ARABIC_NUMERALS(PdfPageLabels.DECIMAL_ARABIC_NUMERALS,
+        "DecimalArabicNumerals", PdfName.D),
+    UPPERCASE_ROMAN_NUMERALS(PdfPageLabels.UPPERCASE_ROMAN_NUMERALS,
+        "UppercaseRomanNumerals", PdfName.R),
+    LOWERCASE_ROMAN_NUMERALS(PdfPageLabels.LOWERCASE_ROMAN_NUMERALS,
+        "LowercaseRomanNumerals", new PdfName("r")),
+    UPPERCASE_LETTERS(PdfPageLabels.UPPERCASE_LETTERS,
+        "UppercaseLetters", PdfName.A),
+    LOWERCASE_LETTERS(PdfPageLabels.LOWERCASE_LETTERS,
+        "LowercaseLetters", new PdfName("a")),
+    EMPTY(PdfPageLabels.EMPTY, "NoNumber", null),
+    ERROR(-1, "[PDFTK ERROR]", null);
     final int value;
     final String representation;
-    static final HashMap<String,NumberingStyle> fromString = new HashMap<String,NumberingStyle>();
+    final PdfName tag;
+    static final HashMap<String,NumberingStyle> fromString =
+        new HashMap<String,NumberingStyle>();
+    static final HashMap<PdfName,NumberingStyle> fromPdfName =
+        new HashMap<PdfName,NumberingStyle>();
     static {
       for (NumberingStyle style : NumberingStyle.values()) {
         fromString.put(style.representation, style);
+        fromPdfName.put(style.tag, style);
       }
     }
-    NumberingStyle(int value, String representation) {
+    NumberingStyle(int value, String representation, PdfName tag) {
       this.value = value;
       this.representation = representation;
+      this.tag = tag;
     }
   }
 

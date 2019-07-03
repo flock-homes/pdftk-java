@@ -740,26 +740,13 @@ class report {
           }
 
           { // PageLabelNumStyle
-            PdfName r_p = new PdfName("r");
-            PdfName a_p = new PdfName("a");
-
             PdfObject style_p = reader_p.getPdfObject(label_p.get(PdfName.S));
             if (style_p != null && style_p.isName()) {
-              if (style_p.equals(PdfName.D)) {
-                pagelabel.m_num_style = "DecimalArabicNumerals";
-              } else if (style_p.equals(PdfName.R)) {
-                pagelabel.m_num_style = "UppercaseRomanNumerals";
-              } else if (style_p.equals(r_p)) {
-                pagelabel.m_num_style = "LowercaseRomanNumerals";
-              } else if (style_p.equals(PdfName.A)) {
-                pagelabel.m_num_style = "UppercaseLetters";
-              } else if (style_p.equals(a_p)) {
-                pagelabel.m_num_style = "LowercaseLetters";
-              } else { // error
-                pagelabel.m_num_style = "[PDFTK ERROR]";
-              }
+              pagelabel.m_num_style = PdfPageLabel.NumberingStyle.fromPdfName.getOrDefault(
+                  style_p,
+                  PdfPageLabel.NumberingStyle.ERROR).representation;
             } else { // default
-              pagelabel.m_num_style = "NoNumber";
+              pagelabel.m_num_style = PdfPageLabel.NumberingStyle.EMPTY.representation;
             }
           }
 
