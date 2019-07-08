@@ -63,7 +63,7 @@ class LoadableString {
     System.err.println(
         "pdftk Warning: "
         + label
-        + "invalid value "
+        + " invalid value "
         + ss);
     return false;
   }

@@ -2,6 +2,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 import org.junit.Rule;
+import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.contrib.java.lang.system.TextFromStandardInputStream;
 import org.junit.rules.TemporaryFolder;
@@ -25,6 +26,10 @@ public class BlackBox {
   @Rule
   public final SystemOutRule systemOut =
     new SystemOutRule().enableLog().muteForSuccessfulTests();
+
+  @Rule
+  public final SystemErrRule systemErr =
+    new SystemErrRule().enableLog();
 
   @Rule
   public final TextFromStandardInputStream systemIn
