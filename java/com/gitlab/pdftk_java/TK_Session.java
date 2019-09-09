@@ -780,8 +780,7 @@ class TK_Session {
                     System.err.println("   according to input PDF order.");
                     System.err.println();
                     System.err.println("   Handles are given like this: <handle>=<password>, and");
-                    System.err.println(
-                        "   they must be single, upper case letters, like: A, B, etc.");
+                    System.err.println("   they must be one or more upper-case letters.");
                     fail_b = true;
                   } else {
                     password_using_handles_not_b = true;
@@ -807,8 +806,7 @@ class TK_Session {
                     System.err.println("   according to input PDF order.");
                     System.err.println();
                     System.err.println("   Handles are given like this: <handle>=<password>, and");
-                    System.err.println(
-                        "   they must be single, upper case letters, like: A, B, etc.");
+                    System.err.println("   they must be one or more upper-case letters.");
                     fail_b = true;
                   } else {
                     password_using_handles_b = true;
