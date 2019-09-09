@@ -764,11 +764,11 @@ class TK_Session {
                 // if handles not used for input PDFs, then assume
                 // any equals signs found in p/w are part of p/w
                 if (m_input_pdf_index.size() == 0) {
-                  handle = "";
+                  handle = null;
                   data = argv;
                 }
 
-                if (handle.isEmpty()) { // no equal sign; try using default handles
+                if (handle == null) { // no equal sign; try using default handles
                   if (password_using_handles_b) { // error: expected a handle
 
                     System.err.println("Error: Expected a user-supplied handle for this input");
