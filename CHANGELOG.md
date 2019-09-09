@@ -1,3 +1,15 @@
+## [3.0.7] - 2019-09-09
+
+### Fixed
+ - Crash involving passwords and file handles (java.lang.NullPointerException).
+
+## [3.0.6] - 2019-06-04
+
+### Fixed
+ - Crash in burst with invalid file patterns.
+ - Do not report some spurious form fields.
+ - Escape more characters on XML-encoded reports.
+
 ## [3.0.5] - 2019-05-20
 
 ### Fixed
