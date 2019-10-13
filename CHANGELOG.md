@@ -1,3 +1,8 @@
+## [3.0.8] - 2019-10-14
+
+### Changed
+ - Build for JRE version 1.7
+
 ## [3.0.7] - 2019-09-09
 
 ### Fixed
