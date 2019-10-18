@@ -197,8 +197,7 @@ class data_import {
                 PdfDictionary root_p = (PdfDictionary) root_po;
                 if (root_p.contains(PdfName.OUTLINES)) {
                   // erase old bookmarks
-                  PdfObject old_outlines_p =
-reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
+                  PdfObject old_outlines_p = reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
                   if (old_outlines_p != null && old_outlines_p.isDictionary()) {
                     bookmarks.RemoveBookmarks(reader_p, (PdfDictionary) old_outlines_p);
                   }

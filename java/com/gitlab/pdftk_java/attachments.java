@@ -30,7 +30,6 @@ import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfStream;
 import pdftk.com.lowagie.text.pdf.PdfString;
 
 class attachments {
@@ -61,8 +60,7 @@ class attachments {
       String output_pathname,
       boolean ask_about_warnings_b) {
     PdfObject type_p = input_reader_p.getPdfObject(filespec_p.get(PdfName.TYPE));
-    if (type_p != null
-        && (type_p.equals(PdfName.FILESPEC) || type_p.equals(PdfName.F))) {
+    if (type_p != null && (type_p.equals(PdfName.FILESPEC) || type_p.equals(PdfName.F))) {
       PdfObject ef_p = input_reader_p.getPdfObject(filespec_p.get(PdfName.EF));
       if (ef_p != null && ef_p.isDictionary()) {
 

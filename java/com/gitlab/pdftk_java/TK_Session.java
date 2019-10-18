@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -1960,7 +1959,10 @@ class TK_Session {
               if (filespec_p != null && filespec_p.isDictionary()) {
 
                 attachments.unpack_file(
-                    input_reader_p, (PdfDictionary) filespec_p, output_pathname, m_ask_about_warnings_b);
+                    input_reader_p,
+                    (PdfDictionary) filespec_p,
+                    output_pathname,
+                    m_ask_about_warnings_b);
               }
             }
           }
@@ -1978,21 +1980,23 @@ class TK_Session {
           PdfObject annots_p = input_reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
           if (annots_p != null && annots_p.isArray()) {
 
-            ArrayList<PdfObject> annots_array_p = ((PdfArray)annots_p).getArrayList();
+            ArrayList<PdfObject> annots_array_p = ((PdfArray) annots_p).getArrayList();
             for (PdfObject jj : annots_array_p) {
               PdfObject annot_po = input_reader_p.getPdfObject(jj);
               if (annot_po != null && annot_po.isDictionary()) {
                 PdfDictionary annot_p = (PdfDictionary) annot_po;
 
-                PdfObject subtype_p =
-input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
+                PdfObject subtype_p = input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 if (subtype_p != null && subtype_p.equals(PdfName.FILEATTACHMENT)) {
 
                   PdfObject filespec_p = input_reader_p.getPdfObject(annot_p.get(PdfName.FS));
                   if (filespec_p != null && filespec_p.isDictionary()) {
 
                     attachments.unpack_file(
-                        input_reader_p, (PdfDictionary) filespec_p, output_pathname, m_ask_about_warnings_b);
+                        input_reader_p,
+                        (PdfDictionary) filespec_p,
+                        output_pathname,
+                        m_ask_about_warnings_b);
                   }
                 }
               }
@@ -2292,7 +2296,8 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                 // PDF extensions
 
                 if (catalog_p.contains(PdfName.EXTENSIONS)) {
-                  PdfObject extensions_po = reader_p.getPdfObject(catalog_p.get(PdfName.EXTENSIONS));
+                  PdfObject extensions_po =
+                      reader_p.getPdfObject(catalog_p.get(PdfName.EXTENSIONS));
                   if (extensions_po != null && extensions_po.isDictionary()) {
                     PdfDictionary extensions_p = (PdfDictionary) extensions_po;
 
@@ -2457,8 +2462,9 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
                         if (top_outline_p != null && top_outline_p.isDictionary()) {
 
                           ArrayList<PdfBookmark> bookmark_data = new ArrayList<PdfBookmark>();
-                          int rr = bookmarks.ReadOutlines(
-                              bookmark_data, (PdfDictionary) top_outline_p, 0, reader_p, true);
+                          int rr =
+                              bookmarks.ReadOutlines(
+                                  bookmark_data, (PdfDictionary) top_outline_p, 0, reader_p, true);
                           if (rr == 0 && !bookmark_data.isEmpty()) {
 
                             // passed in by reference, so must use variable:
@@ -2561,8 +2567,7 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
               }
               try {
                 String.format(m_output_filename, 1);
-              }
-              catch(UnknownFormatConversionException e) {
+              } catch (UnknownFormatConversionException e) {
                 System.err.println("Error: Invalid output pattern:");
                 System.err.println("   " + m_output_filename);
                 System.err.println("   No output created.");

@@ -77,7 +77,7 @@ class bookmarks {
 
                 // Translator note: comparing references
                 if (kid_p == dict_p) // we have what we were looking for
-                  ret_val = sum_pages;
+                ret_val = sum_pages;
 
                 // is kid a page, or is kid a page tree object? add count to sum;
                 // PdfDictionary::isPage() and PdfDictionary::isPages()
@@ -232,7 +232,8 @@ class bookmarks {
         PdfObject child_p = reader_p.getPdfObject(outline_p.get(PdfName.FIRST));
         if (child_p != null && child_p.isDictionary()) {
 
-          ret_val += ReadOutlines(bookmark_data, (PdfDictionary) child_p, level + 1, reader_p, utf8_b);
+          ret_val +=
+              ReadOutlines(bookmark_data, (PdfDictionary) child_p, level + 1, reader_p, utf8_b);
         }
       }
 

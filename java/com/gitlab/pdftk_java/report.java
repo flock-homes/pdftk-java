@@ -37,7 +37,6 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
 import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
 import pdftk.com.lowagie.text.Rectangle;
-import pdftk.com.lowagie.text.pdf.PRIndirectReference;
 import pdftk.com.lowagie.text.pdf.PRStream;
 import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfBoolean;
@@ -51,10 +50,10 @@ import pdftk.com.lowagie.text.pdf.PdfString;
 class report {
 
   // Escape both Xml and Unicode entities
-  // see https://commons.apache.org/proper/commons-lang/javadocs/api-3.6/org/apache/commons/lang3/StringEscapeUtils.html#escapeXml-java.lang.String-
+  // see
+  // https://commons.apache.org/proper/commons-lang/javadocs/api-3.6/org/apache/commons/lang3/StringEscapeUtils.html#escapeXml-java.lang.String-
   static CharSequenceTranslator XmlUnicodeEscaper =
-    StringEscapeUtils.ESCAPE_XML10.with(
-      NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
+      StringEscapeUtils.ESCAPE_XML10.with(NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
 
   static String OutputXmlString(String jss_p) {
     return XmlUnicodeEscaper.translate(jss_p);
@@ -267,8 +266,7 @@ class report {
               if (!acc_state.m_tt.isEmpty()) {
                 acc_state.m_tt = acc_state.m_tt + ".";
               }
-              acc_state.m_tt = acc_state.m_tt +
-                OutputPdfString((PdfString) pdfs_p, utf8_b);
+              acc_state.m_tt = acc_state.m_tt + OutputPdfString((PdfString) pdfs_p, utf8_b);
             }
           }
 
@@ -386,7 +384,7 @@ class report {
             if (kid_kids_p != null && kid_kids_p.isArray()) {
 
               boolean kids_have_names_b =
-                ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
+                  ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
 
               if (!kids_have_names_b && kid_p.contains(PdfName.T)) {
                 // dump form field
@@ -426,7 +424,8 @@ class report {
       PdfObject acro_form_p = reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
       if (acro_form_p != null && acro_form_p.isDictionary()) {
 
-        PdfObject fields_p = reader_p.getPdfObject(((PdfDictionary) acro_form_p).get(PdfName.FIELDS));
+        PdfObject fields_p =
+            reader_p.getPdfObject(((PdfDictionary) acro_form_p).get(PdfName.FIELDS));
         if (fields_p != null && fields_p.isArray()) {
 
           // enter recursion
@@ -453,20 +452,16 @@ class report {
           PdfObject uri_p = reader_p.getPdfObject(action_p.get(PdfName.URI));
           if (uri_p != null && uri_p.isString()) {
 
-            ofs.println(prefix + "ActionURI: " +
-                        OutputPdfString((PdfString) uri_p, utf8_b));
+            ofs.println(prefix + "ActionURI: " + OutputPdfString((PdfString) uri_p, utf8_b));
           }
         }
 
         // report IsMap
         if (action_p.contains(PdfName.ISMAP)) {
           PdfObject ismap_p = reader_p.getPdfObject(action_p.get(PdfName.ISMAP));
-          if (ismap_p != null &&
-              ismap_p.isBoolean() &&
-              ((PdfBoolean) ismap_p).booleanValue()) {
+          if (ismap_p != null && ismap_p.isBoolean() && ((PdfBoolean) ismap_p).booleanValue()) {
             ofs.println(prefix + "ActionIsMap: true");
-          }
-          else {
+          } else {
             ofs.println(prefix + "ActionIsMap: false");
           }
         }
@@ -523,8 +518,7 @@ class report {
           PdfObject coord_p = reader_p.getPdfObject(rect_al_p.get(ii));
           if (coord_p != null && coord_p.isNumber()) {
             rect[ii] = (float) ((PdfNumber) coord_p).floatValue();
-          }
-          else {
+          } else {
             rect[ii] = -1; // error value
           }
         }
@@ -725,10 +719,7 @@ class report {
         // label dictionary
         PdfObject label_po = reader_p.getPdfObject(labels_ii.next());
 
-        if (index_p != null &&
-            index_p.isNumber() &&
-            label_po != null &&
-            label_po.isDictionary()) {
+        if (index_p != null && index_p.isNumber() && label_po != null && label_po.isDictionary()) {
           PdfDictionary label_p = (PdfDictionary) label_po;
           ofs.println(PdfPageLabel.m_begin_mark);
 
@@ -777,13 +768,11 @@ class report {
             }
           }
 
-        }
-        else { // error
+        } else { // error
           ofs.println("[PDFTK ERROR: INVALID label_p IN ReportPageLabelNode]");
         }
       }
-    }
-    else { // try recursing
+    } else { // try recursing
       PdfObject kids_p = reader_p.getPdfObject(numtree_node_p.get(PdfName.KIDS));
       if (kids_p != null && kids_p.isArray()) {
 
@@ -793,7 +782,7 @@ class report {
           PdfObject kid_p = reader_p.getPdfObject(kids_ii);
           if (kid_p != null && kid_p.isDictionary()) {
 
-              // recurse
+            // recurse
             ReportPageLabels(ofs, (PdfDictionary) kid_p, reader_p, utf8_b);
           } else { // error
             ofs.println("[PDFTK ERROR: INVALID kid_p]");
@@ -882,11 +871,11 @@ class report {
 
         // outlines; optional
         PdfObject outlines_p =
-          reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
+            reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
         if (outlines_p != null && outlines_p.isDictionary()) {
 
           PdfObject top_outline_p =
-            reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
+              reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
           if (top_outline_p != null && top_outline_p.isDictionary()) {
 
             ReportOutlines(ofs, (PdfDictionary) top_outline_p, reader_p, utf8_b);
@@ -960,8 +949,7 @@ class report {
       PdfDictionary catalog_p = reader_p.catalog;
       if (catalog_p != null) {
 
-        PdfObject pagelabels_p =
-reader_p.getPdfObject(catalog_p.get(PdfName.PAGELABELS));
+        PdfObject pagelabels_p = reader_p.getPdfObject(catalog_p.get(PdfName.PAGELABELS));
         if (pagelabels_p != null && pagelabels_p.isDictionary()) {
 
           ReportPageLabels(ofs, (PdfDictionary) pagelabels_p, reader_p, utf8_b);
