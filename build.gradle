@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.diffplug.gradle.spotless' version '3.17.0'
+    id 'com.diffplug.gradle.spotless' version '3.24.2'
     id 'com.github.johnrengelman.shadow' version '4.0.3'
 }
 
