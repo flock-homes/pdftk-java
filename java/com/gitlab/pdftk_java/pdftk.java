@@ -173,6 +173,9 @@ public class pdftk {
         System.err.println("Java Exception:");
         c_p.printStackTrace();
         ret_val = ErrorCode.ERROR;
+      } catch (NoClassDefFoundError error) {
+        describe_missing_library(error);
+        ret_val = ErrorCode.ERROR;
       } catch (java.lang.Throwable t_p) {
         System.err.println("Unhandled Java Exception in main():");
         t_p.printStackTrace();
@@ -767,5 +770,12 @@ public class pdftk {
         "including the message above, the version of pdftk-java ("
             + PDFTK_VER
             + "), and if possible steps to reproduce the error.");
+  }
+
+  static void describe_missing_library(Throwable error) {
+    System.err.println("Error: could not load a required library for this operation.");
+    System.err.println(error);
+    System.err.println("Make sure that bcprov and commons-lang3 are installed and included in the");
+    System.err.println("classpath. See also https://gitlab.com/pdftk-java/pdftk/issues/2.");
   }
 };

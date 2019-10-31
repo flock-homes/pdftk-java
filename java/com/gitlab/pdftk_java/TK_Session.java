@@ -3140,6 +3140,9 @@ input_reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
             ret_val = ErrorCode.BUG;
             break;
         }
+      } catch (NoClassDefFoundError error) {
+        pdftk.describe_missing_library(error);
+        ret_val = ErrorCode.ERROR;
       } catch (Throwable t_p) {
         System.err.println("Unhandled Java Exception in create_output():");
         t_p.printStackTrace();
