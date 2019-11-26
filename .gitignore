@@ -1,7 +1,11 @@
 *~
 *.class
 java/test.java
+.classpath
+.project
+.settings/
 /.gradle
 /build
 /gradle
 /gradlew
+/bin

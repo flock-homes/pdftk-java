@@ -1,0 +1,17 @@
+{
+  "resources":[
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Courier-Bold.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Courier-BoldOblique.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Courier-Oblique.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Helvetica-Bold.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Helvetica-BoldOblique.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Helvetica-Oblique.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Helvetica.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Symbol.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Times-Bold.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Times-BoldItalic.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Times-Italic.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/Times-Roman.afm"},
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/ZapfDingbats.afm"}
+  ]
+}
