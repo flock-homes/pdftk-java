@@ -76,8 +76,9 @@ class bookmarks {
                 PdfDictionary kid_p = (PdfDictionary) kid_po;
 
                 // Translator note: comparing references
-                if (kid_p == dict_p) // we have what we were looking for
-                ret_val = sum_pages;
+                if (kid_p == dict_p) { // we have what we were looking for
+                  ret_val = sum_pages;
+                }
 
                 // is kid a page, or is kid a page tree object? add count to sum;
                 // PdfDictionary::isPage() and PdfDictionary::isPages()
