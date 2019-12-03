@@ -46,7 +46,7 @@ pages:
   stage: test
   image: gradle:latest
   variables:
-    GRADLE_VERSION: "5.0"
+    GRADLE_VERSION: "6.0.1"
   script:
     - gradle wrapper --gradle-version=$GRADLE_VERSION
     - ./gradlew shadowJar
@@ -64,10 +64,10 @@ gradle-4.10.3:
   variables:
     GRADLE_VERSION: "4.10.3"
 
-gradle-4.0:
+gradle-5.0:
   extends: .gradle-job
   variables:
-    GRADLE_VERSION: "4.0"
+    GRADLE_VERSION: "5.0"
 
 spotless:
   extends: .gradle-job
