@@ -714,7 +714,7 @@ class TK_Session {
 
               String handle, data;
               {
-                Pattern p = Pattern.compile("(?:([A-Z]+)=)?(.*)");
+                Pattern p = Pattern.compile("(?:([A-Z]+)=)?(.*)", Pattern.DOTALL);
                 Matcher m = p.matcher(argv);
                 m.matches();
                 handle = m.group(1);
@@ -879,7 +879,8 @@ class TK_Session {
               boolean even_pages_b = false;
               boolean odd_pages_b = false;
 
-              Pattern p = Pattern.compile("([A-Z]*)(r?)(end|[0-9]*)(-(r?)(end|[0-9]*))?(.*)");
+              Pattern p = Pattern.compile("([A-Z]*)(r?)(end|[0-9]*)(-(r?)(end|[0-9]*))?(.*)",
+                                          Pattern.DOTALL);
               Matcher m = p.matcher(argv);
               m.matches();
               String handle = m.group(1);
