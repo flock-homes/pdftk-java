@@ -26,12 +26,40 @@ sudo apt install pdftk
  - jdk >= 1.7
  - commons-lang3
  - bcprov
- - gradle >= 4.0 or ant (build time)
+ - gradle >= 4.10.3 or ant (build time)
  - ivy (optionally for ant, for resolving dependencies at build time)
 
 ## Building and running with Gradle
+If you have gradle installed, you can produce a standard jar, which
+requires a Java Runtime Environment plus additional libraries, a
+standalone jar, which only requires a Java Runtime Environment, or a
+standalone native binary, which does not require any runtime
+dependencies. In order to build the binary, you need to have
+[GraalVM](https://www.graalvm.org) with the [Native Image
+Plugin](https://www.graalvm.org/docs/reference-manual/native-image/)
+installed.
 
-If you have gradle installed you can produce a standalone jar with:
+The build configuration is relatively simple so it should work with most
+versions of gradle since 5.0 (tested 5.0 and 6.0.1) but if you have problems try
+installing gradle wrapper at a particular version and then running the wrapper:
+```
+gradle wrapper --gradle-version 6.0.1
+```
+
+### Standard jar
+
+To build a jar, simply run: 
+
+```
+gradle jar
+```
+
+and refer to the [ant instructions](#building-and-running-with-and) for running it.
+
+### Standalone jar
+
+To build the standalone jar, simply run: 
+
 ```
 gradle shadowJar
 ```
@@ -42,12 +70,16 @@ This can then be run with just java installed like:
 java -jar build/libs/pdftk-all.jar
 ```
 
-The build configuration is relatively simple so it should work with most
-versions of gradle since 4.0 (tested 4.0, 4.10.3 and 5.0) but if you have problems try
-installing gradle wrapper at a particular version and then running the wrapper:
+### Standalone binary (native image)
+To build the standalone binary, simply run:
+
 ```
-gradle wrapper --gradle-version 5.0
-./gradlew shadowJar
+gradle nativeImage
+```
+
+This can then be run like:
+```
+./build/native-image/pdftk
 ```
 
 ## Building and running with ant

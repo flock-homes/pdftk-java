@@ -9,7 +9,7 @@ php-pdftk:
   extends: .ant-job
   script:
     - ant -lib /usr/share/java
-    - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.51.jar:'`pwd`'/lib/commons-lang3-3.7.jar com.gitlab.pdftk_java.pdftk "$@"' > /usr/bin/pdftk
+    - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.64.jar:'`pwd`'/lib/commons-lang3-3.9.jar com.gitlab.pdftk_java.pdftk "$@"' > /usr/bin/pdftk
     - chmod +x /usr/bin/pdftk
     - apt-get install php-mbstring phpunit composer -yqq
     - git clone --depth 1 https://github.com/marcvinyals/php-pdftk
@@ -46,7 +46,7 @@ pages:
   stage: test
   image: gradle:latest
   variables:
-    GRADLE_VERSION: "5.0"
+    GRADLE_VERSION: "6.0.1"
   script:
     - gradle wrapper --gradle-version=$GRADLE_VERSION
     - ./gradlew shadowJar
@@ -59,15 +59,10 @@ gradle:
     - build/libs/pdftk-all.jar
     expire_in: 1 month
 
-gradle-4.10.3:
+gradle-5.0:
   extends: .gradle-job
   variables:
-    GRADLE_VERSION: "4.10.3"
-
-gradle-4.0:
-  extends: .gradle-job
-  variables:
-    GRADLE_VERSION: "4.0"
+    GRADLE_VERSION: "5.0"
 
 spotless:
   extends: .gradle-job

@@ -1,8 +1,9 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.diffplug.gradle.spotless' version '3.25.0'
-    id 'com.github.johnrengelman.shadow' version '4.0.3'
+    id 'com.diffplug.gradle.spotless' version '3.26.1'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id "org.mikeneck.graalvm-native-image" version "0.1.1"
 }
 
 sourceCompatibility = 1.7
@@ -26,8 +27,17 @@ repositories {
 }
 
 dependencies {
-    compile 'org.bouncycastle:bcprov-jdk15on:1.51'
-    compile 'org.apache.commons:commons-lang3:3.7'
+    implementation 'org.apache.commons:commons-lang3:3.9'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.64'
+}
+
+nativeImage {
+  mainClass = mainClassName
+  executableName = 'pdftk'
+  arguments(
+      '-H:ResourceConfigurationFiles=META-INF/native-image/resource-config.json',
+      '--no-fallback',
+  )
 }
 
 spotless {
