@@ -879,8 +879,9 @@ class TK_Session {
               boolean even_pages_b = false;
               boolean odd_pages_b = false;
 
-              Pattern p = Pattern.compile("([A-Z]*)(r?)(end|[0-9]*)(-(r?)(end|[0-9]*))?(.*)",
-                                          Pattern.DOTALL);
+              Pattern p =
+                  Pattern.compile(
+                      "([A-Z]*)(r?)(end|[0-9]*)(-(r?)(end|[0-9]*))?(.*)", Pattern.DOTALL);
               Matcher m = p.matcher(argv);
               m.matches();
               String handle = m.group(1);
