@@ -40,7 +40,7 @@ Plugin](https://www.graalvm.org/docs/reference-manual/native-image/)
 installed.
 
 The build configuration is relatively simple so it should work with most
-versions of gradle since 4.10.3 (tested 4.10.3, 5.0 and 6.0.1) but if you have problems try
+versions of gradle since 5.0 (tested 5.0 and 6.0.1) but if you have problems try
 installing gradle wrapper at a particular version and then running the wrapper:
 ```
 gradle wrapper --gradle-version 6.0.1

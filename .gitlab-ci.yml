@@ -59,11 +59,6 @@ gradle:
     - build/libs/pdftk-all.jar
     expire_in: 1 month
 
-gradle-4.10.3:
-  extends: .gradle-job
-  variables:
-    GRADLE_VERSION: "4.10.3"
-
 gradle-5.0:
   extends: .gradle-job
   variables:
