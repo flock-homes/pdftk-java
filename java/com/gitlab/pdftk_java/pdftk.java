@@ -35,7 +35,7 @@ import java.util.Scanner;
 public class pdftk {
 
   /* TODO: should read from compiler */
-  static final String PDFTK_VER = "3.0.8";
+  static final String PDFTK_VER = "3.0.9";
   static final boolean ASK_ABOUT_WARNINGS = false;
 
   static String prompt_for_password(String pass_name, String pass_app) {

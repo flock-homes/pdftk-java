@@ -1,3 +1,12 @@
+## [3.0.9] - 2020-01-13
+
+### Added
+ - Native image build option
+
+### Fixed
+ - Print an informative error if missing dependencies
+ - Crash with newlines in arguments
+
 ## [3.0.8] - 2019-10-14
 
 ### Changed
