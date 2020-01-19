@@ -52,10 +52,14 @@ class report {
   // Escape both Xml and Unicode entities
   // see
   // https://commons.apache.org/proper/commons-lang/javadocs/api-3.6/org/apache/commons/lang3/StringEscapeUtils.html#escapeXml-java.lang.String-
-  static CharSequenceTranslator XmlUnicodeEscaper =
-      StringEscapeUtils.ESCAPE_XML10.with(NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
+  private static CharSequenceTranslator XmlUnicodeEscaper = null;
 
   static String OutputXmlString(String jss_p) {
+    if (XmlUnicodeEscaper == null) {
+      XmlUnicodeEscaper =
+          StringEscapeUtils.ESCAPE_XML10.with(
+              NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
+    }
     return XmlUnicodeEscaper.translate(jss_p);
   }
 
