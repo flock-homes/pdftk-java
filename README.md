@@ -12,7 +12,13 @@ the original; any help in catching them will be appreciated.
 ## Installation on Debian/Ubuntu
 
 An official `pdftk-java` package is available for Debian >= 10 and
-Ubuntu >= 18.10. There is also a package in a third-party repository
+Ubuntu >= 18.10 that can be installed as usual:
+
+```
+sudo apt install pdftk
+```
+
+There is also a package in a third-party repository
 intended for *earlier* OS releases that can be installed as follows:
 
 ```
@@ -62,11 +68,11 @@ To build a jar, simply run:
 gradle jar
 ```
 
-and refer to the [ant instructions](#building-and-running-with-and) for running it.
+and refer to the [ant instructions](#building-and-running-with-ant) for running it.
 
 ### Standalone jar
 
-To build the standalone jar, simply run: 
+To build a standalone jar, simply run: 
 
 ```
 gradle shadowJar
@@ -79,9 +85,12 @@ java -jar build/libs/pdftk-all.jar
 ```
 
 ### Standalone binary (native image)
-To build the standalone binary, simply run:
+
+Building a standalone binary requires [GraalVM Native Image](https://www.graalvm.org/docs/reference-manual/native-image/).
+To build a standalone binary, simply run:
 
 ```
+export JAVA_HOME=/path/to/graalvm
 gradle nativeImage
 ```
 
