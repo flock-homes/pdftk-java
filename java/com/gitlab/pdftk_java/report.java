@@ -620,7 +620,7 @@ class report {
             PdfDictionary annot_p = (PdfDictionary) annot_po;
 
             PdfObject type_p = reader_p.getPdfObject(annot_p.get(PdfName.TYPE));
-            if (type_p.equals(PdfName.ANNOT)) {
+            if (type_p != null && type_p.equals(PdfName.ANNOT)) {
 
               PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 

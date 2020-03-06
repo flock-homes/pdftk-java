@@ -21,6 +21,14 @@ sudo apt update
 sudo apt install pdftk
 ```
 
+## Installation on macOS
+
+On macOS `pdftk-java` is available as a [homebrew](https://brew.sh) formula. It can be installed with the following command:
+
+```
+brew install pdftk-java
+```
+
 ## Dependencies
 
  - jdk >= 1.7
