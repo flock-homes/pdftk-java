@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 import pdftk.com.lowagie.text.Document;
 import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.Rectangle;
+import pdftk.com.lowagie.text.exceptions.InvalidPdfException;
 import pdftk.com.lowagie.text.pdf.AcroFields;
 import pdftk.com.lowagie.text.pdf.FdfReader;
 import pdftk.com.lowagie.text.pdf.FdfWriter;
@@ -177,10 +178,13 @@ class TK_Session {
       if (!input_pdf_p.m_authorized_b) {
         open_success_b = false;
       }
+    } catch (InvalidPdfException e) { // file open error
+      System.err.println("Error: " + e.getMessage());
+      open_success_b = false;
     } catch (IOException ioe_p) { // file open error
       if (ioe_p.getMessage().equals("Bad password")) {
         input_pdf_p.m_authorized_b = false;
-      } else if (ioe_p.getMessage().indexOf("not found") != -1) {
+      } else if (ioe_p.getMessage().indexOf("not found as file or resource") != -1) {
         System.err.println("Error: Unable to find file.");
       } else { // unexpected error
         System.err.println("Error: Unexpected Exception in open_reader()");
