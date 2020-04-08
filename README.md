@@ -1,4 +1,4 @@
-This is a port of [pfdtk](https://www.pdflabs.com/tools/pdftk-server/)
+This is a port of [pdftk](https://www.pdflabs.com/tools/pdftk-server/)
 into Java. The current goal is to make a translation as faithful as it
 is reasonable and to fix any issues present in the original
 (correctness takes precedence over compatibility, see the [differences](#known-differences-with-pdftk)),
@@ -9,7 +9,9 @@ but a lot more testing is needed. Due to the differences between C++
 and Java, it is likely that a few bugs have sneaked in with respect to
 the original; any help in catching them will be appreciated.
 
-## Installation on Debian/Ubuntu
+## Installation
+
+### Installation on Debian/Ubuntu
 
 An official `pdftk-java` package is available for Debian >= 10 and
 Ubuntu >= 18.10 that can be installed as usual:
@@ -27,13 +29,23 @@ sudo apt update
 sudo apt install pdftk
 ```
 
-## Installation on macOS
+### Installation on macOS
 
-On macOS `pdftk-java` is available as a [homebrew](https://brew.sh) formula. It can be installed with the following command:
+On macOS `pdftk-java` is available as a [homebrew](https://brew.sh)
+formula. It can be installed with the following command:
 
 ```
 brew install pdftk-java
 ```
+
+### Pre-built binaries
+
+The recommended way to install pdftk-java is through a package
+manager, but if that is not an option there are pre-built binaries
+available:
+
+ - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/libs/pdftk-all.jar?job=gradle), including dependencies. Requires a JRE at runtime.
+ - [Native Image]((https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/native-image/pdftk?job=nativeimage)) for x86_64 Linux systems. Does not require any runtime dependencies.
 
 ## Dependencies
 
@@ -48,10 +60,7 @@ If you have gradle installed, you can produce a standard jar, which
 requires a Java Runtime Environment plus additional libraries, a
 standalone jar, which only requires a Java Runtime Environment, or a
 standalone native binary, which does not require any runtime
-dependencies. In order to build the binary, you need to have
-[GraalVM](https://www.graalvm.org) with the [Native Image
-Plugin](https://www.graalvm.org/docs/reference-manual/native-image/)
-installed.
+dependencies.
 
 The build configuration is relatively simple so it should work with most
 versions of gradle since 5.0 (tested 5.0 and 6.0.1) but if you have problems try
@@ -77,7 +86,6 @@ To build a standalone jar, simply run:
 ```
 gradle shadowJar
 ```
-Alternatively, a [pre-built jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/libs/pdftk-all.jar?job=gradle) is also available.
 
 This can then be run with just java installed like:
 ```
@@ -86,8 +94,11 @@ java -jar build/libs/pdftk-all.jar
 
 ### Standalone binary (native image)
 
-Building a standalone binary requires [GraalVM Native Image](https://www.graalvm.org/docs/reference-manual/native-image/).
-To build a standalone binary, simply run:
+Building a standalone binary requires
+[GraalVM](https://www.graalvm.org), which replaces the standard JDK,
+with the [Native Image
+Plugin](https://www.graalvm.org/docs/reference-manual/native-image/)
+installed. To build a standalone binary, simply run:
 
 ```
 export JAVA_HOME=/path/to/graalvm

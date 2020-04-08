@@ -46,7 +46,7 @@ pages:
   stage: test
   image: gradle:latest
   variables:
-    GRADLE_VERSION: "6.0.1"
+    GRADLE_VERSION: "6.3"
   script:
     - gradle wrapper --gradle-version=$GRADLE_VERSION
     - ./gradlew shadowJar
@@ -56,7 +56,7 @@ gradle:
   extends: .gradle-job
   artifacts:
     paths:
-    - build/libs/pdftk-all.jar
+      - build/libs/pdftk-all.jar
     expire_in: 1 month
 
 gradle-5.0:
@@ -68,3 +68,18 @@ spotless:
   extends: .gradle-job
   script:
     - gradle spotlessCheck
+
+nativeimage:
+  stage: deploy
+  image: oracle/graalvm-ce:latest
+  script:
+    - gu install native-image
+    - yum install -y wget unzip
+    - wget https://services.gradle.org/distributions/gradle-6.3-bin.zip
+    - unzip gradle-6.3-bin.zip
+    - ./gradle-6.3/bin/gradle nativeImage
+    - ./build/native-image/pdftk --version
+  artifacts:
+    paths:
+      - build/native-image/pdftk
+    expire_in: 1 month
