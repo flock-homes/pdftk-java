@@ -3,7 +3,8 @@ nativeimage:
   image: oracle/graalvm-ce:latest
   script:
     - gu install native-image
-    - yum install -y unzip
-    - curl https://services.gradle.org/distributions/gradle-6.3-bin.zip | unzip
+    - yum install -y wget unzip
+    - wget https://services.gradle.org/distributions/gradle-6.3-bin.zip
+    - unzip gradle-6.3-bin.zip
     - ./gradle-6.3/bin/gradle nativeImage
     - ./build/native-image/pdftk --version
