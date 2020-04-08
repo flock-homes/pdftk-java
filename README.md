@@ -45,7 +45,7 @@ manager, but if that is not an option there are pre-built binaries
 available:
 
  - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/libs/pdftk-all.jar?job=gradle), including dependencies. Requires a JRE at runtime.
- - [Native Image]((https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/native-image/pdftk?job=nativeimage)) for x86_64 Linux systems. Does not require any runtime dependencies.
+ - [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/master/file/build/native-image/pdftk?job=nativeimage) for x86_64 Linux systems. Does not require any runtime dependencies.
 
 ## Dependencies
 
