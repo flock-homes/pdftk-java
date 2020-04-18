@@ -1,3 +1,10 @@
+## [3.0.10] - 2020-04-18
+
+### Fixed
+ - Crash in dump_data_annots
+ - Load commons-lang-3 only if needed
+ - Crash when copying malformed inputs
+
 ## [3.0.9] - 2020-01-13
 
 ### Added
