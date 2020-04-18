@@ -244,8 +244,10 @@ public class PdfCopy extends PdfWriter {
 		if( in_obj!= null && in_obj.isDictionary() ) {
 			PdfDictionary in_dict= (PdfDictionary)in_obj;
 
-			PdfName type= (PdfName)in_dict.get( PdfName.TYPE );
-			if( type!= null && type.isName() && type.equals( PdfName.PAGE ) ) {
+			// /Type should always contain a name, but this is ignored in practice. See
+			// https://gitlab.com/pdftk-java/pdftk/issues/47
+			PdfObject type= in_dict.get(PdfName.TYPE);
+			if(PdfName.PAGE.equals(type)) {
 
 				PdfObject parent_obj=
 					(PdfObject)in_dict.get( PdfName.PARENT );
@@ -279,13 +281,15 @@ public class PdfCopy extends PdfWriter {
     public PdfDictionary copyDictionary(PdfDictionary in)
     throws IOException, BadPdfFormatException {
         PdfDictionary out = new PdfDictionary();
-        PdfName type = (PdfName)in.get(PdfName.TYPE);
+        PdfObject type = in.get(PdfName.TYPE);
         
         for (Iterator it = in.getKeys().iterator(); it.hasNext();) {
             PdfName key = (PdfName)it.next();
             PdfObject value = in.get(key);
 			// System.err.println("Copy " + key); // debug
-            if (type != null && PdfName.PAGE.equals(type)) {
+            // /Type should always contain a name, but this is ignored in practice. See
+            // https://gitlab.com/pdftk-java/pdftk/issues/47
+            if (PdfName.PAGE.equals(type)) {
                 if (key.equals(PdfName.PARENT))
                     out.put(PdfName.PARENT, topPageParent);
                 else if (!key.equals(PdfName.B))
