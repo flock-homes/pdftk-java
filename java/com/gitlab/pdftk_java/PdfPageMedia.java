@@ -39,7 +39,7 @@ class PdfPageMedia {
   Rectangle m_crop = null;
 
   boolean valid() {
-    if (m_rotation >=0 && m_rotation % 90 != 0) return false;
+    if (m_rotation >= 0 && m_rotation % 90 != 0) return false;
     return m_number > 0 && (m_rotation >= 0 || m_rect != null || m_crop != null);
   }
 
