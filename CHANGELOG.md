@@ -1,3 +1,11 @@
+## [3.1.0] - 2020-04-26
+
+### Added
+ - update_info handles page metrics (media, rotation and labels)
+
+### Fixed
+ - Report page label indices correctly
+
 ## [3.0.10] - 2020-04-18
 
 ### Fixed
