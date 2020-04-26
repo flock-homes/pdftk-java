@@ -39,6 +39,7 @@ class PdfPageMedia {
   Rectangle m_crop = null;
 
   boolean valid() {
+    if (m_rotation >=0 && m_rotation % 90 != 0) return false;
     return m_number > 0 && (m_rotation >= 0 || m_rect != null || m_crop != null);
   }
 
@@ -46,7 +47,7 @@ class PdfPageMedia {
     StringBuilder ss = new StringBuilder();
     ss.append(BEGIN_MARK + System.lineSeparator());
     ss.append(NUMBER_LABEL + " " + m_number + System.lineSeparator());
-    ss.append(ROTATION_LABEL + " " + m_rotation + System.lineSeparator());
+    if (m_rotation != -1) ss.append(ROTATION_LABEL + " " + m_rotation + System.lineSeparator());
     if (m_rect != null) {
       ss.append(RECT_LABEL + " " + LoadableRectangle.position(m_rect) + System.lineSeparator());
       ss.append(
@@ -68,8 +69,7 @@ class PdfPageMedia {
   boolean loadRotation(String buff) {
     LoadableInt loader = new LoadableInt(m_rotation);
     boolean success = loader.LoadInt(buff, ROTATION_LABEL);
-    success &= loader.ii % 90 == 0;
-    if (success) m_rotation = (loader.ii % 360 + 360) % 360;
+    m_rotation = (loader.ii % 360 + 360) % 360;
     return success;
   }
 

@@ -46,9 +46,12 @@ public class BlackBox {
   }
 
   // Mock a command line call
-  public void pdftk(String... args) {
+  public void pdftk_error(int expected_error, String... args) {
     int error = pdftk.main_noexit(args);
-    assertEquals(0, error);
+    assertEquals(expected_error, error);
+  }
+  public void pdftk(String... args) {
+    pdftk_error(0, args);
   }
 
   // Capture the output of a command line call.

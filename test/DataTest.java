@@ -88,4 +88,50 @@ public class DataTest extends BlackBox {
     assertThat(systemErr.getLog(), containsString("page label record not valid"));
   }
 
+  @Test
+  public void update_page_media_replace() {
+    String output = tmpDirectory.getRoot().getPath()+"/output.pdf";
+    String[] data = {"PageMediaBegin",
+                     "PageMediaNumber: 3",
+                     "PageMediaRotation: 90",
+                     "PageMediaRect: 1 1 611 791",
+                     "PageMediaCropRect: 2 2 610 792"};
+    String[] expect = {data[0],data[1],data[2],data[3],"PageMediaDimensions: 610 790",data[4]};
+    systemIn.provideLines(data);
+    pdftk("test/files/refs.pdf", "update_info", "-", "output", output);
+    pdftk(output, "dump_data_utf8");
+    assertThat(systemOut.getLog(), containsString(String.join("\n",expect)));
+  }
+
+  @Test
+  public void update_page_media_badpage() {
+    systemIn.provideLines("PageMediaBegin",
+                          "PageMediaNumber: 42",
+                          "PageMediaRotation: 90",
+                          "PageMediaRect: 1 1 611 791",
+                          "PageMediaCropRect: 2 2 610 792");
+    pdftk_error(3, "test/files/refs.pdf", "update_info", "-", "output", "-");
+    assertThat(systemErr.getLog(), containsString("page 42 not found"));
+  }
+
+  @Test
+  public void update_page_media_badrotation() {
+    systemIn.provideLines("PageMediaBegin",
+                          "PageMediaNumber: 3",
+                          "PageMediaRotation: 45",
+                          "PageMediaRect: 1 1 611 791",
+                          "PageMediaCropRect: 2 2 610 792");
+    pdftk("test/files/refs.pdf", "update_info", "-", "output", "-");
+    assertThat(systemErr.getLog(), containsString("page media record not valid"));
+  }
+
+  @Test
+  public void update_page_media_badrect() {
+    systemIn.provideLines("PageMediaBegin",
+                          "PageMediaNumber: 3",
+                          "PageMediaRect: 1 1 611");
+    pdftk("test/files/refs.pdf", "update_info", "-", "output", "-");
+    assertThat(systemErr.getLog(), containsString("page media record not valid"));
+  }
+
 };

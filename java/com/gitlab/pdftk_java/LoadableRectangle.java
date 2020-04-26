@@ -67,7 +67,7 @@ class LoadableRectangle {
                 + position(BufferFloats(buff, label_len))
                 + ") -- skipping newer item");
       }
-      return true;
+      return rr != null;
     }
     return false;
   }
