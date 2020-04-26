@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
 
 class LoadableInt {
   int ii = -1;
-  boolean success;
 
   static int BufferInt(String buff, int buff_ii) {
     // while( buff[buff_ii] && isspace(buff[buff_ii]) ) { ++buff_ii; }

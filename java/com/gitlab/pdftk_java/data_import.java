@@ -26,9 +26,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringEscapeUtils;
+import pdftk.com.lowagie.text.Rectangle;
 import pdftk.com.lowagie.text.pdf.PRIndirectReference;
+import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfName;
+import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
 import pdftk.com.lowagie.text.pdf.PdfString;
@@ -53,6 +56,9 @@ class data_import {
     PdfPageLabel pagelabel = new PdfPageLabel();
     boolean pagelabel_b = false;
 
+    PdfPageMedia pagemedia = new PdfPageMedia();
+    boolean pagemedia_b = false;
+
     boolean eof = !ifs.hasNextLine();
 
     while (!eof) {
@@ -64,6 +70,7 @@ class data_import {
           || buff.startsWith(PdfInfo.BEGIN_MARK)
           || buff.startsWith(PdfBookmark.BEGIN_MARK)
           || buff.startsWith(PdfPageLabel.BEGIN_MARK)
+          || buff.startsWith(PdfPageMedia.BEGIN_MARK)
           || !buff_prev.isEmpty()
               && !buff.startsWith(buff_prev)) { // start of a new record or end of file
         // pack data and reset
@@ -89,6 +96,13 @@ class data_import {
             System.err.println("pdftk Warning: page label record not valid -- skipped; data:");
             System.err.print(pagelabel);
           }
+        } else if (pagemedia_b) {
+          if (pagemedia.valid()) {
+            pdf_data_p.m_pagemedia.add(pagemedia);
+          } else { // warning
+            System.err.println("pdftk Warning: page media record not valid -- skipped; data:");
+            System.err.print(pagemedia);
+          }
         }
 
         // reset
@@ -103,6 +117,9 @@ class data_import {
         //
         pagelabel = new PdfPageLabel();
         pagelabel_b = false;
+        //
+        pagemedia = new PdfPageMedia();
+        pagemedia_b = false;
       }
 
       // whitespace or comment; skip
@@ -115,9 +132,7 @@ class data_import {
         buff_prev_len = PdfInfo.PREFIX.length();
         info_b = true;
 
-        if (buff.startsWith(PdfInfo.BEGIN_MARK)
-            || info.loadKey(buff)
-            || info.loadValue(buff)) {
+        if (buff.startsWith(PdfInfo.BEGIN_MARK) || info.loadKey(buff) || info.loadValue(buff)) {
           // success
         } else { // warning
           System.err.println("pdftk Warning: unexpected Info case in LoadDataFile(); continuing");
@@ -158,9 +173,20 @@ class data_import {
       }
 
       // page media record
-      else if (buff.startsWith(report.PdfPageMedia.PREFIX)) {
-        buff_prev_len = 0;
-        // TODO
+      else if (buff.startsWith(PdfPageMedia.PREFIX)) {
+        buff_prev_len = PdfPageMedia.PREFIX.length();
+        pagemedia_b = true;
+
+        if (buff.startsWith(PdfPageMedia.BEGIN_MARK)
+            || pagemedia.loadNumber(buff)
+            || pagemedia.loadRotation(buff)
+            || pagemedia.loadRect(buff)
+            || pagemedia.loadCrop(buff)) {
+          // success
+        } else { // warning
+          System.err.println(
+              "pdftk Warning: unexpected PageMedia case in LoadDataFile(); continuing");
+        }
       }
 
       // pdf id
@@ -191,97 +217,113 @@ class data_import {
     return pdf_data_p;
   }
 
+  static PdfArray toPdfArray(Rectangle r) {
+    if (r == null) return new PdfArray();
+    return new PdfArray(new float[] {r.left(), r.bottom(), r.right(), r.top()});
+  }
+
   static boolean UpdateInfo(PdfReader reader_p, InputStream ifs, boolean utf8_b) {
     boolean ret_val_b = true;
 
     PdfData pdf_data = LoadDataFile(ifs);
-    if (pdf_data != null) {
+    if (pdf_data == null) { // error
+      System.err.println("pdftk Error in UpdateInfo(): LoadDataFile() failure;");
+      return false;
+    }
 
-      { // trailer data
-        PdfDictionary trailer_p = reader_p.getTrailer();
-        if (trailer_p != null) {
+    // trailer data
+    PdfDictionary trailer_p = reader_p.getTrailer();
+    if (trailer_p != null) {
 
-          PdfObject root_po = reader_p.getPdfObject(trailer_p.get(PdfName.ROOT));
-          if (root_po != null && root_po.isDictionary()) {
-            PdfDictionary root_p = (PdfDictionary) root_po;
+      PdfObject root_po = reader_p.getPdfObject(trailer_p.get(PdfName.ROOT));
+      if (root_po != null && root_po.isDictionary()) {
+        PdfDictionary root_p = (PdfDictionary) root_po;
 
-            // bookmarks
-            if (!pdf_data.m_bookmarks.isEmpty()) {
+        // bookmarks
+        if (!pdf_data.m_bookmarks.isEmpty()) {
 
-              // build bookmarks
-              PdfDictionary outlines_p = new PdfDictionary(PdfName.OUTLINES);
-              if (outlines_p != null) {
-                PRIndirectReference outlines_ref_p = reader_p.getPRIndirectReference(outlines_p);
+          // build bookmarks
+          PdfDictionary outlines_p = new PdfDictionary(PdfName.OUTLINES);
+          if (outlines_p != null) {
+            PRIndirectReference outlines_ref_p = reader_p.getPRIndirectReference(outlines_p);
 
-                int num_bookmarks_total =
-                    bookmarks.BuildBookmarks(
-                        reader_p,
-                        pdf_data.m_bookmarks.listIterator(),
-                        outlines_p,
-                        outlines_ref_p,
-                        0,
-                        utf8_b);
+            int num_bookmarks_total =
+                bookmarks.BuildBookmarks(
+                    reader_p,
+                    pdf_data.m_bookmarks.listIterator(),
+                    outlines_p,
+                    outlines_ref_p,
+                    0,
+                    utf8_b);
 
-                if (root_p.contains(PdfName.OUTLINES)) {
-                  // erase old bookmarks
-                  PdfObject old_outlines_p = reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
-                  if (old_outlines_p != null && old_outlines_p.isDictionary()) {
-                    bookmarks.RemoveBookmarks(reader_p, (PdfDictionary) old_outlines_p);
-                  }
-                }
-                // insert into document
-                root_p.put(PdfName.OUTLINES, outlines_ref_p);
+            if (root_p.contains(PdfName.OUTLINES)) {
+              // erase old bookmarks
+              PdfObject old_outlines_p = reader_p.getPdfObject(root_p.get(PdfName.OUTLINES));
+              if (old_outlines_p != null && old_outlines_p.isDictionary()) {
+                bookmarks.RemoveBookmarks(reader_p, (PdfDictionary) old_outlines_p);
               }
             }
-
-            // page labels
-            if (!pdf_data.m_pagelabels.isEmpty()) {
-              PdfDictionary pagelabels_p = PdfPageLabel.BuildPageLabels(pdf_data.m_pagelabels);
-              PRIndirectReference pagelabels_ref_p = reader_p.getPRIndirectReference(pagelabels_p);
-              root_p.put(PdfName.PAGELABELS, pagelabels_ref_p);
-            }
-
-
-          } else { // error
-            System.err.println("pdftk Error in UpdateInfo(): no Root dictionary found;");
-            ret_val_b = false;
+            // insert into document
+            root_p.put(PdfName.OUTLINES, outlines_ref_p);
           }
+        }
 
-          // metadata
-          if (!pdf_data.m_info.isEmpty()) {
-            PdfObject info_po = reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
-            if (info_po != null && info_po.isDictionary()) {
-              PdfDictionary info_p = (PdfDictionary) info_po;
+        // page labels
+        if (!pdf_data.m_pagelabels.isEmpty()) {
+          PdfDictionary pagelabels_p = PdfPageLabel.BuildPageLabels(pdf_data.m_pagelabels);
+          PRIndirectReference pagelabels_ref_p = reader_p.getPRIndirectReference(pagelabels_p);
+          root_p.put(PdfName.PAGELABELS, pagelabels_ref_p);
+        }
 
-              for (PdfInfo it : pdf_data.m_info) {
-                if (it.m_value.isEmpty()) {
-                  info_p.remove(new PdfName(it.m_key));
-                } else {
-                  if (utf8_b) { // UTF-8 encoded input
-                    // patch by Quentin Godfroy <godfroy@clipper.ens.fr>
-                    // and Chris Adams <cadams@salk.edu>
-                    info_p.put(new PdfName(it.m_key), new PdfString(it.m_value));
-                  } else { // XML entities input
-                    String jvs = XmlStringToJcharArray(it.m_value);
-                    info_p.put(new PdfName(it.m_key), new PdfString(jvs));
-                  }
-                }
-              }
-            } else { // error
-              System.err.println("pdftk Error in UpdateInfo(): no Info dictionary found;");
-              ret_val_b = false;
-            }
-          }
-        } else { // error
-          System.err.println("pdftk Error in UpdateInfo(): no document trailer found;");
+      } else { // error
+        System.err.println("pdftk Error in UpdateInfo(): no Root dictionary found;");
+        ret_val_b = false;
+      }
+
+      // page media
+      for (PdfPageMedia pagemedia : pdf_data.m_pagemedia) {
+        PdfDictionary page_p = reader_p.getPageN(pagemedia.m_number);
+        if (page_p != null) {
+          if (pagemedia.m_rotation >= 0)
+            page_p.put(PdfName.ROTATE, new PdfNumber(pagemedia.m_rotation));
+          if (pagemedia.m_rect != null) page_p.put(PdfName.MEDIABOX, toPdfArray(pagemedia.m_rect));
+          if (pagemedia.m_crop != null) page_p.put(PdfName.CROPBOX, toPdfArray(pagemedia.m_crop));
+        } else {
+          System.err.println(
+              "pdftk Error in UpdateInfo(): page " + pagemedia.m_number + " not found;");
           ret_val_b = false;
         }
       }
 
+      // metadata
+      if (!pdf_data.m_info.isEmpty()) {
+        PdfObject info_po = reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
+        if (info_po != null && info_po.isDictionary()) {
+          PdfDictionary info_p = (PdfDictionary) info_po;
+
+          for (PdfInfo it : pdf_data.m_info) {
+            if (it.m_value.isEmpty()) {
+              info_p.remove(new PdfName(it.m_key));
+            } else {
+              if (utf8_b) { // UTF-8 encoded input
+                // patch by Quentin Godfroy <godfroy@clipper.ens.fr>
+                // and Chris Adams <cadams@salk.edu>
+                info_p.put(new PdfName(it.m_key), new PdfString(it.m_value));
+              } else { // XML entities input
+                String jvs = XmlStringToJcharArray(it.m_value);
+                info_p.put(new PdfName(it.m_key), new PdfString(jvs));
+              }
+            }
+          }
+        } else { // error
+          System.err.println("pdftk Error in UpdateInfo(): no Info dictionary found;");
+          ret_val_b = false;
+        }
+      }
     } else { // error
-      System.err.println("pdftk Error in UpdateInfo(): LoadDataFile() failure;");
+      System.err.println("pdftk Error in UpdateInfo(): no document trailer found;");
+      ret_val_b = false;
     }
-    // cerr << pdf_data; // debug
 
     return ret_val_b;
   }
@@ -336,6 +378,7 @@ class data_import {
     ArrayList<PdfInfo> m_info = new ArrayList<PdfInfo>();
     ArrayList<PdfBookmark> m_bookmarks = new ArrayList<PdfBookmark>();
     ArrayList<PdfPageLabel> m_pagelabels = new ArrayList<PdfPageLabel>();
+    ArrayList<PdfPageMedia> m_pagemedia = new ArrayList<PdfPageMedia>();
 
     static final String PREFIX = "PdfID";
     static final String ID_0_LABEL = "PdfID0:";

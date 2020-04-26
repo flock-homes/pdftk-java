@@ -25,13 +25,11 @@ package com.gitlab.pdftk_java;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
@@ -57,8 +55,8 @@ class report {
   static String OutputXmlString(String jss_p) {
     if (XmlUnicodeEscaper == null) {
       XmlUnicodeEscaper =
-    StringEscapeUtils.ESCAPE_XML10.with(
-      NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
+          StringEscapeUtils.ESCAPE_XML10.with(
+              NumericEntityEscaper.between(0x7f, Integer.MAX_VALUE));
     }
     return XmlUnicodeEscaper.translate(jss_p);
   }
@@ -388,7 +386,7 @@ class report {
             if (kid_kids_p != null && kid_kids_p.isArray()) {
 
               boolean kids_have_names_b =
-                ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
+                  ReportAcroFormFields(ofs, (PdfArray) kid_kids_p, acc_state, reader_p, utf8_b);
 
               if (!kids_have_names_b && kid_p.contains(PdfName.T)) {
                 // dump form field
@@ -649,13 +647,6 @@ class report {
     reader_p.resetReleasePage();
   }
 
-  //
-  class PdfPageMedia {
-    static final String PREFIX = "PageMedia";
-    static final String BEGIN_MARK = "PageMediaBegin";
-    // TODO
-  };
-
   static void ReportOutlines(
       PrintStream ofs, PdfDictionary outline_p, PdfReader reader_p, boolean utf8_b) {
     ArrayList<PdfBookmark> bookmark_data = new ArrayList<PdfBookmark>();
@@ -687,9 +678,7 @@ class report {
           ofs.println(data_import.PdfInfo.KEY_LABEL + " " + OutputPdfName(key_p));
 
           ofs.println(
-              data_import.PdfInfo.VALUE_LABEL
-                  + " "
-                  + OutputPdfString((PdfString) value_p, utf8_b));
+              data_import.PdfInfo.VALUE_LABEL + " " + OutputPdfString((PdfString) value_p, utf8_b));
         }
       }
 
@@ -742,9 +731,10 @@ class report {
           { // PageLabelNumStyle
             PdfObject style_p = reader_p.getPdfObject(label_p.get(PdfName.S));
             if (style_p != null && style_p.isName()) {
-              pagelabel.m_num_style = PdfPageLabel.NumberingStyle.fromPdfName.getOrDefault(
-                  style_p,
-                  PdfPageLabel.NumberingStyle.ERROR).representation;
+              pagelabel.m_num_style =
+                  PdfPageLabel.NumberingStyle.fromPdfName.getOrDefault(
+                          style_p, PdfPageLabel.NumberingStyle.ERROR)
+                      .representation;
             } else { // default
               pagelabel.m_num_style = PdfPageLabel.NumberingStyle.EMPTY.representation;
             }
@@ -766,7 +756,7 @@ class report {
           PdfObject kid_p = reader_p.getPdfObject(kids_ii);
           if (kid_p != null && kid_p.isDictionary()) {
 
-              // recurse
+            // recurse
             ReportPageLabels(ofs, (PdfDictionary) kid_p, reader_p, utf8_b);
           } else { // error
             ofs.println("[PDFTK ERROR: INVALID kid_p]");
@@ -775,6 +765,28 @@ class report {
       } else { // error; a number tree must have one or the other
         ofs.println("[PDFTK ERROR: INVALID PAGE LABEL NUMBER TREE]");
       }
+    }
+  }
+
+  static void ReportPageMedia(PrintStream ofs, int numPages, PdfReader reader_p, boolean utf8_b) {
+    // page metrics, rotation, stamptkData
+    for (int ii = 1; ii <= numPages; ++ii) {
+      PdfDictionary page_p = reader_p.getPageN(ii);
+
+      PdfPageMedia pagemedia = new PdfPageMedia();
+      pagemedia.m_number = ii;
+      pagemedia.m_rotation = reader_p.getPageRotation(page_p);
+      pagemedia.m_rect = reader_p.getPageSize(page_p);
+      pagemedia.m_crop = reader_p.getBoxSize(page_p, PdfName.CROPBOX);
+
+      ofs.print(pagemedia);
+
+      PdfString stamptkData_p = page_p.getAsString(PdfName.STAMPTKDATA);
+      if (stamptkData_p != null) {
+        ofs.println("PageMediaStamptkData: " + OutputPdfString(stamptkData_p, utf8_b));
+      }
+
+      reader_p.releasePage(ii);
     }
   }
 
@@ -855,11 +867,11 @@ class report {
 
         // outlines; optional
         PdfObject outlines_p =
-          reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
+            reader_p.getPdfObject(((PdfDictionary) catalog_p).get(PdfName.OUTLINES));
         if (outlines_p != null && outlines_p.isDictionary()) {
 
           PdfObject top_outline_p =
-            reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
+              reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
           if (top_outline_p != null && top_outline_p.isDictionary()) {
 
             ReportOutlines(ofs, (PdfDictionary) top_outline_p, reader_p, utf8_b);
@@ -874,60 +886,7 @@ class report {
       }
     }
 
-    { // page metrics, rotation, stamptkData
-      for (int ii = 1; ii <= numPages; ++ii) {
-        PdfDictionary page_p = reader_p.getPageN(ii);
-
-        ofs.println(PdfPageMedia.BEGIN_MARK);
-        ofs.println("PageMediaNumber: " + ii);
-
-        ofs.println("PageMediaRotation: " + reader_p.getPageRotation(page_p));
-
-        NumberFormat c_format = NumberFormat.getInstance(Locale.ROOT);
-
-        Rectangle page_rect_p = reader_p.getPageSize(page_p);
-        if (page_rect_p != null) {
-          ofs.println(
-              "PageMediaRect: "
-                  + c_format.format(page_rect_p.left())
-                  + " "
-                  + c_format.format(page_rect_p.bottom())
-                  + " "
-                  + c_format.format(page_rect_p.right())
-                  + " "
-                  + c_format.format(page_rect_p.top()));
-          ofs.println(
-              "PageMediaDimensions: "
-                  + c_format.format(page_rect_p.right() - page_rect_p.left())
-                  + " "
-                  + c_format.format(page_rect_p.top() - page_rect_p.bottom()));
-        }
-
-        Rectangle page_crop_p = reader_p.getBoxSize(page_p, PdfName.CROPBOX);
-        if (page_crop_p != null
-            && !(page_crop_p.left() == page_rect_p.left()
-                && page_crop_p.bottom() == page_rect_p.bottom()
-                && page_crop_p.right() == page_rect_p.right()
-                && page_crop_p.top() == page_rect_p.top())) {
-          ofs.println(
-              "PageMediaCropRect: "
-                  + c_format.format(page_crop_p.left())
-                  + " "
-                  + c_format.format(page_crop_p.bottom())
-                  + " "
-                  + c_format.format(page_crop_p.right())
-                  + " "
-                  + c_format.format(page_crop_p.top()));
-        }
-
-        PdfString stamptkData_p = page_p.getAsString(PdfName.STAMPTKDATA);
-        if (stamptkData_p != null) {
-          ofs.println("PageMediaStamptkData: " + OutputPdfString(stamptkData_p, utf8_b));
-        }
-
-        reader_p.releasePage(ii);
-      }
-    }
+    ReportPageMedia(ofs, numPages, reader_p, utf8_b);
 
     { // page labels (a/k/a logical page numbers)
       PdfDictionary catalog_p = reader_p.catalog;
