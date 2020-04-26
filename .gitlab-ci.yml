@@ -30,6 +30,8 @@ test:
       - coverage/
 
 pages:
+  only:
+    - master
   stage: deploy
   dependencies:
     - test
@@ -39,11 +41,11 @@ pages:
   artifacts:
     paths:
       - public/
-  only:
-    - master
 
 .gradle-job:
-  stage: test
+  only:
+    - tags
+  stage: deploy
   image: gradle:latest
   variables:
     GRADLE_VERSION: "6.3"
@@ -57,7 +59,6 @@ gradle:
   artifacts:
     paths:
       - build/libs/pdftk-all.jar
-    expire_in: 1 month
 
 gradle-5.0:
   extends: .gradle-job
@@ -65,11 +66,14 @@ gradle-5.0:
     GRADLE_VERSION: "5.0"
 
 spotless:
-  extends: .gradle-job
+  stage: test
+  image: gradle:latest
   script:
     - gradle spotlessCheck
 
 nativeimage:
+  only:
+    - tags
   stage: deploy
   image: oracle/graalvm-ce:latest
   script:
@@ -82,4 +86,3 @@ nativeimage:
   artifacts:
     paths:
       - build/native-image/pdftk
-    expire_in: 1 month
