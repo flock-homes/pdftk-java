@@ -90,7 +90,7 @@ If PDF is electronic paper, then pdftk is an electronic staple-remover, hole-pun
 .br
 * Report PDF Metrics, Bookmarks and Metadata
 .br
-* Add/Update PDF Bookmarks or Metadata
+* Add/Update PDF Metrics, Bookmarks or Metadata
 .br
 * Attach Files to PDF Pages or the PDF Document
 .br
@@ -307,9 +307,10 @@ filename or (if no output is given) to stdout. Non-ASCII characters are encoded
 as XML numerical entities. Does not create a new PDF.
 .TP
 .B update_info <info data filename | - | PROMPT>
-Changes the bookmarks and metadata in a single PDF's Info dictionary to match
-the input data file. The input data file uses the same syntax as the
-output from \fBdump_data\fR. Non-ASCII characters should be encoded as XML
+Changes the bookmarks, page labels, page sizes, page rotations, and
+metadata in a single PDF's Info dictionary to match the input data
+file. The input data file uses the same syntax as the output from
+\fBdump_data\fR. Non-ASCII characters should be encoded as XML
 numerical entities.
 
 This operation does not change the metadata stored
