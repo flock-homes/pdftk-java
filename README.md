@@ -136,6 +136,7 @@ pdftk are intended. Issue reports about other differences are welcome.
 - Does not ask for owner password if not needed.
 - Does not report some structure-only form fields.
 - Reports some missing values in multi-valued form fields.
+- Does not escape form fields if UTF-8 output is selected.
 
 ## Source organization
 

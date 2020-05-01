@@ -1,3 +1,8 @@
+## [3.1.1] - 2020-05-01
+
+### Fixed
+ - Do not escape form fields if UTF-8 output selected
+
 ## [3.1.0] - 2020-04-26
 
 ### Added
