@@ -77,11 +77,15 @@ class report {
     return "";
   }
 
-  static String OutputPdfName(PdfName pdfnn_p) {
+  static String OutputPdfName(PdfName pdfnn_p, boolean utf8_b) {
     if (pdfnn_p != null && pdfnn_p.isName()) {
-      String jnn_p = new String(pdfnn_p.getBytes());
+      String jnn_p = pdfnn_p.toString();
       jnn_p = PdfName.decodeName(jnn_p);
-      return OutputXmlString(jnn_p);
+      if (utf8_b) {
+        return OutputUtf8String(jnn_p);
+      } else {
+        return OutputXmlString(jnn_p);
+      }
     }
     return "";
   }
@@ -90,7 +94,7 @@ class report {
     if (pdfoo_p != null && pdfoo_p.isString()) {
       return OutputPdfString((PdfString) pdfoo_p, utf8_b);
     } else if (pdfoo_p != null && pdfoo_p.isName()) {
-      return OutputPdfName((PdfName) pdfoo_p);
+      return OutputPdfName((PdfName) pdfoo_p, utf8_b);
     }
     return null;
   }
@@ -164,13 +168,13 @@ class report {
       }
     }
 
-    void addApStates(PdfReader reader_p, PdfDictionary ap_p, PdfName state_name) {
+    void addApStates(PdfReader reader_p, PdfDictionary ap_p, PdfName state_name, boolean utf8_b) {
       if (ap_p.contains(state_name)) {
         PdfObject n_p = reader_p.getPdfObject(ap_p.get(state_name));
         if (n_p != null && n_p.isDictionary()) {
           Set<PdfName> n_set_p = ((PdfDictionary) n_p).getKeys();
           for (PdfName key_p : n_set_p) {
-            m_states.add(OutputPdfName(key_p));
+            m_states.add(OutputPdfName(key_p, utf8_b));
           }
         }
       }
@@ -367,9 +371,9 @@ class report {
 
               // this is one way to cull button option names: iterate over
               // appearance state names
-              acc_state.addApStates(reader_p, ap_p, PdfName.N);
-              acc_state.addApStates(reader_p, ap_p, PdfName.D);
-              acc_state.addApStates(reader_p, ap_p, PdfName.R);
+              acc_state.addApStates(reader_p, ap_p, PdfName.N, utf8_b);
+              acc_state.addApStates(reader_p, ap_p, PdfName.D, utf8_b);
+              acc_state.addApStates(reader_p, ap_p, PdfName.R, utf8_b);
             }
           }
 
@@ -503,7 +507,7 @@ class report {
     // subtype
     PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
     if (subtype_p != null && subtype_p.isName()) {
-      ofs.println("AnnotSubtype: " + OutputPdfName((PdfName) subtype_p));
+      ofs.println("AnnotSubtype: " + OutputPdfName((PdfName) subtype_p, utf8_b));
     }
 
     ////
@@ -675,7 +679,7 @@ class report {
             && 0 < ((PdfString) value_p).toUnicodeString().length()) { // ouput
           ofs.println(data_import.PdfInfo.BEGIN_MARK);
 
-          ofs.println(data_import.PdfInfo.KEY_LABEL + " " + OutputPdfName(key_p));
+          ofs.println(data_import.PdfInfo.KEY_LABEL + " " + OutputPdfName(key_p, utf8_b));
 
           ofs.println(
               data_import.PdfInfo.VALUE_LABEL + " " + OutputPdfString((PdfString) value_p, utf8_b));
