@@ -181,6 +181,7 @@ class data_import {
             || pagemedia.loadNumber(buff)
             || pagemedia.loadRotation(buff)
             || pagemedia.loadRect(buff)
+            || pagemedia.loadDimensions(buff)
             || pagemedia.loadCrop(buff)) {
           // success
         } else { // warning

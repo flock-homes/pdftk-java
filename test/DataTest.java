@@ -16,6 +16,17 @@ public class DataTest extends BlackBox {
   }
 
   @Test
+  public void idempotent() {
+    pdftk("test/files/refs.pdf", "dump_data_utf8");
+    String expectedData = systemOut.getLog();
+    systemIn.provideLines(expectedData);
+    String output = tmpDirectory.getRoot().getPath()+"/output.pdf";
+    pdftk("test/files/refs.pdf", "update_info", "-", "output", output);
+    assertEquals(expectedData, systemOut.getLog());
+    assertEquals("", systemErr.getLog());
+  }
+
+  @Test
   public void update_info_incomplete_record() {
     systemIn.provideLines("InfoBegin", "InfoKey: Title", " ","InfoBegin", "InfoKey: Author", " ");
     pdftk("test/files/blank.pdf", "update_info", "-", "output", "-");

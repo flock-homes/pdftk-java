@@ -80,6 +80,11 @@ class PdfPageMedia {
     return success;
   }
 
+  boolean loadDimensions(String buff) {
+    // Ignoring dimensions. Alternative: cross-check with Rect.
+    return buff.startsWith(DIMENSIONS_LABEL);
+  }
+
   boolean loadCrop(String buff) {
     LoadableRectangle loader = new LoadableRectangle(m_crop);
     boolean success = loader.LoadRectangle(buff, CROP_LABEL);
