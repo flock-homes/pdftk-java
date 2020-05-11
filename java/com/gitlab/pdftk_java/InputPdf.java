@@ -22,7 +22,9 @@
 
 package com.gitlab.pdftk_java;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import pdftk.com.lowagie.text.exceptions.InvalidPdfException;
@@ -32,6 +34,7 @@ class InputPdf {
   String m_filename = "";
   String m_password = "";
   boolean m_authorized_b = true;
+  byte[] m_buffer = null; // Copy input to memory if reading from stdin.
 
   // keep track of which pages get output under which readers,
   // because one reader mayn't output the same page twice;
@@ -48,9 +51,25 @@ class InputPdf {
 
   int m_num_pages = 0;
 
+  // For compatibility with Java < 9
+  private static byte[] readAllBytes(InputStream inputStream) throws IOException {
+    final int bufferSize = 0x2000;
+    byte[] buffer = new byte[bufferSize];
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    while (true) {
+      int readBytes = inputStream.read(buffer, 0, bufferSize);
+      if (readBytes < 0) break;
+      outputStream.write(buffer, 0, readBytes);
+    }
+    return outputStream.toByteArray();
+  }
+
   InputPdf.PagesReader add_reader(boolean keep_artifacts_b, boolean ask_about_warnings_b) {
     boolean open_success_b = true;
     InputPdf.PagesReader pr = null;
+
+    // No point on asking for a password after we read all of stdin.
+    if (m_filename.equals("-")) ask_about_warnings_b = false;
 
     try {
       PdfReader reader = null;
@@ -58,7 +77,12 @@ class InputPdf {
         m_filename = pdftk.prompt_for_filename("Please enter a filename for an input PDF:");
       }
       if (m_password.isEmpty()) {
-        reader = new PdfReader(m_filename);
+        if (m_filename.equals("-")) {
+          if (m_buffer == null) m_buffer = readAllBytes(System.in);
+          reader = new PdfReader(m_buffer);
+        } else {
+          reader = new PdfReader(m_filename);
+        }
       } else {
         if (m_password.equals("PROMPT")) {
           m_password = pdftk.prompt_for_password("open", "the input PDF:\n   " + m_filename);
@@ -69,10 +93,11 @@ class InputPdf {
                 m_password, false); // allow user to enter greatest selection of chars
 
         if (password != null) {
-          reader = new PdfReader(m_filename, password);
-          if (reader == null) {
-            System.err.println("Error: Unexpected null from open_reader()");
-            return null; // <--- return
+          if (m_filename.equals("-")) {
+            if (m_buffer == null) m_buffer = readAllBytes(System.in);
+            reader = new PdfReader(m_buffer, password);
+          } else {
+            reader = new PdfReader(m_filename, password);
           }
         } else { // bad password
           System.err.println("Error: Password used to decrypt input PDF:");
@@ -80,6 +105,11 @@ class InputPdf {
           System.err.println("   includes invalid characters.");
           return null; // <--- return
         }
+      }
+
+      if (reader == null) {
+        System.err.println("Error: Unexpected null from open_reader()");
+        return null; // <--- return
       }
 
       if (!keep_artifacts_b) {

@@ -1,5 +1,7 @@
 import org.junit.Test;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 
 import com.gitlab.pdftk_java.pdftk;
@@ -37,5 +39,14 @@ public class CatTest extends BlackBox {
     byte[] expected = getPdf("test/files/blank.pdf", "cat", "1east", "output", "-");
     byte[] actual = getPdf("test/files/blank.pdf", "cat", "1-1east", "output", "-");
     assertPdfEqualsAsPS(expected, actual);
+  }
+
+  @Test
+  public void duplicate_stdin() throws IOException {
+    InputStream stdinMock = new FileInputStream("test/files/blank.pdf");
+    InputStream originalIn = System.in;
+    System.setIn(stdinMock);
+    pdftk("A=-", "cat", "A", "A", "A", "output", "-");
+    System.setIn(originalIn);
   }
 };
