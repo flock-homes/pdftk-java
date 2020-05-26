@@ -11,32 +11,17 @@ the original; any help in catching them will be appreciated.
 
 ## Installation
 
-### Installation on Debian/Ubuntu
+### Using a package manager.
 
-An official `pdftk-java` package is available for Debian >= 10 and
-Ubuntu >= 18.10 that can be installed as usual:
+There are pdftk-java packages available in a few repositories, including
 
-```
-sudo apt install pdftk
-```
+ - Arch
+ - Debian >=10 / Ubuntu >= 18.10
+ - Gentoo (`pdftk`)
+ - Homebrew (macOS)
+ - MacPorts (macOS)
 
-There is also a package in a third-party repository
-intended for *earlier* OS releases that can be installed as follows:
-
-```
-sudo add-apt-repository ppa:malteworld/ppa
-sudo apt update
-sudo apt install pdftk
-```
-
-### Installation on macOS
-
-On macOS `pdftk-java` is available as a [homebrew](https://brew.sh)
-formula. It can be installed with the following command:
-
-```
-brew install pdftk-java
-```
+Please refer to the documentation of your package manager for instructions.
 
 ### Pre-built binaries
 
@@ -45,7 +30,7 @@ manager, but if that is not an option there are pre-built binaries
 available:
 
  - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/v3.1.1/file/build/libs/pdftk-all.jar?job=gradle), including dependencies. Requires a JRE at runtime.
- - [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/v3.1.1/file/build/native-image/pdftk?job=nativeimage) for x86_64 Linux systems. Does not require any runtime dependencies.
+ - [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/v3.1.1/file/build/native-image/pdftk?job=nativeimage) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
 
 ## Dependencies
 
