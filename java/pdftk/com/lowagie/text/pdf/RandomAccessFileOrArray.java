@@ -119,19 +119,9 @@ public class RandomAccessFileOrArray implements DataInput {
 		    }
 		}
             else {
-                InputStream is;
-		if( filename.equals("-") ) {
-		    // ssteward, pdftk 1.10; patch provided by Bart Orbons 
-		    // to permit stdin input via pdftk
-		    is = System.in;
-		}
-		else {
-		    is = BaseFont.getResourceStream(filename);
-		}
-
+                InputStream is = BaseFont.getResourceStream(filename);
                 if (is == null)
                     throw new IOException(filename + " not found as file or resource.");
-
                 try {
                     this.inputStreamToArray(is);
                 }
