@@ -79,48 +79,50 @@ public class pdftk {
   }
 
   static OutputStream get_output_stream(String output_filename, boolean ask_about_warnings_b) {
-    OutputStream os_p = null;
-
     if (output_filename.isEmpty() || output_filename.equals("PROMPT")) {
       output_filename = prompt_for_filename("Please enter a name for the output:");
       // recurse; try again
       return get_output_stream(output_filename, ask_about_warnings_b);
     }
     if (output_filename.equals("-")) { // stdout
-      os_p = System.out;
-    } else {
-      if (ask_about_warnings_b) {
-        // test for existing file by this name
-        boolean output_exists_b = false;
-        if (file_exists(output_filename)) {
-          if (!confirm_overwrite(output_filename)) {
-            // recurse; try again
-            return get_output_stream("PROMPT", ask_about_warnings_b);
-          }
-        }
-      }
+      return System.out;
+    }
 
-      // attempt to open the stream
-      try {
-        os_p = new FileOutputStream(output_filename);
-      } catch (IOException ioe_p) { // file open error
-        System.err.println("Error: Failed to open output file: ");
-        System.err.println("   " + output_filename);
-        System.err.println("   No output created.");
-        os_p = null;
+    if (ask_about_warnings_b) {
+      // test for existing file by this name
+      boolean output_exists_b = false;
+      if (file_exists(output_filename)) {
+        if (!confirm_overwrite(output_filename)) {
+          // recurse; try again
+          return get_output_stream("PROMPT", ask_about_warnings_b);
+        }
       }
     }
 
+    return get_output_stream_file(output_filename);
+  }
+
+  static OutputStream get_output_stream_file(String output_filename) {
+    OutputStream os_p = null;
+    // attempt to open the stream
+    try {
+      os_p = new FileOutputStream(output_filename);
+    } catch (IOException ioe_p) { // file open error
+      System.err.println("Error: Failed to open output file: ");
+      System.err.println("   " + output_filename);
+      System.err.println("   No output created.");
+      os_p = null;
+    }
     return os_p;
   }
 
-  static PrintStream get_print_stream(String m_output_filename, boolean m_output_utf8_b)
+  static PrintStream get_print_stream(String output_filename, boolean output_utf8_b)
       throws IOException {
-    Charset encoding = (m_output_utf8_b ? StandardCharsets.UTF_8 : StandardCharsets.US_ASCII);
-    if (m_output_filename.isEmpty() || m_output_filename.equals("-")) {
+    Charset encoding = (output_utf8_b ? StandardCharsets.UTF_8 : StandardCharsets.US_ASCII);
+    if (output_filename.isEmpty() || output_filename.equals("-")) {
       return new PrintStream(System.out, true, encoding.name());
     } else {
-      return new PrintStream(m_output_filename, encoding.name());
+      return new PrintStream(output_filename, encoding.name());
     }
   }
 

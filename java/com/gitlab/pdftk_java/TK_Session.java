@@ -25,7 +25,6 @@ package com.gitlab.pdftk_java;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -2469,10 +2468,14 @@ class TK_Session {
               for (int ii = 0; ii < input_num_pages; ++ii) {
 
                 // the filename
-                String jv_output_filename_p = String.format(m_output_filename, ii + 1);
+                String output_filename_p = String.format(m_output_filename, ii + 1);
+                OutputStream ofs_p = pdftk.get_output_stream_file(output_filename_p);
+                if (ofs_p == null) {
+                  ret_val = ErrorCode.ERROR;
+                  continue;
+                }
 
                 Document output_doc_p = new Document();
-                FileOutputStream ofs_p = new FileOutputStream(jv_output_filename_p);
                 PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
                 output_doc_p.addCreator(creator);
@@ -2531,17 +2534,15 @@ class TK_Session {
               // dump document data
 
               String doc_data_fn = "doc_data.txt";
-              if (!m_output_filename.isEmpty()) {
-                int loc = m_output_filename.lastIndexOf(File.separatorChar);
-                if (loc >= 0) {
-                  doc_data_fn =
-                      m_output_filename.substring(0, loc) + File.separatorChar + doc_data_fn;
-                }
+              int loc = m_output_filename.lastIndexOf(File.separatorChar);
+              if (loc >= 0) {
+                doc_data_fn =
+                    m_output_filename.substring(0, loc) + File.separatorChar + doc_data_fn;
               }
               try {
                 PrintStream ofs = pdftk.get_print_stream(doc_data_fn, m_output_utf8_b);
                 report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
-              } catch (FileNotFoundException e) { // error
+              } catch (IOException e) { // error
                 System.err.println("Error: unable to open file for output: doc_data.txt");
                 ret_val = ErrorCode.ERROR;
               }
