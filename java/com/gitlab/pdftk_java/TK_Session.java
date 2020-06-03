@@ -32,10 +32,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import pdftk.com.lowagie.text.Document;
@@ -2437,12 +2437,14 @@ class TK_Session {
                     pdftk.prompt_for_filename(
                         "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):");
               }
-              if (m_output_filename.isEmpty()) {
-                m_output_filename = "pg_%04d.pdf";
-              }
               try {
-                String.format(m_output_filename, 1);
-              } catch (UnknownFormatConversionException e) {
+                String s1 = String.format(m_output_filename, 1);
+                String s2 = String.format(m_output_filename, 2);
+                if (s1.equals(s2)) {
+                  m_output_filename += "pg_%04d.pdf";
+                  String.format(m_output_filename, 1);
+                }
+              } catch (IllegalFormatException e) {
                 System.err.println("Error: Invalid output pattern:");
                 System.err.println("   " + m_output_filename);
                 System.err.println("   No output created.");

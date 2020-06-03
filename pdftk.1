@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH PDFTK 1 "May 11, 2018"
+.TH PDFTK 1 "June 3, 2020"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -225,10 +225,10 @@ Collates pages from input PDFs to create a new PDF.  Works like the \fBcat\fR op
 .B burst
 Splits a single input PDF document into individual pages. Also creates a
 report named \fBdoc_data.txt\fR which is the same as the output from \fBdump_data\fR.
-If the \fBoutput\fR section is omitted, then PDF pages are named: pg_%04d.pdf, 
-e.g.: pg_0001.pdf, pg_0002.pdf, etc.  To name these pages yourself, supply a
-printf-styled format string via the \fBoutput\fR section.  For example, if you want pages
-named: page_01.pdf, page_02.pdf, etc., pass \fBoutput page_%02d.pdf\fR to pdftk.
+The \fBoutput\fR section can contain a printf-styled format string to name these pages.
+For example, if you want pages named page_01.pdf, page_02.pdf, etc., pass
+\fBoutput page_%02d.pdf\fR to pdftk. If the pattern is omitted, then a default pattern
+\fpg_%04d.pdf\fR is appended and produces pages named pg_0001.pdf, pg_0002.pdf, etc.
 Encryption can be applied to the output by appending output options such as \fBowner_pw\fR, e.g.:
 
 pdftk in.pdf burst owner_pw foopass
