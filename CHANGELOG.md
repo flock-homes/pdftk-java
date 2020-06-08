@@ -1,3 +1,13 @@
+## [3.1.2] - 2020-06-08
+
+### Changed
+ - Add a pattern if missing from burst output
+
+### Fixed
+ - Allow outputting pages read from stdin more than once
+ - Do not warn if PageMediaDimensions is given in update_info
+ - Crash when opening output files in burst fails
+
 ## [3.1.1] - 2020-05-01
 
 ### Fixed
