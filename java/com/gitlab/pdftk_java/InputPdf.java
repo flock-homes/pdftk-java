@@ -22,9 +22,7 @@
 
 package com.gitlab.pdftk_java;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import pdftk.com.lowagie.text.exceptions.InvalidPdfException;
@@ -51,19 +49,6 @@ class InputPdf {
 
   int m_num_pages = 0;
 
-  // For compatibility with Java < 9
-  private static byte[] readAllBytes(InputStream inputStream) throws IOException {
-    final int bufferSize = 0x2000;
-    byte[] buffer = new byte[bufferSize];
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    while (true) {
-      int readBytes = inputStream.read(buffer, 0, bufferSize);
-      if (readBytes < 0) break;
-      outputStream.write(buffer, 0, readBytes);
-    }
-    return outputStream.toByteArray();
-  }
-
   InputPdf.PagesReader add_reader(boolean keep_artifacts_b, boolean ask_about_warnings_b) {
     boolean open_success_b = true;
     InputPdf.PagesReader pr = null;
@@ -78,7 +63,7 @@ class InputPdf {
       }
       if (m_password.isEmpty()) {
         if (m_filename.equals("-")) {
-          if (m_buffer == null) m_buffer = readAllBytes(System.in);
+          if (m_buffer == null) m_buffer = pdftk.readAllBytes(System.in);
           reader = new PdfReader(m_buffer);
         } else {
           reader = new PdfReader(m_filename);
@@ -94,7 +79,7 @@ class InputPdf {
 
         if (password != null) {
           if (m_filename.equals("-")) {
-            if (m_buffer == null) m_buffer = readAllBytes(System.in);
+            if (m_buffer == null) m_buffer = pdftk.readAllBytes(System.in);
             reader = new PdfReader(m_buffer, password);
           } else {
             reader = new PdfReader(m_filename, password);

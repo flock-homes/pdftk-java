@@ -19,6 +19,7 @@ sourceSets {
         resources {
             srcDirs = ['java']
             include "**/*.afm"
+            include "**/*.txt"
         }
     }
 }

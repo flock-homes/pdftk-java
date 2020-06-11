@@ -20,6 +20,7 @@
     </javac>
     <copy todir="build/classes">
       <fileset dir="java" includes="**/*.afm"/>
+      <fileset dir="java" includes="**/*.txt"/>
     </copy>
   </target>
 

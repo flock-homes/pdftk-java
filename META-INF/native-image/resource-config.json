@@ -1,5 +1,6 @@
 {
   "resources":[
-    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/.*.afm"}
+    {"pattern":"pdftk/com/lowagie/text/pdf/fonts/.*.afm"},
+    {"pattern":"com/gitlab/pdftk_java/resources/.*"}
   ]
 }
