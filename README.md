@@ -11,13 +11,13 @@ the original; any help in catching them will be appreciated.
 
 ## Installation
 
-### Using a package manager.
+### Using a package manager
 
 There are pdftk-java packages available in a few repositories, including
 
  - Arch
- - Debian >=10 / Ubuntu >= 18.10
- - Gentoo (`pdftk`)
+ - Debian >=10 (buster) / Ubuntu >= 18.10 (cosmic)
+ - Gentoo (package `pdftk`)
  - Homebrew (macOS)
  - MacPorts (macOS)
 
