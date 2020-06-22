@@ -1,3 +1,8 @@
+## [3.1.3] - 2020-06-22
+
+### Fixed
+ - Crash when reading FDF files
+
 ## [3.1.2] - 2020-06-08
 
 ### Changed
