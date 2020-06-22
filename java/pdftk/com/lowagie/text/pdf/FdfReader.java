@@ -111,6 +111,7 @@ public class FdfReader extends PdfReader {
                 tokens.close();
             }
             catch (Exception e) {
+                System.err.println("Something fishy");
                 // empty on purpose
             }
         }
@@ -141,13 +142,34 @@ public class FdfReader extends PdfReader {
             }
         }
     }
+
+    // A file specification may be a string or a dictionary
+    // See sect. 7.11.3 of the PDF Reference
+    // See https://gitlab.com/pdftk-java/pdftk/-/issues/56
+    protected void readFileSpecification(PdfDictionary fdf) {
+        PdfObject fs = getPdfObject(fdf.get(PdfName.F));
+        if (fs != null) {
+            if (fs.isString()) {
+                fileSpec = ((PdfString)fs).toUnicodeString();
+            } else if (fs.isDictionary()) {
+                PdfObject uf = getPdfObject(((PdfDictionary)fs).get(PdfName.UF));
+                if (uf != null && uf.isString()) {
+                    fileSpec = ((PdfString)uf).toUnicodeString();
+                }
+                else {
+                    PdfObject f = getPdfObject(((PdfDictionary)fs).get(PdfName.F));
+                    if (f != null && f.isString()) {
+                        fileSpec = ((PdfString)f).toUnicodeString();
+                    }
+                }
+            }
+        }
+    }
     
     protected void readFields() throws IOException {
         catalog = (PdfDictionary)getPdfObject(trailer.get(PdfName.ROOT));
         PdfDictionary fdf = (PdfDictionary)getPdfObject(catalog.get(PdfName.FDF));
-        PdfString fs = (PdfString)getPdfObject(fdf.get(PdfName.F));
-        if (fs != null)
-            fileSpec = fs.toUnicodeString();
+        readFileSpecification(fdf);
         PdfArray fld = (PdfArray)getPdfObject(fdf.get(PdfName.FIELDS));
         if (fld == null)
             return;
