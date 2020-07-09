@@ -69,6 +69,8 @@ class TK_Session {
   boolean m_verbose_reporting_b = false;
   boolean m_ask_about_warnings_b = pdftk.ASK_ABOUT_WARNINGS; // set default at compile-time
 
+  final String creator = "pdftk-java " + pdftk.PDFTK_VER;
+
   // typedef unsigned long PageNumber;
   enum PageRotate {
     NORTH(0),
@@ -454,6 +456,9 @@ class TK_Session {
   };
 
   encryption_strength m_output_encryption_strength = encryption_strength.none_enc;
+
+  byte[] m_output_owner_pw_pdfdoc = new byte[0];
+  byte[] m_output_user_pw_pdfdoc = new byte[0];
 
   TK_Session(String[] args) {
     ArgState arg_state = ArgState.input_files_e;
@@ -1725,8 +1730,7 @@ class TK_Session {
             af_po = new PdfArray();
             af_new_b = true;
           }
-          if (names_po != null && names_po.isDictionary() &&
-              af_po != null && af_po.isArray()) {
+          if (names_po != null && names_po.isDictionary() && af_po != null && af_po.isArray()) {
             PdfDictionary names_p = (PdfDictionary) names_po;
             PdfArray af_p = (PdfArray) af_po;
 
@@ -1760,7 +1764,7 @@ class TK_Session {
                         writer_p, vit, // the file path
                         filename, // the display name
                         null);
-                filespec_p.put(new PdfName("AFRelationship"),new PdfName("Unspecified"));
+                filespec_p.put(new PdfName("AFRelationship"), new PdfName("Unspecified"));
               } catch (IOException ioe_p) { // file open error
                 System.err.println("Error: Failed to open attachment file: ");
                 System.err.println("   " + vit);
@@ -1809,7 +1813,6 @@ class TK_Session {
               if (af_new_b) {
                 catalog_p.put(new PdfName("AF"), af_p);
               }
-
             }
           } else { // error
             System.err.println("Internal Error: couldn't read or create PDF Names dictionary.");
@@ -2030,1017 +2033,936 @@ class TK_Session {
     return version_cc;
   }
 
-  ErrorCode create_output() {
-    ErrorCode ret_val = ErrorCode.NO_ERROR; // default: no error
-
-    if (is_valid()) {
-
-      /*
-      bool rdfcat_available_b= false;
-      { // is rdfcat available?  first character should be a digit;
-        // grab stderr to keep messages appearing to user;
-        // 2>&1 might not work on older versions of Windows (e.g., 98);
-        FILE* pp= popen( "rdfcat --version 2>&1", "r" );
-        if( pp ) {
-          int cc= fgetc( pp );
-          if( '0'<= cc && cc<= '9' ) {
-            rdfcat_available_b= true;
-          }
-          pclose( pp );
-        }
-      }
-      */
-
-      if (m_verbose_reporting_b) {
-        System.out.println();
-        System.out.println("Creating Output ...");
-      }
-
-      String creator = "pdftk-java " + pdftk.PDFTK_VER;
-
-      if (m_output_owner_pw.equals("PROMPT")) {
-        m_output_owner_pw = pdftk.prompt_for_password("owner", "the output PDF");
-      }
-      if (m_output_user_pw.equals("PROMPT")) {
-        m_output_user_pw = pdftk.prompt_for_password("user", "the output PDF");
-      }
-
-      byte[] output_owner_pw_p = new byte[0];
-      if (!m_output_owner_pw.isEmpty()) {
-        output_owner_pw_p = passwords.utf8_password_to_pdfdoc(m_output_owner_pw, true);
-        if (output_owner_pw_p == null) { // error
-          System.err.println("Error: Owner password used to encrypt output PDF includes");
-          System.err.println("   invalid characters.");
-          System.err.println("   No output created.");
-          ret_val = ErrorCode.ERROR;
-        }
-      }
-
-      byte[] output_user_pw_p = new byte[0];
-      if (!m_output_user_pw.isEmpty()) {
-        output_user_pw_p = passwords.utf8_password_to_pdfdoc(m_output_user_pw, true);
-        if (output_user_pw_p == null) { // error
-          System.err.println("Error: User password used to encrypt output PDF includes");
-          System.err.println("   invalid characters.");
-          System.err.println("   No output created.");
-          ret_val = ErrorCode.ERROR;
-        }
-      }
-
-      if (ret_val != ErrorCode.NO_ERROR) return ret_val; // <--- exit
-
-      try {
-        switch (m_operation) {
-          case cat_k:
-          case shuffle_k:
-            { // catenate pages or shuffle pages
-              Document output_doc_p = new Document();
-
-              OutputStream ofs_p =
-                  pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
-
-              if (ofs_p == null) { // file open error
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-              PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
-
-              // update to suit any features that we add, e.g. encryption;
-              char max_version_cc = PdfWriter.VERSION_1_2;
-
-              //
-              output_doc_p.addCreator(creator);
-
-              // un/compress output streams?
-              if (m_output_uncompress_b) {
-                writer_p.filterStreams = true;
-                writer_p.compressStreams = false;
-              } else if (m_output_compress_b) {
-                writer_p.filterStreams = false;
-                writer_p.compressStreams = true;
-              }
-
-              // encrypt output?
-              if (m_output_encryption_strength != encryption_strength.none_enc
-                  || !m_output_owner_pw.isEmpty()
-                  || !m_output_user_pw.isEmpty()) {
-                // if no stregth is given, default to 128 bit,
-                boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-                writer_p.setEncryption(
-                    output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
-
-                if (bit128_b) max_version_cc = PdfWriter.VERSION_1_4;
-                else // 1.1 probably okay, here
-                max_version_cc = PdfWriter.VERSION_1_3;
-              }
-
-              // copy file ID?
-              if (m_output_keep_first_id_b || m_output_keep_final_id_b) {
-                PdfReader input_reader_p =
-                    m_output_keep_first_id_b
-                        ? m_input_pdf.get(0).m_readers.get(0).second
-                        : m_input_pdf.get(m_input_pdf.size() - 1).m_readers.get(0).second;
-
-                PdfDictionary trailer_p = input_reader_p.getTrailer();
-
-                PdfObject file_id_p = input_reader_p.getPdfObject(trailer_p.get(PdfName.ID));
-                if (file_id_p != null && file_id_p.isArray()) {
-
-                  writer_p.setFileID(file_id_p);
-                }
-              }
-
-              // set output PDF version to the max PDF ver of all the input PDFs;
-              // also find the maximum extension levels, if present -- this can
-              // only be added /after/ opening the document;
-              //
-              // collected extensions information; uses PdfName::hashCode() for key
-              HashMap<PdfName, PdfName> ext_base_versions = new HashMap<PdfName, PdfName>();
-              HashMap<PdfName, Integer> ext_levels = new HashMap<PdfName, Integer>();
-              for (InputPdf it : m_input_pdf) {
-                PdfReader reader_p = it.m_readers.get(0).second;
-
-                ////
-                // PDF version number
-
-                // version in header
-                if (max_version_cc < reader_p.getPdfVersion())
-                  max_version_cc = reader_p.getPdfVersion();
-
-                // version override in catalog; used only if greater than header version, per PDF
-                // spec;
-                PdfDictionary catalog_p = reader_p.getCatalog();
-                if (catalog_p.contains(PdfName.VERSION)) {
-
-                  PdfName version_p =
-                      (PdfName) reader_p.getPdfObject(catalog_p.get(PdfName.VERSION));
-                  char version_cc = GetPdfVersionChar(version_p);
-
-                  if (max_version_cc < version_cc) max_version_cc = version_cc;
-                }
-
-                ////
-                // PDF extensions
-
-                if (catalog_p.contains(PdfName.EXTENSIONS)) {
-                  PdfObject extensions_po =
-                      reader_p.getPdfObject(catalog_p.get(PdfName.EXTENSIONS));
-                  if (extensions_po != null && extensions_po.isDictionary()) {
-                    PdfDictionary extensions_p = (PdfDictionary) extensions_po;
-
-                    // iterate over developers
-                    Set<PdfObject> keys_p = extensions_p.getKeys();
-                    for (PdfObject kit : keys_p) {
-                      PdfName developer_p = (PdfName) reader_p.getPdfObject(kit);
-
-                      PdfObject dev_exts_po = reader_p.getPdfObject(extensions_p.get(developer_p));
-                      if (dev_exts_po != null && dev_exts_po.isDictionary()) {
-                        PdfDictionary dev_exts_p = (PdfDictionary) dev_exts_po;
-
-                        if (dev_exts_p.contains(PdfName.BASEVERSION)
-                            && dev_exts_p.contains(PdfName.EXTENSIONLEVEL)) {
-                          // use the greater base version or the greater extension level
-
-                          PdfName base_version_p =
-                              (PdfName) reader_p.getPdfObject(dev_exts_p.get(PdfName.BASEVERSION));
-                          PdfNumber ext_level_p =
-                              (PdfNumber)
-                                  reader_p.getPdfObject(dev_exts_p.get(PdfName.EXTENSIONLEVEL));
-
-                          if (!ext_base_versions.containsKey(developer_p)
-                              || GetPdfVersionChar(ext_base_versions.get(developer_p))
-                                  < GetPdfVersionChar(
-                                      base_version_p)) { // new developer or greater base version
-                            ext_base_versions.put(developer_p, base_version_p);
-                            ext_levels.put(developer_p, ext_level_p.intValue());
-                          } else if (GetPdfVersionChar(ext_base_versions.get(developer_p))
-                                  == GetPdfVersionChar(base_version_p)
-                              && ext_levels.get(developer_p)
-                                  < ext_level_p
-                                      .intValue()) { // greater extension level for current base
-                            // version
-                            ext_levels.put(developer_p, ext_level_p.intValue());
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              // set the pdf version
-              writer_p.setPdfVersion(max_version_cc);
-
-              // open the doc
-              output_doc_p.open();
-
-              // set any pdf version extensions we might have found
-              if (!ext_base_versions.isEmpty()) {
-                PdfDictionary extensions_dict_p = new PdfDictionary();
-                PdfIndirectReference extensions_ref_p = writer_p.getPdfIndirectReference();
-                for (Map.Entry<PdfName, PdfName> it : ext_base_versions.entrySet()) {
-                  PdfDictionary ext_dict_p = new PdfDictionary();
-                  ext_dict_p.put(PdfName.BASEVERSION, it.getValue());
-                  ext_dict_p.put(
-                      PdfName.EXTENSIONLEVEL, new PdfNumber(ext_levels.get(it.getKey())));
-
-                  extensions_dict_p.put(it.getKey(), ext_dict_p);
-                }
-
-                writer_p.addToBody(extensions_dict_p, extensions_ref_p);
-                writer_p.setExtensions(extensions_ref_p);
-              }
-
-              if (m_operation == keyword.shuffle_k) {
-                int max_seq_length = 0;
-                for (ArrayList<PageRef> jt : m_page_seq) {
-                  max_seq_length = (max_seq_length < jt.size()) ? jt.size() : max_seq_length;
-                }
-
-                int output_page_count = 0;
-                // iterate over ranges
-                for (int ii = 0; (ii < max_seq_length && ret_val == ErrorCode.NO_ERROR); ++ii) {
-                  // iterate over ranges
-                  for (ArrayList<PageRef> jt : m_page_seq) {
-                    if (ret_val != ErrorCode.NO_ERROR) break;
-                    if (ii < jt.size()) {
-                      ret_val = create_output_page(writer_p, jt.get(ii), output_page_count);
-                      ++output_page_count;
-                    }
-                  }
-                }
-              } else { // cat_k
-
-                int output_page_count = 0;
-                // iterate over page ranges
-                for (ArrayList<PageRef> jt : m_page_seq) {
-                  if (ret_val != ErrorCode.NO_ERROR) break;
-                  // iterate over pages in page range
-                  for (PageRef it : jt) {
-                    if (ret_val != ErrorCode.NO_ERROR) break;
-                    ret_val = create_output_page(writer_p, it, output_page_count);
-                    ++output_page_count;
-                  }
-                }
-
-                // first impl added a bookmark for each input PDF and then
-                // added any of that PDFs bookmarks under that; now it
-                // appends input PDF bookmarks, which is more attractive;
-                // OTOH, some folks might want pdftk to add bookmarks for
-                // input PDFs, esp if they don't have bookmarks -- TODO
-                // but then, it would be nice to allow the user to specify
-                // a label -- using the PDF filename is unattractive;
-                if (m_cat_full_pdfs_b) { // add bookmark info
-                  // cerr << "cat full pdfs!" << endl; // debug
-
-                  PdfDictionary output_outlines_p = new PdfDictionary(PdfName.OUTLINES);
-                  PdfIndirectReference output_outlines_ref_p = writer_p.getPdfIndirectReference();
-
-                  PdfDictionary after_child_p = null;
-                  PdfIndirectReference after_child_ref_p = null;
-
-                  int page_count = 1;
-                  int num_bookmarks_total = 0;
-                  /* used for adding doc bookmarks
-                  itext::PdfDictionary* prev_p= 0;
-                  itext::PdfIndirectReference* prev_ref_p= 0;
-                  */
-                  // iterate over page ranges; each full PDF has one page seq in m_page_seq;
-                  // using m_page_seq instead of m_input_pdf, so the doc order is right
-                  for (ArrayList<PageRef> jt : m_page_seq) {
-                    PdfReader reader_p =
-                        m_input_pdf.get(jt.get(0).m_input_pdf_index).m_readers.get(0).second;
-                    long reader_page_count =
-                        m_input_pdf.get(jt.get(0).m_input_pdf_index).m_num_pages;
-
-                    /* used for adding doc bookmarks
-                    itext::PdfDictionary* item_p= new itext::PdfDictionary();
-                    itext::PdfIndirectReference* item_ref_p= writer_p->getPdfIndirectReference();
-
-                    item_p->put( itext::PdfName::PARENT, outlines_ref_p );
-                    item_p->put( itext::PdfName::TITLE,
-                                 new itext::PdfString( JvNewStringUTF( (*it).m_filename.c_str() ) ) );
-
-                    // wire into linked list
-                    if( prev_p ) {
-                      prev_p->put( itext::PdfName::NEXT, item_ref_p );
-                      item_p->put( itext::PdfName::PREV, prev_ref_p );
-                    }
-                    else { // first item; wire into outlines dict
-                      output_outlines_p->put( itext::PdfName::FIRST, item_ref_p );
-                    }
-
-                    // the destination
-                    itext::PdfDestination* dest_p= new itext::PdfDestination(itext::PdfDestination::FIT);
-                    itext::PdfIndirectReference* page_ref_p= writer_p->getPageReference( page_count );
-                    if( page_ref_p ) {
-                      dest_p->addPage( page_ref_p );
-                    }
-                    item_p->put( itext::PdfName::DEST, dest_p );
-                    */
-
-                    // pdf bookmarks -> children
-                    {
-                      PdfDictionary catalog_p = reader_p.getCatalog();
-                      PdfObject outlines_p = reader_p.getPdfObject(catalog_p.get(PdfName.OUTLINES));
-                      if (outlines_p != null && outlines_p.isDictionary()) {
-
-                        PdfObject top_outline_p =
-                            reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
-                        if (top_outline_p != null && top_outline_p.isDictionary()) {
-
-                          ArrayList<PdfBookmark> bookmark_data = new ArrayList<PdfBookmark>();
-                          int rr =
-                              bookmarks.ReadOutlines(
-                                  bookmark_data, (PdfDictionary) top_outline_p, 0, reader_p, true);
-                          if (rr == 0 && !bookmark_data.isEmpty()) {
-
-                            // passed in by reference, so must use variable:
-                            bookmarks.BuildBookmarksState state =
-                                new bookmarks.BuildBookmarksState();
-                            state.final_child_p = after_child_p;
-                            state.final_child_ref_p = after_child_ref_p;
-                            state.num_bookmarks_total = num_bookmarks_total;
-                            bookmarks.BuildBookmarks(
-                                writer_p,
-                                bookmark_data.listIterator(),
-                                // item_p, item_ref_p, // used for adding doc bookmarks
-                                output_outlines_p,
-                                output_outlines_ref_p,
-                                after_child_p,
-                                after_child_ref_p,
-                                0,
-                                page_count - 1, // page offset is 0-based
-                                0,
-                                true,
-                                state);
-                            after_child_p = state.final_child_p;
-                            after_child_ref_p = state.final_child_ref_p;
-                            num_bookmarks_total = state.num_bookmarks_total;
-                          }
-                          /*
-                          else if( rr!= 0 )
-                          cerr << "ReadOutlines error" << endl; // debug
-                          else
-                          cerr << "empty bookmark data" << endl; // debug
-                          */
-                        }
-                      }
-                      /*
-                      else
-                        cerr << "no outlines" << endl; // debug
-                      */
-                    }
-
-                    /* used for adding doc bookmarks
-                    // finished with prev; add to body
-                    if( prev_p )
-                      writer_p->addToBody( prev_p, prev_ref_p );
-
-                    prev_p= item_p;
-                    prev_ref_p= item_ref_p;
-                    */
-
-                    page_count += reader_page_count;
-                  }
-                  /* used for adding doc bookmarks
-                  if( prev_p ) { // wire into outlines dict
-                    // finished with prev; add to body
-                    writer_p->addToBody( prev_p, prev_ref_p );
-
-                    output_outlines_p->put( itext::PdfName::LAST, prev_ref_p );
-                    output_outlines_p->put( itext::PdfName::COUNT, new itext::PdfNumber( (jint)m_input_pdf.size() ) );
-                  }
-                  */
-
-                  if (num_bookmarks_total != 0) { // we encountered bookmarks
-
-                    // necessary for serial appending to outlines
-                    if (after_child_p != null && after_child_ref_p != null)
-                      writer_p.addToBody(after_child_p, after_child_ref_p);
-
-                    writer_p.addToBody(output_outlines_p, output_outlines_ref_p);
-                    writer_p.setOutlines(output_outlines_ref_p);
-                  }
-                }
-              }
-
-              output_doc_p.close();
-              writer_p.close();
-            }
-            break;
-
-          case burst_k:
-            { // burst input into pages
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println("Error: Only one input PDF file may be given for \"burst\" op.");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              // grab the first reader, since there's only one
-              PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
-              int input_num_pages = m_input_pdf.get(0).m_num_pages;
-
-              if (m_output_filename.equals("PROMPT")) {
-                m_output_filename =
-                    pdftk.prompt_for_filename(
-                        "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):");
-              }
-              try {
-                String s1 = String.format(m_output_filename, 1);
-                String s2 = String.format(m_output_filename, 2);
-                if (s1.equals(s2)) {
-                  m_output_filename += "pg_%04d.pdf";
-                  String.format(m_output_filename, 1);
-                }
-              } catch (IllegalFormatException e) {
-                System.err.println("Error: Invalid output pattern:");
-                System.err.println("   " + m_output_filename);
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              // locate the input PDF Info dictionary that holds metadata
-              PdfDictionary input_info_p = null;
-              {
-                PdfDictionary input_trailer_p = input_reader_p.getTrailer();
-                if (input_trailer_p != null) {
-                  PdfObject input_info_po =
-                      input_reader_p.getPdfObject(input_trailer_p.get(PdfName.INFO));
-                  if (input_info_po != null && input_info_po.isDictionary()) {
-                    // success
-                    input_info_p = (PdfDictionary) input_info_po;
-                  }
-                }
-              }
-
-              for (int ii = 0; ii < input_num_pages; ++ii) {
-
-                // the filename
-                String output_filename_p = String.format(m_output_filename, ii + 1);
-                OutputStream ofs_p = pdftk.get_output_stream_file(output_filename_p);
-                if (ofs_p == null) {
-                  ret_val = ErrorCode.ERROR;
-                  continue;
-                }
-
-                Document output_doc_p = new Document();
-                PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
-
-                output_doc_p.addCreator(creator);
-
-                // un/compress output streams?
-                if (m_output_uncompress_b) {
-                  writer_p.filterStreams = true;
-                  writer_p.compressStreams = false;
-                } else if (m_output_compress_b) {
-                  writer_p.filterStreams = false;
-                  writer_p.compressStreams = true;
-                }
-
-                // encrypt output?
-                if (m_output_encryption_strength != encryption_strength.none_enc
-                    || !m_output_owner_pw.isEmpty()
-                    || !m_output_user_pw.isEmpty()) {
-                  // if no stregth is given, default to 128 bit,
-                  boolean bit128_b =
-                      (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-                  writer_p.setEncryption(
-                      output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
-                }
-
-                output_doc_p.open(); // must open writer before copying (possibly) indirect object
-                // Call setFromReader() after open(),
-                // otherwise topPageParent is not properly set.
-                // See https://gitlab.com/pdftk-java/pdftk/issues/18
-                writer_p.setFromReader(input_reader_p);
-
-                { // copy the Info dictionary metadata
-                  if (input_info_p != null) {
-                    PdfDictionary writer_info_p = writer_p.getInfo();
-                    if (writer_info_p != null) {
-                      PdfDictionary info_copy_p = writer_p.copyDictionary(input_info_p);
-                      if (info_copy_p != null) {
-                        writer_info_p.putAll(info_copy_p);
-                      }
-                    }
-                  }
-                  byte[] input_reader_xmp_p = input_reader_p.getMetadata();
-                  if (input_reader_xmp_p != null) {
-                    writer_p.setXmpMetadata(input_reader_xmp_p);
-                  }
-                }
-
-                PdfImportedPage page_p = writer_p.getImportedPage(input_reader_p, ii + 1);
-                writer_p.addPage(page_p);
-
-                output_doc_p.close();
-                writer_p.close();
-              }
-
-              ////
-              // dump document data
-
-              String doc_data_fn = "doc_data.txt";
-              int loc = m_output_filename.lastIndexOf(File.separatorChar);
-              if (loc >= 0) {
-                doc_data_fn =
-                    m_output_filename.substring(0, loc) + File.separatorChar + doc_data_fn;
-              }
-              try {
-                PrintStream ofs = pdftk.get_print_stream(doc_data_fn, m_output_utf8_b);
-                report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
-              } catch (IOException e) { // error
-                System.err.println("Error: unable to open file for output: doc_data.txt");
-                ret_val = ErrorCode.ERROR;
-              }
-            }
-            break;
-
-          case filter_k:
-            { // apply operations to given PDF file
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println("Error: Only one input PDF file may be given for this");
-                System.err.println("   operation.  Maybe you meant to use the \"cat\" operator?");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              // try opening the FDF file before we get too involved;
-              // if input is stdin ("-"), don't pass it to both the FDF and XFDF readers
-              FdfReader fdf_reader_p = null;
-              XfdfReader xfdf_reader_p = null;
-              if (m_form_data_filename.equals(
-                  "PROMPT")) { // handle case where user enters '-' or (empty) at the prompt
-                m_form_data_filename =
-                    pdftk.prompt_for_filename("Please enter a filename for the form data:");
-              }
-              if (!m_form_data_filename.isEmpty()) { // we have form data to process
-                if (m_form_data_filename.equals("-")) { // form data on stdin
-                  // JArray<jbyte>* in_arr= itext::RandomAccessFileOrArray::InputStreamToArray(
-                  // java::System::in );
-
-                  // first try fdf
-                  try {
-                    fdf_reader_p = new FdfReader(System.in);
-                  } catch (IOException ioe_p) { // file open error
-
-                    // maybe it's xfdf?
-                    try {
-                      xfdf_reader_p = new XfdfReader(System.in);
-                    } catch (IOException ioe2_p) { // file open error
-                      System.err.println("Error: Failed read form data on stdin.");
-                      System.err.println("   No output created.");
-                      ret_val = ErrorCode.ERROR;
-                      // ioe_p->printStackTrace(); // debug
-                      break;
-                    }
-                  }
-                } else { // form data file
-
-                  // first try fdf
-                  try {
-                    fdf_reader_p = new FdfReader(m_form_data_filename);
-                  } catch (IOException ioe_p) { // file open error
-                    // maybe it's xfdf?
-                    try {
-                      xfdf_reader_p = new XfdfReader(m_form_data_filename);
-                    } catch (IOException ioe2_p) { // file open error
-                      System.err.println("Error: Failed to open form data file: ");
-                      System.err.println("   " + m_form_data_filename);
-                      System.err.println("   No output created.");
-                      ret_val = ErrorCode.ERROR;
-                      // ioe_p->printStackTrace(); // debug
-                      break;
-                    }
-                  }
-                }
-              }
-
-              // try opening the PDF background or stamp before we get too involved
-              PdfReader mark_p = null;
-              boolean background_b = true; // set false for stamp
-              //
-              // background
-              if (!m_background_filename.isEmpty()) {
-                InputPdf input = new InputPdf();
-                input.m_filename = m_background_filename;
-                input.m_role = "background";
-                input.m_role_determined = "the background";
-                InputPdf.PagesReader reader = input.add_reader(false, false);
-                if (reader == null) {
-                  System.err.println("   No output created.");
-                  ret_val = ErrorCode.ERROR;
-                  break;
-                } else {
-                  mark_p = reader.second;
-                }
-              }
-
-              //
-              // stamp
-              if (mark_p == null && !m_stamp_filename.isEmpty()) {
-                background_b = false;
-                InputPdf input = new InputPdf();
-                input.m_filename = m_stamp_filename;
-                input.m_role = "stamp";
-                input.m_role_determined = "the stamp";
-                InputPdf.PagesReader reader = input.add_reader(false, false);
-                if (reader == null) {
-                  System.err.println("   No output created.");
-                  ret_val = ErrorCode.ERROR;
-                  break;
-                } else {
-                  mark_p = reader.second;
-                }
-              }
-
-              //
-              OutputStream ofs_p =
-                  pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
-              if (ofs_p == null) { // file open error
-                System.err.println("Error: unable to open file for output: " + m_output_filename);
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              //
-              PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
-
-              // drop the xfa?
-              if (m_output_drop_xfa_b) {
-                PdfDictionary catalog_p = input_reader_p.catalog;
-                if (catalog_p != null && catalog_p.isDictionary()) {
-
-                  PdfObject acro_form_p =
-                      input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
-                  if (acro_form_p != null && acro_form_p.isDictionary()) {
-
-                    ((PdfDictionary) acro_form_p).remove(PdfName.XFA);
-                  }
-                }
-              }
-
-              // drop the xmp?
-              if (m_output_drop_xmp_b) {
-                PdfDictionary catalog_p = input_reader_p.catalog;
-                if (catalog_p != null) {
-
-                  catalog_p.remove(PdfName.METADATA);
-                }
-              }
-
-              //
-              PdfStamperImp writer_p =
-                  new PdfStamperImp(input_reader_p, ofs_p, '\0', false /* append mode */);
-
-              // update the info?
-              if (m_update_info_filename.equals("PROMPT")) {
-                m_update_info_filename =
-                    pdftk.prompt_for_filename("Please enter an Info file filename:");
-              }
-              if (!m_update_info_filename.isEmpty()) {
-                if (m_update_info_filename.equals("-")) {
-                  if (!data_import.UpdateInfo(input_reader_p, System.in, m_update_info_utf8_b)) {
-                    System.err.println("Warning: no Info added to output PDF.");
-                    ret_val = ErrorCode.WARNING;
-                  }
-                } else {
-                  try {
-                    FileInputStream ifs = new FileInputStream(m_update_info_filename);
-                    if (!data_import.UpdateInfo(input_reader_p, ifs, m_update_info_utf8_b)) {
-                      System.err.println("Warning: no Info added to output PDF.");
-                      ret_val = ErrorCode.WARNING;
-                    }
-                  } catch (FileNotFoundException e) { // error
-                    System.err.println(
-                        "Error: unable to open FDF file for input: " + m_update_info_filename);
-                    ret_val = ErrorCode.ERROR;
-                    break;
-                  }
-                }
-              }
-
-              /*
-              // update the xmp?
-              if( !m_update_xmp_filename.empty() ) {
-                if( rdfcat_available_b ) {
-                  if( m_update_xmp_filename== "PROMPT" ) {
-                    prompt_for_filename( "Please enter an Info file filename:",
-                                         m_update_xmp_filename );
-                  }
-                  if( !m_update_xmp_filename.empty() ) {
-                    UpdateXmp( input_reader_p, m_update_xmp_filename );
-                  }
-                }
-                else { // error
-                  cerr << "Error: to use this feature, you must install the rdfcat program." << endl;
-                  cerr << "   Perhaps the replace_xmp feature would suit you, instead?" << endl;
-                  break;
-                }
-              }
-              */
-
-              // rotate pages?
-              if (!m_page_seq.isEmpty()) {
-                for (ArrayList<PageRef> jt : m_page_seq) {
-                  for (PageRef kt : jt) {
-                    apply_rotation_to_page(
-                        input_reader_p, kt.m_page_num, kt.m_page_rot.value, kt.m_page_abs);
-                  }
-                }
-              }
-
-              // un/compress output streams?
-              if (m_output_uncompress_b) {
-                add_marks_to_pages(input_reader_p);
-                writer_p.filterStreams = true;
-                writer_p.compressStreams = false;
-              } else if (m_output_compress_b) {
-                remove_marks_from_pages(input_reader_p);
-                writer_p.filterStreams = false;
-                writer_p.compressStreams = true;
-              }
-
-              // encrypt output?
-              if (m_output_encryption_strength != encryption_strength.none_enc
-                  || !m_output_owner_pw.isEmpty()
-                  || !m_output_user_pw.isEmpty()) {
-
-                // if no stregth is given, default to 128 bit,
-                // (which is incompatible w/ Acrobat 4)
-                boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-                writer_p.setEncryption(
-                    output_user_pw_p, output_owner_pw_p, m_output_user_perms, bit128_b);
-              }
-
-              // fill form fields?
-              if (fdf_reader_p != null || xfdf_reader_p != null) {
-                if (input_reader_p.getAcroForm() != null) { // we really have a form to fill
-
-                  AcroFields fields_p = writer_p.getAcroFields();
-                  fields_p.setGenerateAppearances(true); // have iText create field appearances
-                  if ((fdf_reader_p != null && fields_p.setFields(fdf_reader_p))
-                      || (xfdf_reader_p != null
-                          && fields_p.setFields(xfdf_reader_p))) { // Rich Text input found
-
-                    // set the PDF so that Acrobat will create appearances;
-                    // this might appear contradictory to our setGenerateAppearances( true ) call,
-                    // above; setting this, here, allows us to keep the generated appearances,
-                    // in case the PDF is opened somewhere besides Acrobat; yet, Acrobat/Reader
-                    // will create the Rich Text appearance if it has a chance
-                    m_output_need_appearances_b = true;
-                    /*
-                    itext::PdfDictionary* catalog_p= input_reader_p->catalog;
-                    if( catalog_p && catalog_p->isDictionary() ) {
-
-                      itext::PdfDictionary* acro_form_p= (itext::PdfDictionary*)
-                        input_reader_p->getPdfObject( catalog_p->get( itext::PdfName::ACROFORM ) );
-                      if( acro_form_p && acro_form_p->isDictionary() ) {
-
-                        acro_form_p->put( itext::PdfName::NEEDAPPEARANCES, itext::PdfBoolean::PDFTRUE );
-                      }
-                    }
-                    */
-                  }
-                } else { // warning
-                  System.err.println(
-                      "Warning: input PDF is not an acroform, so its fields were not filled.");
-                  ret_val = ErrorCode.WARNING;
-                }
-              }
-
-              // flatten form fields?
-              writer_p.setFormFlattening(m_output_flatten_b);
-
-              // cue viewer to render form field appearances?
-              if (m_output_need_appearances_b) {
-                PdfDictionary catalog_p = input_reader_p.catalog;
-                if (catalog_p != null && catalog_p.isDictionary()) {
-                  PdfObject acro_form_p =
-                      input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
-                  if (acro_form_p != null && acro_form_p.isDictionary()) {
-                    ((PdfDictionary) acro_form_p).put(PdfName.NEEDAPPEARANCES, PdfBoolean.PDFTRUE);
-                  }
-                }
-              }
-
-              // add background/watermark?
-              if (mark_p != null) {
-
-                int mark_num_pages = 1; // default: use only the first page of mark
-                if (m_multistamp_b || m_multibackground_b) { // use all pages of mark
-                  mark_num_pages = mark_p.getNumberOfPages();
-                }
-
-                // the mark information; initialized inside loop
-                PdfImportedPage mark_page_p = null;
-                Rectangle mark_page_size_p = null;
-                int mark_page_rotation = 0;
-
-                // iterate over document's pages, adding mark_page as
-                // a layer above (stamp) or below (watermark) the page content;
-                // scale mark_page and move it so it fits within the document's page;
-                //
-                int num_pages = input_reader_p.getNumberOfPages();
-                for (int ii = 0; ii < num_pages; ) {
-                  ++ii; // page refs are 1-based, not 0-based
-
-                  // the mark page and its geometry
-                  if (ii <= mark_num_pages) {
-                    mark_page_size_p = mark_p.getCropBox(ii);
-                    mark_page_rotation = mark_p.getPageRotation(ii);
-                    for (int mm = 0; mm < mark_page_rotation; mm += 90) {
-                      mark_page_size_p = mark_page_size_p.rotate();
-                    }
-
-                    // create a PdfTemplate from the first page of mark
-                    // (PdfImportedPage is derived from PdfTemplate)
-                    mark_page_p = writer_p.getImportedPage(mark_p, ii);
-                  }
-
-                  // the target page geometry
-                  Rectangle doc_page_size_p = input_reader_p.getCropBox(ii);
-                  int doc_page_rotation = input_reader_p.getPageRotation(ii);
-                  for (int mm = 0; mm < doc_page_rotation; mm += 90) {
-                    doc_page_size_p = doc_page_size_p.rotate();
-                  }
-
-                  float h_scale = doc_page_size_p.width() / mark_page_size_p.width();
-                  float v_scale = doc_page_size_p.height() / mark_page_size_p.height();
-                  float mark_scale = (h_scale < v_scale) ? h_scale : v_scale;
-
-                  float h_trans =
-                      (float)
-                          (doc_page_size_p.left()
-                              - mark_page_size_p.left() * mark_scale
-                              + (doc_page_size_p.width() - mark_page_size_p.width() * mark_scale)
-                                  / 2.0);
-                  float v_trans =
-                      (float)
-                          (doc_page_size_p.bottom()
-                              - mark_page_size_p.bottom() * mark_scale
-                              + (doc_page_size_p.height() - mark_page_size_p.height() * mark_scale)
-                                  / 2.0);
-
-                  PdfContentByte content_byte_p =
-                      (background_b) ? writer_p.getUnderContent(ii) : writer_p.getOverContent(ii);
-
-                  if (mark_page_rotation == 0) {
-                    content_byte_p.addTemplate(
-                        mark_page_p, mark_scale, 0, 0, mark_scale, h_trans, v_trans);
-                  } else if (mark_page_rotation == 90) {
-                    content_byte_p.addTemplate(
-                        mark_page_p,
-                        0,
-                        -1 * mark_scale,
-                        mark_scale,
-                        0,
-                        h_trans,
-                        v_trans + mark_page_size_p.height() * mark_scale);
-                  } else if (mark_page_rotation == 180) {
-                    content_byte_p.addTemplate(
-                        mark_page_p,
-                        -1 * mark_scale,
-                        0,
-                        0,
-                        -1 * mark_scale,
-                        h_trans + mark_page_size_p.width() * mark_scale,
-                        v_trans + mark_page_size_p.height() * mark_scale);
-                  } else if (mark_page_rotation == 270) {
-                    content_byte_p.addTemplate(
-                        mark_page_p,
-                        0,
-                        mark_scale,
-                        -1 * mark_scale,
-                        0,
-                        h_trans + mark_page_size_p.width() * mark_scale,
-                        v_trans);
-                  }
-                }
-              }
-
-              // attach file to document?
-              if (!m_input_attach_file_filename.isEmpty()) {
-                this.attach_files(input_reader_p, writer_p);
-              }
-
-              // performed in add_reader(), but this eliminates objects after e.g. drop_xfa,
-              // drop_xmp
-              input_reader_p.removeUnusedObjects();
-
-              // done; write output
-              writer_p.close();
-            }
-            break;
-
-          case dump_data_fields_k:
-          case dump_data_annots_k:
-          case dump_data_k:
-            { // report on input document
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println(
-                    "Error: Only one input PDF file may be used for the dump_data operation");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
-
-              try {
-                PrintStream ofs = pdftk.get_print_stream(m_output_filename, m_output_utf8_b);
-                if (m_operation == keyword.dump_data_k) {
-                  report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
-                } else if (m_operation == keyword.dump_data_fields_k) {
-                  report.ReportAcroFormFields(ofs, input_reader_p, m_output_utf8_b);
-                } else if (m_operation == keyword.dump_data_annots_k) {
-                  report.ReportAnnots(ofs, input_reader_p, m_output_utf8_b);
-                }
-              } catch (FileNotFoundException e) { // error
-                System.err.println("Error: unable to open file for output: " + m_output_filename);
-              }
-            }
-            break;
-
-          case generate_fdf_k:
-            { // create a dummy FDF file that would work with the input PDF form
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println(
-                    "Error: Only one input PDF file may be used for the generate_fdf operation");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
-
-              OutputStream ofs_p =
-                  pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
-              if (ofs_p != null) {
-                FdfWriter writer_p = new FdfWriter();
-                input_reader_p.getAcroFields().exportAsFdf(writer_p);
-                writer_p.writeTo(ofs_p);
-                // no writer_p->close() function
-
-                // delete writer_p; // OK? GC? -- NOT okay!
-              } else { // error: get_output_stream() reports error
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-            }
-            break;
-
-          case unpack_files_k:
-            { // copy PDF file attachments into current directory
-
-              // we should have been given only a single, input file
-              if (1 < m_input_pdf.size()) { // error
-                System.err.println(
-                    "Error: Only one input PDF file may be given for \"unpack_files\" op.");
-                System.err.println("   No output created.");
-                ret_val = ErrorCode.ERROR;
-                break;
-              }
-
-              PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
-
-              this.unpack_files(input_reader_p);
-            }
-            break;
-          default:
-            // error
-            System.err.println("Unexpected pdftk Error in create_output()");
-            ret_val = ErrorCode.BUG;
-            break;
-        }
-      } catch (NoClassDefFoundError error) {
-        pdftk.describe_missing_library(error);
-        ret_val = ErrorCode.ERROR;
-      } catch (Throwable t_p) {
-        System.err.println("Unhandled Java Exception in create_output():");
-        t_p.printStackTrace();
-        ret_val = ErrorCode.BUG;
-      }
-    } else { // error
-      ret_val = ErrorCode.ERROR;
+  // catenate pages or shuffle pages
+  ErrorCode create_output_cat() throws DocumentException, IOException {
+    Document output_doc_p = new Document();
+
+    OutputStream ofs_p = pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
+
+    if (ofs_p == null) { // file open error
+      return ErrorCode.ERROR;
+    }
+    PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
+
+    // update to suit any features that we add, e.g. encryption;
+    char max_version_cc = PdfWriter.VERSION_1_2;
+
+    //
+    output_doc_p.addCreator(creator);
+
+    // un/compress output streams?
+    if (m_output_uncompress_b) {
+      writer_p.filterStreams = true;
+      writer_p.compressStreams = false;
+    } else if (m_output_compress_b) {
+      writer_p.filterStreams = false;
+      writer_p.compressStreams = true;
     }
 
+    // encrypt output?
+    if (m_output_encryption_strength != encryption_strength.none_enc
+        || !m_output_owner_pw.isEmpty()
+        || !m_output_user_pw.isEmpty()) {
+      // if no stregth is given, default to 128 bit,
+      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
+
+      writer_p.setEncryption(
+          m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
+
+      if (bit128_b) max_version_cc = PdfWriter.VERSION_1_4;
+      else // 1.1 probably okay, here
+      max_version_cc = PdfWriter.VERSION_1_3;
+    }
+
+    // copy file ID?
+    if (m_output_keep_first_id_b || m_output_keep_final_id_b) {
+      PdfReader input_reader_p =
+          m_output_keep_first_id_b
+              ? m_input_pdf.get(0).m_readers.get(0).second
+              : m_input_pdf.get(m_input_pdf.size() - 1).m_readers.get(0).second;
+
+      PdfDictionary trailer_p = input_reader_p.getTrailer();
+
+      PdfObject file_id_p = input_reader_p.getPdfObject(trailer_p.get(PdfName.ID));
+      if (file_id_p != null && file_id_p.isArray()) {
+        writer_p.setFileID(file_id_p);
+      }
+    }
+
+    // set output PDF version to the max PDF ver of all the input PDFs;
+    // also find the maximum extension levels, if present -- this can
+    // only be added /after/ opening the document;
+    //
+    // collected extensions information; uses PdfName::hashCode() for key
+    HashMap<PdfName, PdfName> ext_base_versions = new HashMap<PdfName, PdfName>();
+    HashMap<PdfName, Integer> ext_levels = new HashMap<PdfName, Integer>();
+    for (InputPdf it : m_input_pdf) {
+      PdfReader reader_p = it.m_readers.get(0).second;
+
+      ////
+      // PDF version number
+
+      // version in header
+      if (max_version_cc < reader_p.getPdfVersion()) max_version_cc = reader_p.getPdfVersion();
+
+      // version override in catalog; used only if greater than header version, per PDF
+      // spec;
+      PdfDictionary catalog_p = reader_p.getCatalog();
+      if (catalog_p.contains(PdfName.VERSION)) {
+
+        PdfName version_p = (PdfName) reader_p.getPdfObject(catalog_p.get(PdfName.VERSION));
+        char version_cc = GetPdfVersionChar(version_p);
+
+        if (max_version_cc < version_cc) max_version_cc = version_cc;
+      }
+
+      ////
+      // PDF extensions
+
+      if (catalog_p.contains(PdfName.EXTENSIONS)) {
+        PdfObject extensions_po = reader_p.getPdfObject(catalog_p.get(PdfName.EXTENSIONS));
+        if (extensions_po != null && extensions_po.isDictionary()) {
+          PdfDictionary extensions_p = (PdfDictionary) extensions_po;
+
+          // iterate over developers
+          Set<PdfObject> keys_p = extensions_p.getKeys();
+          for (PdfObject kit : keys_p) {
+            PdfName developer_p = (PdfName) reader_p.getPdfObject(kit);
+
+            PdfObject dev_exts_po = reader_p.getPdfObject(extensions_p.get(developer_p));
+            if (dev_exts_po != null && dev_exts_po.isDictionary()) {
+              PdfDictionary dev_exts_p = (PdfDictionary) dev_exts_po;
+
+              if (dev_exts_p.contains(PdfName.BASEVERSION)
+                  && dev_exts_p.contains(PdfName.EXTENSIONLEVEL)) {
+                // use the greater base version or the greater extension level
+
+                PdfName base_version_p =
+                    (PdfName) reader_p.getPdfObject(dev_exts_p.get(PdfName.BASEVERSION));
+                PdfNumber ext_level_p =
+                    (PdfNumber) reader_p.getPdfObject(dev_exts_p.get(PdfName.EXTENSIONLEVEL));
+
+                if (!ext_base_versions.containsKey(developer_p)
+                    || GetPdfVersionChar(ext_base_versions.get(developer_p))
+                        < GetPdfVersionChar(base_version_p)) {
+                  // new developer or greater base version
+                  ext_base_versions.put(developer_p, base_version_p);
+                  ext_levels.put(developer_p, ext_level_p.intValue());
+                } else if (GetPdfVersionChar(ext_base_versions.get(developer_p))
+                        == GetPdfVersionChar(base_version_p)
+                    && ext_levels.get(developer_p) < ext_level_p.intValue()) {
+                  // greater extension level for current base version
+                  ext_levels.put(developer_p, ext_level_p.intValue());
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    // set the pdf version
+    writer_p.setPdfVersion(max_version_cc);
+
+    // open the doc
+    output_doc_p.open();
+
+    // set any pdf version extensions we might have found
+    if (!ext_base_versions.isEmpty()) {
+      PdfDictionary extensions_dict_p = new PdfDictionary();
+      PdfIndirectReference extensions_ref_p = writer_p.getPdfIndirectReference();
+      for (Map.Entry<PdfName, PdfName> it : ext_base_versions.entrySet()) {
+        PdfDictionary ext_dict_p = new PdfDictionary();
+        ext_dict_p.put(PdfName.BASEVERSION, it.getValue());
+        ext_dict_p.put(PdfName.EXTENSIONLEVEL, new PdfNumber(ext_levels.get(it.getKey())));
+
+        extensions_dict_p.put(it.getKey(), ext_dict_p);
+      }
+
+      writer_p.addToBody(extensions_dict_p, extensions_ref_p);
+      writer_p.setExtensions(extensions_ref_p);
+    }
+
+    if (m_operation == keyword.shuffle_k) {
+      int max_seq_length = 0;
+      for (ArrayList<PageRef> jt : m_page_seq) {
+        max_seq_length = (max_seq_length < jt.size()) ? jt.size() : max_seq_length;
+      }
+
+      int output_page_count = 0;
+      // iterate over ranges
+      for (int ii = 0; ii < max_seq_length; ++ii) {
+        // iterate over ranges
+        for (ArrayList<PageRef> jt : m_page_seq) {
+          if (ii < jt.size()) {
+            ErrorCode ret_val = create_output_page(writer_p, jt.get(ii), output_page_count);
+            if (ret_val != ErrorCode.NO_ERROR) return ret_val;
+            ++output_page_count;
+          }
+        }
+      }
+    } else { // cat_k
+
+      int output_page_count = 0;
+      // iterate over page ranges
+      for (ArrayList<PageRef> jt : m_page_seq) {
+        // iterate over pages in page range
+        for (PageRef it : jt) {
+          ErrorCode ret_val = create_output_page(writer_p, it, output_page_count);
+          if (ret_val != ErrorCode.NO_ERROR) return ret_val;
+          ++output_page_count;
+        }
+      }
+
+      // first impl added a bookmark for each input PDF and then
+      // added any of that PDFs bookmarks under that; now it
+      // appends input PDF bookmarks, which is more attractive;
+      // OTOH, some folks might want pdftk to add bookmarks for
+      // input PDFs, esp if they don't have bookmarks -- TODO
+      // but then, it would be nice to allow the user to specify
+      // a label -- using the PDF filename is unattractive;
+      if (m_cat_full_pdfs_b) { // add bookmark info
+        // cerr << "cat full pdfs!" << endl; // debug
+
+        PdfDictionary output_outlines_p = new PdfDictionary(PdfName.OUTLINES);
+        PdfIndirectReference output_outlines_ref_p = writer_p.getPdfIndirectReference();
+
+        PdfDictionary after_child_p = null;
+        PdfIndirectReference after_child_ref_p = null;
+
+        int page_count = 1;
+        int num_bookmarks_total = 0;
+        /* used for adding doc bookmarks
+           itext::PdfDictionary* prev_p= 0;
+           itext::PdfIndirectReference* prev_ref_p= 0;
+        */
+        // iterate over page ranges; each full PDF has one page seq in m_page_seq;
+        // using m_page_seq instead of m_input_pdf, so the doc order is right
+        for (ArrayList<PageRef> jt : m_page_seq) {
+          PdfReader reader_p = m_input_pdf.get(jt.get(0).m_input_pdf_index).m_readers.get(0).second;
+          long reader_page_count = m_input_pdf.get(jt.get(0).m_input_pdf_index).m_num_pages;
+
+          /* used for adding doc bookmarks
+             itext::PdfDictionary* item_p= new itext::PdfDictionary();
+             itext::PdfIndirectReference* item_ref_p= writer_p->getPdfIndirectReference();
+
+             item_p->put( itext::PdfName::PARENT, outlines_ref_p );
+             item_p->put( itext::PdfName::TITLE,
+             new itext::PdfString( JvNewStringUTF( (*it).m_filename.c_str() ) ) );
+
+             // wire into linked list
+             if( prev_p ) {
+               prev_p->put( itext::PdfName::NEXT, item_ref_p );
+               item_p->put( itext::PdfName::PREV, prev_ref_p );
+             }
+             else { // first item; wire into outlines dict
+               output_outlines_p->put( itext::PdfName::FIRST, item_ref_p );
+             }
+
+             // the destination
+             itext::PdfDestination* dest_p= new itext::PdfDestination(itext::PdfDestination::FIT);
+             itext::PdfIndirectReference* page_ref_p= writer_p->getPageReference( page_count );
+             if( page_ref_p ) {
+               dest_p->addPage( page_ref_p );
+             }
+             item_p->put( itext::PdfName::DEST, dest_p );
+          */
+
+          // pdf bookmarks -> children
+          {
+            PdfDictionary catalog_p = reader_p.getCatalog();
+            PdfObject outlines_p = reader_p.getPdfObject(catalog_p.get(PdfName.OUTLINES));
+            if (outlines_p != null && outlines_p.isDictionary()) {
+
+              PdfObject top_outline_p =
+                  reader_p.getPdfObject(((PdfDictionary) outlines_p).get(PdfName.FIRST));
+              if (top_outline_p != null && top_outline_p.isDictionary()) {
+
+                ArrayList<PdfBookmark> bookmark_data = new ArrayList<PdfBookmark>();
+                int rr =
+                    bookmarks.ReadOutlines(
+                        bookmark_data, (PdfDictionary) top_outline_p, 0, reader_p, true);
+                if (rr == 0 && !bookmark_data.isEmpty()) {
+
+                  // passed in by reference, so must use variable:
+                  bookmarks.BuildBookmarksState state = new bookmarks.BuildBookmarksState();
+                  state.final_child_p = after_child_p;
+                  state.final_child_ref_p = after_child_ref_p;
+                  state.num_bookmarks_total = num_bookmarks_total;
+                  bookmarks.BuildBookmarks(
+                      writer_p,
+                      bookmark_data.listIterator(),
+                      // item_p, item_ref_p, // used for adding doc bookmarks
+                      output_outlines_p,
+                      output_outlines_ref_p,
+                      after_child_p,
+                      after_child_ref_p,
+                      0,
+                      page_count - 1, // page offset is 0-based
+                      0,
+                      true,
+                      state);
+                  after_child_p = state.final_child_p;
+                  after_child_ref_p = state.final_child_ref_p;
+                  num_bookmarks_total = state.num_bookmarks_total;
+                }
+                /*
+                  else if( rr!= 0 )
+                  cerr << "ReadOutlines error" << endl; // debug
+                  else
+                  cerr << "empty bookmark data" << endl; // debug
+                */
+              }
+            }
+            /*
+              else
+              cerr << "no outlines" << endl; // debug
+            */
+          }
+
+          /* used for adding doc bookmarks
+          // finished with prev; add to body
+          if( prev_p )
+            writer_p->addToBody( prev_p, prev_ref_p );
+
+          prev_p= item_p;
+          prev_ref_p= item_ref_p;
+          */
+
+          page_count += reader_page_count;
+        }
+        /* used for adding doc bookmarks
+        if( prev_p ) { // wire into outlines dict
+          // finished with prev; add to body
+          writer_p->addToBody( prev_p, prev_ref_p );
+
+          output_outlines_p->put( itext::PdfName::LAST, prev_ref_p );
+          output_outlines_p->put( itext::PdfName::COUNT, new itext::PdfNumber( (jint)m_input_pdf.size() ) );
+        }
+        */
+
+        if (num_bookmarks_total != 0) { // we encountered bookmarks
+
+          // necessary for serial appending to outlines
+          if (after_child_p != null && after_child_ref_p != null)
+            writer_p.addToBody(after_child_p, after_child_ref_p);
+
+          writer_p.addToBody(output_outlines_p, output_outlines_ref_p);
+          writer_p.setOutlines(output_outlines_ref_p);
+        }
+      }
+    }
+
+    output_doc_p.close();
+    writer_p.close();
+    return ErrorCode.NO_ERROR;
+  }
+
+  // burst input into pages
+  ErrorCode create_output_burst() throws DocumentException, IOException {
+    ErrorCode ret_val = ErrorCode.NO_ERROR;
+
+    // grab the first reader, since there's only one
+    PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
+    int input_num_pages = m_input_pdf.get(0).m_num_pages;
+
+    if (m_output_filename.equals("PROMPT")) {
+      m_output_filename =
+          pdftk.prompt_for_filename(
+              "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):");
+    }
+    try {
+      String s1 = String.format(m_output_filename, 1);
+      String s2 = String.format(m_output_filename, 2);
+      if (s1.equals(s2)) {
+        m_output_filename += "pg_%04d.pdf";
+        String.format(m_output_filename, 1);
+      }
+    } catch (IllegalFormatException e) {
+      System.err.println("Error: Invalid output pattern:");
+      System.err.println("   " + m_output_filename);
+      return ErrorCode.ERROR;
+    }
+
+    // locate the input PDF Info dictionary that holds metadata
+    PdfDictionary input_info_p = null;
+    {
+      PdfDictionary input_trailer_p = input_reader_p.getTrailer();
+      if (input_trailer_p != null) {
+        PdfObject input_info_po = input_reader_p.getPdfObject(input_trailer_p.get(PdfName.INFO));
+        if (input_info_po != null && input_info_po.isDictionary()) {
+          // success
+          input_info_p = (PdfDictionary) input_info_po;
+        }
+      }
+    }
+
+    for (int ii = 0; ii < input_num_pages; ++ii) {
+
+      // the filename
+      String output_filename_p = String.format(m_output_filename, ii + 1);
+      OutputStream ofs_p = pdftk.get_output_stream_file(output_filename_p);
+      if (ofs_p == null) {
+        ret_val = ErrorCode.PARTIAL;
+        continue;
+      }
+
+      Document output_doc_p = new Document();
+      PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
+
+      output_doc_p.addCreator(creator);
+
+      // un/compress output streams?
+      if (m_output_uncompress_b) {
+        writer_p.filterStreams = true;
+        writer_p.compressStreams = false;
+      } else if (m_output_compress_b) {
+        writer_p.filterStreams = false;
+        writer_p.compressStreams = true;
+      }
+
+      // encrypt output?
+      if (m_output_encryption_strength != encryption_strength.none_enc
+          || !m_output_owner_pw.isEmpty()
+          || !m_output_user_pw.isEmpty()) {
+        // if no stregth is given, default to 128 bit,
+        boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
+
+        writer_p.setEncryption(
+            m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
+      }
+
+      output_doc_p.open(); // must open writer before copying (possibly) indirect object
+      // Call setFromReader() after open(),
+      // otherwise topPageParent is not properly set.
+      // See https://gitlab.com/pdftk-java/pdftk/issues/18
+      writer_p.setFromReader(input_reader_p);
+
+      { // copy the Info dictionary metadata
+        if (input_info_p != null) {
+          PdfDictionary writer_info_p = writer_p.getInfo();
+          if (writer_info_p != null) {
+            PdfDictionary info_copy_p = writer_p.copyDictionary(input_info_p);
+            if (info_copy_p != null) {
+              writer_info_p.putAll(info_copy_p);
+            }
+          }
+        }
+        byte[] input_reader_xmp_p = input_reader_p.getMetadata();
+        if (input_reader_xmp_p != null) {
+          writer_p.setXmpMetadata(input_reader_xmp_p);
+        }
+      }
+
+      PdfImportedPage page_p = writer_p.getImportedPage(input_reader_p, ii + 1);
+      writer_p.addPage(page_p);
+
+      output_doc_p.close();
+      writer_p.close();
+    }
+
+    ////
+    // dump document data
+
+    String doc_data_fn = "doc_data.txt";
+    int loc = m_output_filename.lastIndexOf(File.separatorChar);
+    if (loc >= 0) {
+      doc_data_fn = m_output_filename.substring(0, loc) + File.separatorChar + doc_data_fn;
+    }
+    try {
+      PrintStream ofs = pdftk.get_print_stream(doc_data_fn, m_output_utf8_b);
+      report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
+    } catch (IOException e) { // error
+      System.err.println("Error: unable to open file for output: doc_data.txt");
+      ret_val = ErrorCode.PARTIAL;
+    }
     return ret_val;
+  }
+
+  // apply operations to given PDF file
+  ErrorCode create_output_filter() throws DocumentException, IOException {
+    ErrorCode ret_val = ErrorCode.NO_ERROR;
+
+    // we should have been given only a single, input file
+    if (1 < m_input_pdf.size()) { // error
+      System.err.println("Error: Only one input PDF file may be given for this");
+      System.err.println("   operation.  Maybe you meant to use the \"cat\" operator?");
+      return ErrorCode.ERROR;
+    }
+
+    // try opening the FDF file before we get too involved;
+    // if input is stdin ("-"), don't pass it to both the FDF and XFDF readers
+    FdfReader fdf_reader_p = null;
+    XfdfReader xfdf_reader_p = null;
+    if (m_form_data_filename.equals("PROMPT")) {
+      // handle case where user enters '-' or (empty) at the prompt
+      m_form_data_filename =
+          pdftk.prompt_for_filename("Please enter a filename for the form data:");
+    }
+    if (!m_form_data_filename.isEmpty()) { // we have form data to process
+      if (m_form_data_filename.equals("-")) { // form data on stdin
+        // JArray<jbyte>* in_arr= itext::RandomAccessFileOrArray::InputStreamToArray(
+        // java::System::in );
+
+        // first try fdf
+        try {
+          fdf_reader_p = new FdfReader(System.in);
+        } catch (IOException ioe_p) { // file open error
+          // maybe it's xfdf?
+          try {
+            xfdf_reader_p = new XfdfReader(System.in);
+          } catch (IOException ioe2_p) { // file open error
+            System.err.println("Error: Failed read form data on stdin.");
+            // ioe_p->printStackTrace(); // debug
+            return ErrorCode.ERROR;
+          }
+        }
+      } else { // form data file
+
+        // first try fdf
+        try {
+          fdf_reader_p = new FdfReader(m_form_data_filename);
+        } catch (IOException ioe_p) { // file open error
+          // maybe it's xfdf?
+          try {
+            xfdf_reader_p = new XfdfReader(m_form_data_filename);
+          } catch (IOException ioe2_p) { // file open error
+            System.err.println("Error: Failed to open form data file: ");
+            System.err.println("   " + m_form_data_filename);
+            // ioe_p->printStackTrace(); // debug
+            return ErrorCode.ERROR;
+          }
+        }
+      }
+    }
+
+    // try opening the PDF background or stamp before we get too involved
+    PdfReader mark_p = null;
+    boolean background_b = true; // set false for stamp
+    //
+    // background
+    if (!m_background_filename.isEmpty()) {
+      InputPdf input = new InputPdf();
+      input.m_filename = m_background_filename;
+      input.m_role = "background";
+      input.m_role_determined = "the background";
+      InputPdf.PagesReader reader = input.add_reader(false, false);
+      if (reader == null) return ErrorCode.ERROR;
+      mark_p = reader.second;
+    }
+
+    //
+    // stamp
+    if (mark_p == null && !m_stamp_filename.isEmpty()) {
+      background_b = false;
+      InputPdf input = new InputPdf();
+      input.m_filename = m_stamp_filename;
+      input.m_role = "stamp";
+      input.m_role_determined = "the stamp";
+      InputPdf.PagesReader reader = input.add_reader(false, false);
+      if (reader == null) return ErrorCode.ERROR;
+      mark_p = reader.second;
+    }
+
+    //
+    OutputStream ofs_p = pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
+    if (ofs_p == null) return ErrorCode.ERROR; // file open error
+
+    //
+    PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
+
+    // drop the xfa?
+    if (m_output_drop_xfa_b) {
+      PdfDictionary catalog_p = input_reader_p.catalog;
+      if (catalog_p != null && catalog_p.isDictionary()) {
+
+        PdfObject acro_form_p = input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
+        if (acro_form_p != null && acro_form_p.isDictionary()) {
+
+          ((PdfDictionary) acro_form_p).remove(PdfName.XFA);
+        }
+      }
+    }
+
+    // drop the xmp?
+    if (m_output_drop_xmp_b) {
+      PdfDictionary catalog_p = input_reader_p.catalog;
+      if (catalog_p != null) {
+        catalog_p.remove(PdfName.METADATA);
+      }
+    }
+
+    //
+    PdfStamperImp writer_p =
+        new PdfStamperImp(input_reader_p, ofs_p, '\0', false /* append mode */);
+
+    // update the info?
+    if (m_update_info_filename.equals("PROMPT")) {
+      m_update_info_filename = pdftk.prompt_for_filename("Please enter an Info file filename:");
+    }
+    if (!m_update_info_filename.isEmpty()) {
+      if (m_update_info_filename.equals("-")) {
+        if (!data_import.UpdateInfo(input_reader_p, System.in, m_update_info_utf8_b)) {
+          System.err.println("Warning: no Info added to output PDF.");
+          ret_val = ErrorCode.WARNING;
+        }
+      } else {
+        try {
+          FileInputStream ifs = new FileInputStream(m_update_info_filename);
+          if (!data_import.UpdateInfo(input_reader_p, ifs, m_update_info_utf8_b)) {
+            System.err.println("Warning: no Info added to output PDF.");
+            ret_val = ErrorCode.WARNING;
+          }
+        } catch (FileNotFoundException e) { // error
+          System.err.println("Error: unable to open FDF file for input: " + m_update_info_filename);
+          return ErrorCode.ERROR;
+        }
+      }
+    }
+
+    /*
+    // update the xmp?
+    if( !m_update_xmp_filename.empty() ) {
+      if( rdfcat_available_b ) {
+        if( m_update_xmp_filename== "PROMPT" ) {
+          prompt_for_filename( "Please enter an Info file filename:",
+                               m_update_xmp_filename );
+        }
+        if( !m_update_xmp_filename.empty() ) {
+          UpdateXmp( input_reader_p, m_update_xmp_filename );
+        }
+      }
+      else { // error
+        cerr << "Error: to use this feature, you must install the rdfcat program." << endl;
+        cerr << "   Perhaps the replace_xmp feature would suit you, instead?" << endl;
+        break;
+      }
+    }
+    */
+
+    // rotate pages?
+    if (!m_page_seq.isEmpty()) {
+      for (ArrayList<PageRef> jt : m_page_seq) {
+        for (PageRef kt : jt) {
+          apply_rotation_to_page(input_reader_p, kt.m_page_num, kt.m_page_rot.value, kt.m_page_abs);
+        }
+      }
+    }
+
+    // un/compress output streams?
+    if (m_output_uncompress_b) {
+      add_marks_to_pages(input_reader_p);
+      writer_p.filterStreams = true;
+      writer_p.compressStreams = false;
+    } else if (m_output_compress_b) {
+      remove_marks_from_pages(input_reader_p);
+      writer_p.filterStreams = false;
+      writer_p.compressStreams = true;
+    }
+
+    // encrypt output?
+    if (m_output_encryption_strength != encryption_strength.none_enc
+        || !m_output_owner_pw.isEmpty()
+        || !m_output_user_pw.isEmpty()) {
+
+      // if no stregth is given, default to 128 bit,
+      // (which is incompatible w/ Acrobat 4)
+      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
+
+      writer_p.setEncryption(
+          m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
+    }
+
+    // fill form fields?
+    if (fdf_reader_p != null || xfdf_reader_p != null) {
+      if (input_reader_p.getAcroForm() != null) { // we really have a form to fill
+
+        AcroFields fields_p = writer_p.getAcroFields();
+        fields_p.setGenerateAppearances(true); // have iText create field appearances
+        if ((fdf_reader_p != null && fields_p.setFields(fdf_reader_p))
+            || (xfdf_reader_p != null
+                && fields_p.setFields(xfdf_reader_p))) { // Rich Text input found
+
+          // set the PDF so that Acrobat will create appearances;
+          // this might appear contradictory to our setGenerateAppearances( true ) call,
+          // above; setting this, here, allows us to keep the generated appearances,
+          // in case the PDF is opened somewhere besides Acrobat; yet, Acrobat/Reader
+          // will create the Rich Text appearance if it has a chance
+          m_output_need_appearances_b = true;
+          /*
+          itext::PdfDictionary* catalog_p= input_reader_p->catalog;
+          if( catalog_p && catalog_p->isDictionary() ) {
+
+            itext::PdfDictionary* acro_form_p= (itext::PdfDictionary*)
+                input_reader_p->getPdfObject( catalog_p->get( itext::PdfName::ACROFORM ) );
+            if( acro_form_p && acro_form_p->isDictionary() ) {
+
+              acro_form_p->put( itext::PdfName::NEEDAPPEARANCES, itext::PdfBoolean::PDFTRUE );
+            }
+          }
+          */
+        }
+      } else { // warning
+        System.err.println("Warning: input PDF is not an acroform, so its fields were not filled.");
+        ret_val = ErrorCode.WARNING;
+      }
+    }
+
+    // flatten form fields?
+    writer_p.setFormFlattening(m_output_flatten_b);
+
+    // cue viewer to render form field appearances?
+    if (m_output_need_appearances_b) {
+      PdfDictionary catalog_p = input_reader_p.catalog;
+      if (catalog_p != null && catalog_p.isDictionary()) {
+        PdfObject acro_form_p = input_reader_p.getPdfObject(catalog_p.get(PdfName.ACROFORM));
+        if (acro_form_p != null && acro_form_p.isDictionary()) {
+          ((PdfDictionary) acro_form_p).put(PdfName.NEEDAPPEARANCES, PdfBoolean.PDFTRUE);
+        }
+      }
+    }
+
+    // add background/watermark?
+    if (mark_p != null) {
+
+      int mark_num_pages = 1; // default: use only the first page of mark
+      if (m_multistamp_b || m_multibackground_b) { // use all pages of mark
+        mark_num_pages = mark_p.getNumberOfPages();
+      }
+
+      // the mark information; initialized inside loop
+      PdfImportedPage mark_page_p = null;
+      Rectangle mark_page_size_p = null;
+      int mark_page_rotation = 0;
+
+      // iterate over document's pages, adding mark_page as
+      // a layer above (stamp) or below (watermark) the page content;
+      // scale mark_page and move it so it fits within the document's page;
+      //
+      int num_pages = input_reader_p.getNumberOfPages();
+      for (int ii = 0; ii < num_pages; ) {
+        ++ii; // page refs are 1-based, not 0-based
+
+        // the mark page and its geometry
+        if (ii <= mark_num_pages) {
+          mark_page_size_p = mark_p.getCropBox(ii);
+          mark_page_rotation = mark_p.getPageRotation(ii);
+          for (int mm = 0; mm < mark_page_rotation; mm += 90) {
+            mark_page_size_p = mark_page_size_p.rotate();
+          }
+
+          // create a PdfTemplate from the first page of mark
+          // (PdfImportedPage is derived from PdfTemplate)
+          mark_page_p = writer_p.getImportedPage(mark_p, ii);
+        }
+
+        // the target page geometry
+        Rectangle doc_page_size_p = input_reader_p.getCropBox(ii);
+        int doc_page_rotation = input_reader_p.getPageRotation(ii);
+        for (int mm = 0; mm < doc_page_rotation; mm += 90) {
+          doc_page_size_p = doc_page_size_p.rotate();
+        }
+
+        float h_scale = doc_page_size_p.width() / mark_page_size_p.width();
+        float v_scale = doc_page_size_p.height() / mark_page_size_p.height();
+        float mark_scale = (h_scale < v_scale) ? h_scale : v_scale;
+
+        float h_trans =
+            (float)
+                (doc_page_size_p.left()
+                    - mark_page_size_p.left() * mark_scale
+                    + (doc_page_size_p.width() - mark_page_size_p.width() * mark_scale) / 2.0);
+        float v_trans =
+            (float)
+                (doc_page_size_p.bottom()
+                    - mark_page_size_p.bottom() * mark_scale
+                    + (doc_page_size_p.height() - mark_page_size_p.height() * mark_scale) / 2.0);
+
+        PdfContentByte content_byte_p =
+            (background_b) ? writer_p.getUnderContent(ii) : writer_p.getOverContent(ii);
+
+        if (mark_page_rotation == 0) {
+          content_byte_p.addTemplate(mark_page_p, mark_scale, 0, 0, mark_scale, h_trans, v_trans);
+        } else if (mark_page_rotation == 90) {
+          content_byte_p.addTemplate(
+              mark_page_p,
+              0,
+              -1 * mark_scale,
+              mark_scale,
+              0,
+              h_trans,
+              v_trans + mark_page_size_p.height() * mark_scale);
+        } else if (mark_page_rotation == 180) {
+          content_byte_p.addTemplate(
+              mark_page_p,
+              -1 * mark_scale,
+              0,
+              0,
+              -1 * mark_scale,
+              h_trans + mark_page_size_p.width() * mark_scale,
+              v_trans + mark_page_size_p.height() * mark_scale);
+        } else if (mark_page_rotation == 270) {
+          content_byte_p.addTemplate(
+              mark_page_p,
+              0,
+              mark_scale,
+              -1 * mark_scale,
+              0,
+              h_trans + mark_page_size_p.width() * mark_scale,
+              v_trans);
+        }
+      }
+    }
+
+    // attach file to document?
+    if (!m_input_attach_file_filename.isEmpty()) {
+      this.attach_files(input_reader_p, writer_p);
+    }
+
+    // performed in add_reader(), but this eliminates objects after e.g. drop_xfa,
+    // drop_xmp
+    input_reader_p.removeUnusedObjects();
+
+    // done; write output
+    writer_p.close();
+    return ret_val;
+  }
+
+  ErrorCode create_output() {
+    if (!is_valid()) return ErrorCode.ERROR;
+
+    /*
+    bool rdfcat_available_b= false;
+    { // is rdfcat available?  first character should be a digit;
+      // grab stderr to keep messages appearing to user;
+      // 2>&1 might not work on older versions of Windows (e.g., 98);
+      FILE* pp= popen( "rdfcat --version 2>&1", "r" );
+      if( pp ) {
+        int cc= fgetc( pp );
+        if( '0'<= cc && cc<= '9' ) {
+          rdfcat_available_b= true;
+        }
+        pclose( pp );
+      }
+    }
+    */
+
+    if (m_verbose_reporting_b) {
+      System.out.println();
+      System.out.println("Creating Output ...");
+    }
+
+    if (m_output_owner_pw.equals("PROMPT")) {
+      m_output_owner_pw = pdftk.prompt_for_password("owner", "the output PDF");
+    }
+    if (m_output_user_pw.equals("PROMPT")) {
+      m_output_user_pw = pdftk.prompt_for_password("user", "the output PDF");
+    }
+
+    if (!m_output_owner_pw.isEmpty()) {
+      m_output_owner_pw_pdfdoc = passwords.utf8_password_to_pdfdoc(m_output_owner_pw, true);
+      if (m_output_owner_pw_pdfdoc == null) { // error
+        System.err.println("Error: Owner password used to encrypt output PDF includes");
+        System.err.println("   invalid characters.");
+        return ErrorCode.ERROR;
+      }
+    }
+
+    if (!m_output_user_pw.isEmpty()) {
+      m_output_user_pw_pdfdoc = passwords.utf8_password_to_pdfdoc(m_output_user_pw, true);
+      if (m_output_user_pw_pdfdoc == null) { // error
+        System.err.println("Error: User password used to encrypt output PDF includes");
+        System.err.println("   invalid characters.");
+        return ErrorCode.ERROR;
+      }
+    }
+
+    switch (m_operation) {
+      case burst_k:
+      case dump_data_fields_k:
+      case dump_data_annots_k:
+      case dump_data_k:
+      case generate_fdf_k:
+      case unpack_files_k:
+        // we should have been given only a single, input file
+        if (1 < m_input_pdf.size()) { // error
+          System.err.println(
+              "Error: Only one input PDF file may be used for the " + m_operation + " operation");
+          return ErrorCode.ERROR;
+        }
+    }
+
+    try {
+      switch (m_operation) {
+        case cat_k:
+        case shuffle_k:
+          return create_output_cat();
+        case burst_k:
+          return create_output_burst();
+        case filter_k:
+          return create_output_filter();
+        case dump_data_fields_k:
+        case dump_data_annots_k:
+        case dump_data_k:
+          { // report on input document
+            PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
+
+            try {
+              PrintStream ofs = pdftk.get_print_stream(m_output_filename, m_output_utf8_b);
+              if (m_operation == keyword.dump_data_k) {
+                report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
+              } else if (m_operation == keyword.dump_data_fields_k) {
+                report.ReportAcroFormFields(ofs, input_reader_p, m_output_utf8_b);
+              } else if (m_operation == keyword.dump_data_annots_k) {
+                report.ReportAnnots(ofs, input_reader_p, m_output_utf8_b);
+              }
+            } catch (FileNotFoundException e) { // error
+              System.err.println("Error: unable to open file for output: " + m_output_filename);
+              return ErrorCode.ERROR;
+            }
+          }
+          break;
+
+        case generate_fdf_k:
+          { // create a dummy FDF file that would work with the input PDF form
+            PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
+
+            OutputStream ofs_p = pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
+            if (ofs_p != null) {
+              FdfWriter writer_p = new FdfWriter();
+              input_reader_p.getAcroFields().exportAsFdf(writer_p);
+              writer_p.writeTo(ofs_p);
+              // no writer_p->close() function
+
+              // delete writer_p; // OK? GC? -- NOT okay!
+            } else { // error: get_output_stream() reports error
+              return ErrorCode.ERROR;
+            }
+          }
+          break;
+
+        case unpack_files_k:
+          { // copy PDF file attachments into current directory
+            PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
+
+            unpack_files(input_reader_p);
+          }
+          break;
+
+        default:
+          // error
+          System.err.println("Unexpected pdftk Error in create_output()");
+          return ErrorCode.BUG;
+      }
+    } catch (NoClassDefFoundError error) {
+      pdftk.describe_missing_library(error);
+      return ErrorCode.ERROR;
+    } catch (Throwable t_p) {
+      System.err.println("Unhandled Java Exception in create_output():");
+      t_p.printStackTrace();
+      return ErrorCode.BUG;
+    }
+
+    return ErrorCode.NO_ERROR;
   }
 
   private enum ArgState {

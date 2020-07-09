@@ -26,7 +26,8 @@ enum ErrorCode {
   NO_ERROR(0),
   ERROR(1),
   BUG(2),
-  WARNING(3);
+  WARNING(3),
+  PARTIAL(4);
 
   final int code;
 

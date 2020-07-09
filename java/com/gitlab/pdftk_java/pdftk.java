@@ -175,6 +175,12 @@ public class pdftk {
         if (tk_session.is_valid()) {
           // create_output() prints necessary error messages
           ret_val = tk_session.create_output();
+          if (ret_val == ErrorCode.ERROR) {
+            System.err.println("   No output created.");
+          } else if (ret_val == ErrorCode.PARTIAL) {
+            System.err.println("   Not all outputs created.");
+            ret_val = ErrorCode.ERROR;
+          }
         } else { // error
           System.err.println("Done.  Input errors, so no output created.");
           ret_val = ErrorCode.ERROR;
