@@ -34,6 +34,9 @@ class InputPdf {
   boolean m_authorized_b = true;
   byte[] m_buffer = null; // Copy input to memory if reading from stdin.
 
+  String m_role = "input";
+  String m_role_determined = "an input";
+
   // keep track of which pages get output under which readers,
   // because one reader mayn't output the same page twice;
   static class PagesReader {
@@ -59,7 +62,8 @@ class InputPdf {
     try {
       PdfReader reader = null;
       if (m_filename.equals("PROMPT")) {
-        m_filename = pdftk.prompt_for_filename("Please enter a filename for an input PDF:");
+        m_filename =
+            pdftk.prompt_for_filename("Please enter a filename for " + m_role_determined + " PDF:");
       }
       if (m_password.isEmpty()) {
         if (m_filename.equals("-")) {
@@ -70,7 +74,8 @@ class InputPdf {
         }
       } else {
         if (m_password.equals("PROMPT")) {
-          m_password = pdftk.prompt_for_password("open", "the input PDF:\n   " + m_filename);
+          m_password =
+              pdftk.prompt_for_password("open", "the " + m_role + " PDF:\n   " + m_filename);
         }
 
         byte[] password =
@@ -85,7 +90,7 @@ class InputPdf {
             reader = new PdfReader(m_filename, password);
           }
         } else { // bad password
-          System.err.println("Error: Password used to decrypt input PDF:");
+          System.err.println("Error: Password used to decrypt " + m_role + " PDF:");
           System.err.println("   " + m_filename);
           System.err.println("   includes invalid characters.");
           return null; // <--- return
@@ -115,7 +120,7 @@ class InputPdf {
       m_authorized_b = true; // instead of:  ( !reader->encrypted || reader->ownerPasswordUsed );
 
       if (open_success_b && reader.encrypted && !reader.ownerPasswordUsed) {
-        System.err.println("WARNING: The creator of the input PDF:");
+        System.err.println("WARNING: The creator of the " + m_role + " PDF:");
         System.err.println("   " + m_filename);
         System.err.println(
             "   has set an owner password (which is not required to handle this PDF).");
@@ -147,13 +152,13 @@ class InputPdf {
 
     if (!m_authorized_b && ask_about_warnings_b) {
       // prompt for a new password
-      System.err.println("The password you supplied for the input PDF:");
+      System.err.println("The password you supplied for the " + m_role + " PDF:");
       System.err.println("   " + m_filename);
       System.err.println("   did not work.  This PDF is encrypted, and you must supply the");
       System.err.println("   owner or the user password to open it. To quit, enter a blank");
       System.err.println("   password at the next prompt.");
 
-      m_password = pdftk.prompt_for_password("open", "the input PDF:\n   " + m_filename);
+      m_password = pdftk.prompt_for_password("open", "the " + m_role + " PDF:\n   " + m_filename);
       if (!m_password.isEmpty()) { // reset flags try again
         m_authorized_b = true;
         return (add_reader(keep_artifacts_b, ask_about_warnings_b)); // <--- recurse, return
@@ -162,7 +167,7 @@ class InputPdf {
 
     // report
     if (!open_success_b) { // file open error
-      System.err.println("Error: Failed to open PDF file: ");
+      System.err.println("Error: Failed to open " + m_role + " PDF file: ");
       System.err.println("   " + m_filename);
       if (!m_authorized_b) {
         System.err.println("   OWNER OR USER PASSWORD REQUIRED, but not given (or incorrect)");

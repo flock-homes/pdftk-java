@@ -2617,45 +2617,36 @@ class TK_Session {
               boolean background_b = true; // set false for stamp
               //
               // background
-              if (m_background_filename.equals("PROMPT")) {
-                m_background_filename =
-                    pdftk.prompt_for_filename("Please enter a filename for the background PDF:");
-              }
               if (!m_background_filename.isEmpty()) {
-                try {
-                  mark_p = new PdfReader(m_background_filename);
-                  mark_p.removeUnusedObjects();
-                  // reader->shuffleSubsetNames(); // changes the PDF subset names, but not the
-                  // PostScript font names
-                } catch (IOException ioe_p) { // file open error
-                  System.err.println("Error: Failed to open background PDF file: ");
-                  System.err.println("   " + m_background_filename);
+                InputPdf input = new InputPdf();
+                input.m_filename = m_background_filename;
+                input.m_role = "background";
+                input.m_role_determined = "the background";
+                InputPdf.PagesReader reader = input.add_reader(false, false);
+                if (reader == null) {
                   System.err.println("   No output created.");
                   ret_val = ErrorCode.ERROR;
                   break;
+                } else {
+                  mark_p = reader.second;
                 }
               }
+
               //
               // stamp
-              if (mark_p == null) {
-                if (m_stamp_filename.equals("PROMPT")) {
-                  m_stamp_filename =
-                      pdftk.prompt_for_filename("Please enter a filename for the stamp PDF:");
-                }
-                if (!m_stamp_filename.isEmpty()) {
-                  background_b = false;
-                  try {
-                    mark_p = new PdfReader(m_stamp_filename);
-                    mark_p.removeUnusedObjects();
-                    // reader->shuffleSubsetNames(); // changes the PDF subset names, but not the
-                    // PostScript font names
-                  } catch (IOException ioe_p) { // file open error
-                    System.err.println("Error: Failed to open stamp PDF file: ");
-                    System.err.println("   " + m_stamp_filename);
-                    System.err.println("   No output created.");
-                    ret_val = ErrorCode.ERROR;
-                    break;
-                  }
+              if (mark_p == null && !m_stamp_filename.isEmpty()) {
+                background_b = false;
+                InputPdf input = new InputPdf();
+                input.m_filename = m_stamp_filename;
+                input.m_role = "stamp";
+                input.m_role_determined = "the stamp";
+                InputPdf.PagesReader reader = input.add_reader(false, false);
+                if (reader == null) {
+                  System.err.println("   No output created.");
+                  ret_val = ErrorCode.ERROR;
+                  break;
+                } else {
+                  mark_p = reader.second;
                 }
               }
 
