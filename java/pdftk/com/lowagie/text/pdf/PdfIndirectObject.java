@@ -85,9 +85,16 @@ public class PdfIndirectObject {
     
 /** the generation number */
     protected int generation = 0;
-    
-    static final byte STARTOBJ[] = DocWriter.getISOBytes(" obj "); // ssteward
-    static final byte ENDOBJ[] = DocWriter.getISOBytes("\nendobj "); // ssteward
+
+    // Unclear why the following two lines were changed from the original.
+    // The modification does not conform to the standard.
+    // Reverting.
+    // See https://gitlab.com/pdftk-java/pdftk/-/issues/61
+    //
+    // static final byte STARTOBJ[] = DocWriter.getISOBytes(" obj "); // ssteward
+    // static final byte ENDOBJ[] = DocWriter.getISOBytes("\nendobj "); // ssteward
+    static final byte STARTOBJ[] = DocWriter.getISOBytes(" obj\n");
+    static final byte ENDOBJ[] = DocWriter.getISOBytes("\nendobj\n");
     static final int SIZEOBJ = STARTOBJ.length + ENDOBJ.length;
     PdfObject object;
     PdfWriter writer;

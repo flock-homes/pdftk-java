@@ -55,6 +55,8 @@ package pdftk.com.lowagie.text.pdf;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 /** Specifies a file or an URL. The file can be extern or embedded.
  *
  * @author Paulo Soares (psoares@consiste.pt)
@@ -66,12 +68,17 @@ public class PdfFileSpecification extends PdfDictionary {
     /** Creates a new instance of PdfFileSpecification. The static methods are preferred. */
     public PdfFileSpecification() {
 
+        // Ditching compatibility with Acrobat 5 for compatibility
+        // with the ISO standard.
+        // See https://gitlab.com/pdftk-java/pdftk/-/issues/61
+        //
 	// ssteward: for Acrobat 5 compatibility, set Type to "F" instead
 	// of the (more correct) "Filesec"; this quirk is documented
 	// in Implementation Note 38 on page 955 of the PDF Ref. ver. 1.5;
 	// Acrobat 6 (and later) accept either "Filespec" or "F"
-        //super(PdfName.FILESPEC);
-	super(PdfName.F);
+        //
+	// super(PdfName.F);
+        super(PdfName.FILESPEC);
     }
     
     /**
@@ -130,6 +137,7 @@ public class PdfFileSpecification extends PdfDictionary {
         InputStream in = null;
         PdfIndirectReference ref;
         PdfIndirectReference refFileLength;
+        PdfDate modDate = new PdfDate();
         try {
             refFileLength = writer.getPdfIndirectReference();
             if (fileStore == null) {
@@ -148,10 +156,15 @@ public class PdfFileSpecification extends PdfDictionary {
                     }
                 }
                 stream = new PdfStream(in, writer);
+                Calendar calendar = new GregorianCalendar();
+                calendar.setTimeInMillis(file.lastModified());
+                modDate = new PdfDate(calendar);
             }
-            else
+            else {
                 stream = new PdfStream(fileStore);
+            }
             stream.put(PdfName.TYPE, PdfName.EMBEDDEDFILE);
+            stream.put(PdfName.SUBTYPE, new PdfName("application/octet-stream"));
             if (compress)
                 stream.flateCompress();
             stream.put(PdfName.PARAMS, refFileLength);
@@ -161,6 +174,7 @@ public class PdfFileSpecification extends PdfDictionary {
             }
             PdfDictionary params = new PdfDictionary();
             params.put(PdfName.SIZE, new PdfNumber(stream.getRawLength()));
+            params.put(PdfName.MODDATE, modDate);
             writer.addToBody(params, refFileLength);
         }
         finally {

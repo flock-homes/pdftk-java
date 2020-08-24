@@ -1715,12 +1715,20 @@ class TK_Session {
           // the Names dict
           PdfObject names_po = input_reader_p.getPdfObject(catalog_p.get(PdfName.NAMES));
           boolean names_new_b = false;
+          PdfObject af_po = input_reader_p.getPdfObject(catalog_p.get(new PdfName("AF")));
+          boolean af_new_b = false;
           if (names_po == null) { // create Names dict
             names_po = new PdfDictionary();
             names_new_b = true;
           }
-          if (names_po != null && names_po.isDictionary()) {
+          if (af_po == null) {
+            af_po = new PdfArray();
+            af_new_b = true;
+          }
+          if (names_po != null && names_po.isDictionary() &&
+              af_po != null && af_po.isArray()) {
             PdfDictionary names_p = (PdfDictionary) names_po;
+            PdfArray af_p = (PdfArray) af_po;
 
             // the EmbeddedFiles name tree (ref. 1.5, sec. 3.8.5), which is a dict at top
             PdfObject emb_files_tree_p =
@@ -1752,6 +1760,7 @@ class TK_Session {
                         writer_p, vit, // the file path
                         filename, // the display name
                         null);
+                filespec_p.put(new PdfName("AFRelationship"),new PdfName("Unspecified"));
               } catch (IOException ioe_p) { // file open error
                 System.err.println("Error: Failed to open attachment file: ");
                 System.err.println("   " + vit);
@@ -1772,6 +1781,7 @@ class TK_Session {
 
               // add file spec. to map
               emb_files_map_p.put(key_p, ref_p);
+              af_p.add(ref_p);
             }
 
             if (!emb_files_map_p.isEmpty()) {
@@ -1796,6 +1806,10 @@ class TK_Session {
                 PdfIndirectReference ref_p = writer_p.addToBody(names_p).getIndirectReference();
                 catalog_p.put(PdfName.NAMES, ref_p);
               }
+              if (af_new_b) {
+                catalog_p.put(new PdfName("AF"), af_p);
+              }
+
             }
           } else { // error
             System.err.println("Internal Error: couldn't read or create PDF Names dictionary.");
