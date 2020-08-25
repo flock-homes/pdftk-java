@@ -65,6 +65,16 @@ gradle-5.0:
   variables:
     GRADLE_VERSION: "5.0"
 
+gradle-web:
+  extends: .gradle-job
+  stage: test
+  only:
+    - web
+  artifacts:
+    paths:
+      - build/libs/pdftk-all.jar
+    expire_in: 1 month
+
 spotless:
   stage: test
   image: gradle:latest
