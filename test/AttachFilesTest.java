@@ -37,4 +37,28 @@ public class AttachFilesTest extends BlackBox {
     String attachedData = slurp(tmpDirectory.getRoot().getPath()+"/blank.tex");
     assertEquals(expectedData, attachedData);
   }
+
+  @Test
+  public void attach_to_page() throws IOException {
+    String output = tmpDirectory.getRoot().getPath()+"/output.pdf";
+    pdftk("test/files/blank.pdf", "attach_files",
+          "test/files/blank.tex", "to_page", "1", "output", output);
+    pdftk(output, "unpack_files", "output",
+          tmpDirectory.getRoot().getPath());
+    String expectedData = slurp("test/files/blank.tex");
+    String attachedData = slurp(tmpDirectory.getRoot().getPath()+"/blank.tex");
+    assertEquals(expectedData, attachedData);
+  }
+
+  @Test
+  public void attach_relation() throws IOException {
+    String output = tmpDirectory.getRoot().getPath()+"/output.pdf";
+    pdftk("test/files/blank.pdf", "attach_files",
+          "test/files/blank.tex", "relation", "Source", "output", output);
+    pdftk(output, "unpack_files", "output",
+          tmpDirectory.getRoot().getPath());
+    String expectedData = slurp("test/files/blank.tex");
+    String attachedData = slurp(tmpDirectory.getRoot().getPath()+"/blank.tex");
+    assertEquals(expectedData, attachedData);
+  }
 };
