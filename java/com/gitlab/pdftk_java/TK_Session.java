@@ -37,6 +37,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.text.WordUtils;
 import pdftk.com.lowagie.text.Document;
 import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.Rectangle;
@@ -124,6 +125,7 @@ class TK_Session {
 
   ArrayList<String> m_input_attach_file_filename = new ArrayList<String>();
   int m_input_attach_file_pagenum = 0;
+  String m_input_attach_file_relation = "Unspecified";
 
   String m_update_info_filename = "";
   boolean m_update_info_utf8_b = false;
@@ -161,8 +163,9 @@ class TK_Session {
     // <johfel@gmx.de>
     rotate_k, // rotate given pages as directed
 
-    // optional attach_file argument
+    // optional attach_file arguments
     attach_file_to_page_k,
+    attach_file_relation_k,
 
     // cat page range keywords
     even_k,
@@ -258,8 +261,10 @@ class TK_Session {
     }
 
     // file attachment option
-    else if (ss.equals("topage")) {
+    else if (ss.equals("to_page") || ss.equals("topage")) {
       return keyword.attach_file_to_page_k;
+    } else if (ss.equals("relation")) {
+      return keyword.attach_file_relation_k;
     }
 
     // encryption & decryption; depends on context
@@ -503,6 +508,8 @@ class TK_Session {
               arg_state = ArgState.attach_file_filename_e;
             } else if (arg_keyword == keyword.attach_file_to_page_k) {
               arg_state = ArgState.attach_file_pagenum_e;
+            } else if (arg_keyword == keyword.attach_file_relation_k) {
+              arg_state = ArgState.attach_file_relation_e;
             } else if (arg_keyword == keyword.unpack_files_k) {
               m_operation = keyword.unpack_files_k;
               arg_state = ArgState.output_e;
@@ -917,6 +924,8 @@ class TK_Session {
 
             if (arg_keyword == keyword.attach_file_to_page_k) {
               arg_state = ArgState.attach_file_pagenum_e; // advance state
+            } else if (arg_keyword == keyword.attach_file_relation_k) {
+              arg_state = ArgState.attach_file_relation_e; // advance state
             } else if (arg_keyword == keyword.output_k) {
               arg_state = ArgState.output_filename_e; // advance state
             } else if (arg_keyword == keyword.none_k) {
@@ -952,6 +961,20 @@ class TK_Session {
             // advance state
             arg_state = ArgState.output_e; // look for an output filename
           } // end: case attach_file_pagenum_e
+          break;
+
+        case attach_file_relation_e:
+          {
+            if (argv.matches("(?i)Source|Data|Alternative|Supplement|Unspecified")) {
+              argv = WordUtils.capitalizeFully(argv);
+            } else {
+              System.err.println("Warning: non-standard attachment relationship: " + argv + ".");
+            }
+            m_input_attach_file_relation = argv;
+
+            // advance state
+            arg_state = ArgState.output_e; // look for an output filename
+          }
           break;
 
         case update_info_filename_e:
@@ -1718,7 +1741,8 @@ class TK_Session {
                         writer_p, vit, // the file path
                         filename, // the display name
                         null);
-                filespec_p.put(new PdfName("AFRelationship"), new PdfName("Unspecified"));
+                filespec_p.put(
+                    new PdfName("AFRelationship"), new PdfName(m_input_attach_file_relation));
               } catch (IOException ioe_p) { // file open error
                 System.err.println("Error: Failed to open attachment file: ");
                 System.err.println("   " + vit);
@@ -2928,6 +2952,7 @@ class TK_Session {
 
     attach_file_filename_e,
     attach_file_pagenum_e,
+    attach_file_relation_e,
 
     update_info_filename_e,
     update_xmp_filename_e,
