@@ -326,14 +326,21 @@ pdftk in.pdf update_info in.info output out.pdf
 .B update_info_utf8 <info data filename | - | PROMPT>
 Same as \fBupdate_info\fR except that the input is encoded as UTF-8.
 .TP
-.B attach_files <attachment filenames | PROMPT> [to_page <page number | PROMPT>]
-Packs arbitrary files into a PDF using PDF's file attachment features. More than
-one attachment may be listed after \fBattach_files\fR. Attachments are added at the
-document level unless the optional \fBto_page\fR option is given, in which case
-the files are attached to the given page number (the first page is 1, the final 
-page is \fBend\fR). For example:
+.B attach_files <attachment filenames | PROMPT> [to_page <page number | PROMPT> | relation <relationship>]
+Packs arbitrary files into a PDF using PDF's file attachment
+features. More than one attachment may be listed after
+\fBattach_files\fR. Attachments are added at the document level unless
+the optional \fBto_page\fR option is given, in which case the files
+are attached to the given page number (the first page is 1, the final
+page is \fBend\fR). Attachments at the document level may be tagged
+with a relationship among \fBSource\fR, \fBData\fR, \fBAlternative\fR,
+\fBSupplement\fR, and \fBUnspecified\fR (default).
+
+For example:
 
 pdftk in.pdf attach_files table1.html table2.html to_page 6 output out.pdf
+
+pdftk in.pdf attach_files in.tex relation Source output out.pdf
 .TP
 .B unpack_files
 Copies all of the attachments from the input PDF into the current folder or to

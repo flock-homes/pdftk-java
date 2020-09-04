@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-open(MANPAGE, "-|", "groff -mman -Tascii pdftk.1");
+open(MANPAGE, "-|", "groff -mman -Tascii -rHY=14 pdftk.1");
 open(DEVNULL, ">", "/dev/null");
 open(SYNOPSIS, ">", "java/com/gitlab/pdftk_java/resources/synopsis.txt");
 open(DESCRIPTION, ">", "java/com/gitlab/pdftk_java/resources/description.txt");

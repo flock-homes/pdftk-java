@@ -303,16 +303,23 @@ OPTIONS
                  UTF-8.
 
           attach_files <attachment filenames | PROMPT> [to_page <page number |
-          PROMPT>]
+          PROMPT> | relation <relationship>]
                  Packs arbitrary files into a PDF using PDF's file attachment
                  features. More than one attachment may be listed after
                  attach_files. Attachments are added at the document level
                  unless the optional to_page option is given, in which case
                  the files are attached to the given page number (the first
-                 page is 1, the final page is end). For example:
+                 page is 1, the final page is end). Attachments at the docu-
+                 ment level may be tagged with a relationship among Source,
+                 Data, Alternative, Supplement, and Unspecified (default).
+
+                 For example:
 
                  pdftk in.pdf attach_files table1.html table2.html to_page 6
                  output out.pdf
+
+                 pdftk in.pdf attach_files in.tex relation Source output
+                 out.pdf
 
           unpack_files
                  Copies all of the attachments from the input PDF into the
