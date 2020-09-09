@@ -188,7 +188,7 @@ class TK_Session {
   byte[] m_output_owner_pw_pdfdoc = new byte[0];
   byte[] m_output_user_pw_pdfdoc = new byte[0];
 
-  TK_Session(String[] args) {
+  void parse(String[] args) {
     ArgState arg_state = ArgState.input_files_e;
 
     // set one and only one to true when p/w used; use to
@@ -1696,6 +1696,40 @@ class TK_Session {
     }
   }
 
+  char prepare_writer(PdfWriter writer_p) throws DocumentException {
+    char max_version_cc = PdfWriter.VERSION_1_2;
+
+    // un/compress output streams?
+    if (m_output_uncompress_b) {
+      writer_p.filterStreams = true;
+      writer_p.compressStreams = false;
+    } else if (m_output_compress_b) {
+      writer_p.filterStreams = false;
+      writer_p.compressStreams = true;
+    }
+
+    // encrypt output?
+    if (m_output_encryption_strength != encryption_strength.none_enc
+        || !m_output_owner_pw.isEmpty()
+        || !m_output_user_pw.isEmpty()) {
+
+      // if no stregth is given, default to 128 bit,
+      // (which is incompatible w/ Acrobat 4)
+      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
+
+      writer_p.setEncryption(
+          m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
+
+      if (bit128_b) {
+        max_version_cc = PdfWriter.VERSION_1_4;
+      } else { // 1.1 probably okay, here
+        max_version_cc = PdfWriter.VERSION_1_3;
+      }
+    }
+
+    return max_version_cc;
+  }
+
   ErrorCode create_output_page(PdfCopy writer_p, PageRef page_ref, int output_page_count) {
     ErrorCode ret_val = ErrorCode.NO_ERROR;
 
@@ -1791,35 +1825,10 @@ class TK_Session {
     }
     PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
-    // update to suit any features that we add, e.g. encryption;
-    char max_version_cc = PdfWriter.VERSION_1_2;
-
-    //
     output_doc_p.addCreator(creator);
 
-    // un/compress output streams?
-    if (m_output_uncompress_b) {
-      writer_p.filterStreams = true;
-      writer_p.compressStreams = false;
-    } else if (m_output_compress_b) {
-      writer_p.filterStreams = false;
-      writer_p.compressStreams = true;
-    }
-
-    // encrypt output?
-    if (m_output_encryption_strength != encryption_strength.none_enc
-        || !m_output_owner_pw.isEmpty()
-        || !m_output_user_pw.isEmpty()) {
-      // if no stregth is given, default to 128 bit,
-      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-      writer_p.setEncryption(
-          m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
-
-      if (bit128_b) max_version_cc = PdfWriter.VERSION_1_4;
-      else // 1.1 probably okay, here
-      max_version_cc = PdfWriter.VERSION_1_3;
-    }
+    // update to suit any features that we add, e.g. encryption;
+    char max_version_cc = prepare_writer(writer_p);
 
     // copy file ID?
     if (m_output_keep_first_id_b || m_output_keep_final_id_b) {
@@ -2157,26 +2166,7 @@ class TK_Session {
       PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
 
       output_doc_p.addCreator(creator);
-
-      // un/compress output streams?
-      if (m_output_uncompress_b) {
-        writer_p.filterStreams = true;
-        writer_p.compressStreams = false;
-      } else if (m_output_compress_b) {
-        writer_p.filterStreams = false;
-        writer_p.compressStreams = true;
-      }
-
-      // encrypt output?
-      if (m_output_encryption_strength != encryption_strength.none_enc
-          || !m_output_owner_pw.isEmpty()
-          || !m_output_user_pw.isEmpty()) {
-        // if no stregth is given, default to 128 bit,
-        boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-        writer_p.setEncryption(
-            m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
-      }
+      prepare_writer(writer_p);
 
       output_doc_p.open(); // must open writer before copying (possibly) indirect object
       // Call setFromReader() after open(),
@@ -2395,29 +2385,12 @@ class TK_Session {
       }
     }
 
-    // un/compress output streams?
     if (m_output_uncompress_b) {
       add_marks_to_pages(input_reader_p);
-      writer_p.filterStreams = true;
-      writer_p.compressStreams = false;
-    } else if (m_output_compress_b) {
+    } else {
       remove_marks_from_pages(input_reader_p);
-      writer_p.filterStreams = false;
-      writer_p.compressStreams = true;
     }
-
-    // encrypt output?
-    if (m_output_encryption_strength != encryption_strength.none_enc
-        || !m_output_owner_pw.isEmpty()
-        || !m_output_user_pw.isEmpty()) {
-
-      // if no stregth is given, default to 128 bit,
-      // (which is incompatible w/ Acrobat 4)
-      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
-
-      writer_p.setEncryption(
-          m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
-    }
+    prepare_writer(writer_p);
 
     // fill form fields?
     if (fdf_reader_p != null || xfdf_reader_p != null) {

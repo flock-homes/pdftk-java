@@ -168,13 +168,14 @@ public class pdftk {
       describe_synopsis();
     } else {
       try {
-        TK_Session tk_session = new TK_Session(args);
+        TK_Session session = new TK_Session();
+        session.parse(args);
 
-        tk_session.dump_session_data();
+        session.dump_session_data();
 
-        if (tk_session.is_valid()) {
+        if (session.is_valid()) {
           // create_output() prints necessary error messages
-          ret_val = tk_session.create_output();
+          ret_val = session.create_output();
           if (ret_val == ErrorCode.ERROR) {
             System.err.println("   No output created.");
           } else if (ret_val == ErrorCode.PARTIAL) {
