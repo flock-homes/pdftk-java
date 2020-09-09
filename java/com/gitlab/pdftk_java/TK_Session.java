@@ -22,7 +22,6 @@
 
 package com.gitlab.pdftk_java;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,7 +30,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.IllegalFormatException;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -70,7 +68,7 @@ class TK_Session {
   boolean m_verbose_reporting_b = false;
   boolean m_ask_about_warnings_b = pdftk.ASK_ABOUT_WARNINGS; // set default at compile-time
 
-  final String creator = "pdftk-java " + pdftk.PDFTK_VER;
+  static final String creator = "pdftk-java " + pdftk.PDFTK_VER;
 
   // typedef unsigned long PageNumber;
   enum PageRotate {
@@ -2113,108 +2111,6 @@ class TK_Session {
     return ErrorCode.NO_ERROR;
   }
 
-  // burst input into pages
-  ErrorCode create_output_burst() throws DocumentException, IOException {
-    ErrorCode ret_val = ErrorCode.NO_ERROR;
-
-    // grab the first reader, since there's only one
-    PdfReader input_reader_p = m_input_pdf.get(0).m_readers.get(0).second;
-    int input_num_pages = m_input_pdf.get(0).m_num_pages;
-
-    if (m_output_filename.equals("PROMPT")) {
-      m_output_filename =
-          pdftk.prompt_for_filename(
-              "Please enter a filename pattern for the PDF pages (e.g. pg_%04d.pdf):");
-    }
-    try {
-      String s1 = String.format(m_output_filename, 1);
-      String s2 = String.format(m_output_filename, 2);
-      if (s1.equals(s2)) {
-        m_output_filename += "pg_%04d.pdf";
-        String.format(m_output_filename, 1);
-      }
-    } catch (IllegalFormatException e) {
-      System.err.println("Error: Invalid output pattern:");
-      System.err.println("   " + m_output_filename);
-      return ErrorCode.ERROR;
-    }
-
-    // locate the input PDF Info dictionary that holds metadata
-    PdfDictionary input_info_p = null;
-    {
-      PdfDictionary input_trailer_p = input_reader_p.getTrailer();
-      if (input_trailer_p != null) {
-        PdfObject input_info_po = input_reader_p.getPdfObject(input_trailer_p.get(PdfName.INFO));
-        if (input_info_po != null && input_info_po.isDictionary()) {
-          // success
-          input_info_p = (PdfDictionary) input_info_po;
-        }
-      }
-    }
-
-    for (int ii = 0; ii < input_num_pages; ++ii) {
-
-      // the filename
-      String output_filename_p = String.format(m_output_filename, ii + 1);
-      OutputStream ofs_p = pdftk.get_output_stream_file(output_filename_p);
-      if (ofs_p == null) {
-        ret_val = ErrorCode.PARTIAL;
-        continue;
-      }
-
-      Document output_doc_p = new Document();
-      PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
-
-      output_doc_p.addCreator(creator);
-      prepare_writer(writer_p);
-
-      output_doc_p.open(); // must open writer before copying (possibly) indirect object
-      // Call setFromReader() after open(),
-      // otherwise topPageParent is not properly set.
-      // See https://gitlab.com/pdftk-java/pdftk/issues/18
-      writer_p.setFromReader(input_reader_p);
-
-      { // copy the Info dictionary metadata
-        if (input_info_p != null) {
-          PdfDictionary writer_info_p = writer_p.getInfo();
-          if (writer_info_p != null) {
-            PdfDictionary info_copy_p = writer_p.copyDictionary(input_info_p);
-            if (info_copy_p != null) {
-              writer_info_p.putAll(info_copy_p);
-            }
-          }
-        }
-        byte[] input_reader_xmp_p = input_reader_p.getMetadata();
-        if (input_reader_xmp_p != null) {
-          writer_p.setXmpMetadata(input_reader_xmp_p);
-        }
-      }
-
-      PdfImportedPage page_p = writer_p.getImportedPage(input_reader_p, ii + 1);
-      writer_p.addPage(page_p);
-
-      output_doc_p.close();
-      writer_p.close();
-    }
-
-    ////
-    // dump document data
-
-    String doc_data_fn = "doc_data.txt";
-    int loc = m_output_filename.lastIndexOf(File.separatorChar);
-    if (loc >= 0) {
-      doc_data_fn = m_output_filename.substring(0, loc) + File.separatorChar + doc_data_fn;
-    }
-    try {
-      PrintStream ofs = pdftk.get_print_stream(doc_data_fn, m_output_utf8_b);
-      report.ReportOnPdf(ofs, input_reader_p, m_output_utf8_b);
-    } catch (IOException e) { // error
-      System.err.println("Error: unable to open file for output: doc_data.txt");
-      ret_val = ErrorCode.PARTIAL;
-    }
-    return ret_val;
-  }
-
   // apply operations to given PDF file
   ErrorCode create_output_filter() throws DocumentException, IOException {
     ErrorCode ret_val = ErrorCode.NO_ERROR;
@@ -2617,7 +2513,8 @@ class TK_Session {
         case shuffle_k:
           return create_output_cat();
         case burst_k:
-          return create_output_burst();
+          burst burst = new burst(this);
+          return burst.create_output_burst();
         case filter_k:
           return create_output_filter();
         case dump_data_fields_k:
