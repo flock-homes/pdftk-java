@@ -105,9 +105,9 @@ class cat {
 
         //
         if (session.m_output_uncompress_b) {
-          session.add_mark_to_page(input_reader_p, page_ref.m_page_num, output_page_count + 1);
+          filter.add_mark_to_page(input_reader_p, page_ref.m_page_num, output_page_count + 1);
         } else if (session.m_output_compress_b) {
-          session.remove_mark_from_page(input_reader_p, page_ref.m_page_num);
+          filter.remove_mark_from_page(input_reader_p, page_ref.m_page_num);
         }
 
         // DF rotate
