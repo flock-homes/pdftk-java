@@ -46,8 +46,6 @@ class cat {
   String m_output_filename;
   ArrayList<InputPdf> m_input_pdf;
   ArrayList<ArrayList<PageRef>> m_page_seq;
-  boolean m_output_utf8_b;
-  boolean m_ask_about_warnings_b;
   boolean m_output_keep_first_id_b;
   boolean m_output_keep_final_id_b;
 
@@ -55,11 +53,9 @@ class cat {
     this.session = session;
     m_output_filename = session.m_output_filename;
     m_input_pdf = session.m_input_pdf;
-    m_output_utf8_b = session.m_output_utf8_b;
-    m_ask_about_warnings_b = session.m_ask_about_warnings_b;
+    m_page_seq = session.m_page_seq;
     m_output_keep_first_id_b = session.m_output_keep_first_id_b;
     m_output_keep_final_id_b = session.m_output_keep_final_id_b;
-    m_page_seq = session.m_page_seq;
   }
 
   static char GetPdfVersionChar(PdfName version_p) {
@@ -150,7 +146,7 @@ class cat {
   ErrorCode create_output_cat() throws DocumentException, IOException {
     Document output_doc_p = new Document();
 
-    OutputStream ofs_p = pdftk.get_output_stream(m_output_filename, m_ask_about_warnings_b);
+    OutputStream ofs_p = pdftk.get_output_stream(m_output_filename, session.m_ask_about_warnings_b);
 
     if (ofs_p == null) { // file open error
       return ErrorCode.ERROR;
