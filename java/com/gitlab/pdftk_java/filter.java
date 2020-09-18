@@ -412,7 +412,8 @@ class filter {
 
     // attach file to document?
     if (!session.m_input_attach_file_filename.isEmpty()) {
-      session.attach_files(input_reader_p, writer_p);
+      attachments attachments = new attachments(session);
+      attachments.attach_files(input_reader_p, writer_p);
     }
 
     // performed in add_reader(), but this eliminates objects after e.g. drop_xfa,
