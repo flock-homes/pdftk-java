@@ -81,9 +81,9 @@ public class BlackBox {
     return outputStream.toByteArray();
   }
 
-  // Convert a PDF into a PS using pdftops from Poppler
-  private byte[] pdfToPS(byte[] pdf) throws IOException {
-    Process process = Runtime.getRuntime().exec(new String[]{"pdftops","-","-"});
+  // Convert a PDF into an SVG using pdftocairo from Poppler
+  private byte[] pdfToSVG(byte[] pdf) throws IOException {
+    Process process = Runtime.getRuntime().exec(new String[]{"pdftocairo", "-svg", "-","-"});
     OutputStream pdfStream = process.getOutputStream();
     InputStream psStream = process.getInputStream();
     pdfStream.write(pdf);
@@ -91,7 +91,7 @@ public class BlackBox {
     return readAllBytes(psStream);
   }
 
-  // Compare two PDFs by checking that their PS representations are
+  // Compare two PDFs by checking that their SVG representations are
   // equal. This ignores any differences in forms, links, bookmarks,
   // etc.
   //
@@ -99,14 +99,14 @@ public class BlackBox {
   // have time-sensitive data, and even after removing that there can
   // be harmless differences such as objects being reordered or
   // renamed.
-  public void assertPdfEqualsAsPS(byte[] pdf1, byte[] pdf2) {
+  public void assertPdfEqualsAsSVG(byte[] pdf1, byte[] pdf2) {
     try {
-      byte[] ps1 = pdfToPS(pdf1);
-      byte[] ps2 = pdfToPS(pdf2);
-      assertArrayEquals(ps1,ps2);
+      byte[] svg1 = pdfToSVG(pdf1);
+      byte[] svg2 = pdfToSVG(pdf2);
+      assertArrayEquals(svg1,svg2);
     }
     catch (IOException e) {
-      fail("pdftops error");
+      fail("pdftocairo error");
     }
   }
 

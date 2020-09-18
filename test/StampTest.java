@@ -15,7 +15,7 @@ public class StampTest extends BlackBox {
     System.setIn(stdinMock);
     byte[] actual = getPdf("-", operation, "test/files/duck.pdf", "output", "-");
     System.setIn(originalIn);
-    assertPdfEqualsAsPS(expected, actual);
+    assertPdfEqualsAsSVG(expected, actual);
   }
 
   void operation_stdin(String operation) throws IOException {
@@ -25,7 +25,7 @@ public class StampTest extends BlackBox {
     System.setIn(stdinMock);
     byte[] actual = getPdf("test/files/blank.pdf", operation, "-", "output", "-");
     System.setIn(originalIn);
-    assertPdfEqualsAsPS(expected, actual);
+    assertPdfEqualsAsSVG(expected, actual);
   }
 
   @Test
