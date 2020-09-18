@@ -137,9 +137,17 @@ class TK_Session {
   boolean m_cat_full_pdfs_b = true; // we are merging entire docs, not select pages
 
   enum encryption_strength {
-    none_enc,
-    bits40_enc,
-    bits128_enc
+    none_enc(PdfWriter.INVALID_ENCRYPTION, PdfWriter.VERSION_1_2), // 1.1 probably okay, here
+    rc4_40_enc(PdfWriter.STANDARD_ENCRYPTION_40, PdfWriter.VERSION_1_3), // 1.1 probably okay, here
+    rc4_128_enc(PdfWriter.STANDARD_ENCRYPTION_128, PdfWriter.VERSION_1_4),
+    aes128_enc(PdfWriter.ENCRYPTION_AES_128, PdfWriter.VERSION_1_6);
+    final int value;
+    final char pdf_version;
+
+    encryption_strength(int value, char pdf_version) {
+      this.value = value;
+      this.pdf_version = pdf_version;
+    }
   };
 
   encryption_strength m_output_encryption_strength = encryption_strength.none_enc;
@@ -1241,14 +1249,16 @@ class TK_Session {
 
       switch (m_output_encryption_strength) {
         case none_enc:
-          System.out.println("   Encryption strength not given. Defaulting to: 128 bits.");
+          System.out.println("   Encryption strength not given. Defaulting to: AES 128 bits.");
           break;
-        case bits40_enc:
-          System.out.println("   Given output encryption strength: 40 bits");
+        case rc4_40_enc:
+          System.out.println("   Given output encryption strength: AES 40 bits");
           break;
-        case bits128_enc:
-          System.out.println("   Given output encryption strength: 128 bits");
+        case rc4_128_enc:
+          System.out.println("   Given output encryption strength: RC4 128 bits");
           break;
+        case aes128_enc:
+          System.out.println("   Given output encryption strength: AES 128 bits");
       }
 
       System.out.println();
@@ -1656,8 +1666,6 @@ class TK_Session {
   }
 
   char prepare_writer(PdfWriter writer_p) throws DocumentException {
-    char max_version_cc = PdfWriter.VERSION_1_2;
-
     // un/compress output streams?
     if (m_output_uncompress_b) {
       writer_p.filterStreams = true;
@@ -1672,21 +1680,20 @@ class TK_Session {
         || !m_output_owner_pw.isEmpty()
         || !m_output_user_pw.isEmpty()) {
 
-      // if no stregth is given, default to 128 bit,
-      // (which is incompatible w/ Acrobat 4)
-      boolean bit128_b = (m_output_encryption_strength != encryption_strength.bits40_enc);
+      // if no strength is given, default to AES 128 bit,
+      if (m_output_encryption_strength == encryption_strength.none_enc) {
+        m_output_encryption_strength = encryption_strength.aes128_enc;
+      }
+      int encryption_type = m_output_encryption_strength.value;
 
       writer_p.setEncryption(
-          m_output_user_pw_pdfdoc, m_output_owner_pw_pdfdoc, m_output_user_perms, bit128_b);
-
-      if (bit128_b) {
-        max_version_cc = PdfWriter.VERSION_1_4;
-      } else { // 1.1 probably okay, here
-        max_version_cc = PdfWriter.VERSION_1_3;
-      }
+          m_output_user_pw_pdfdoc,
+          m_output_owner_pw_pdfdoc,
+          m_output_user_perms,
+          m_output_encryption_strength.value);
     }
 
-    return max_version_cc;
+    return m_output_encryption_strength.pdf_version;
   }
 
   // apply operations to given PDF file
@@ -2220,11 +2227,13 @@ class TK_Session {
         ////
         // no arguments to these keywords, so the state remains unchanged
       case encrypt_40bit_k:
-        m_output_encryption_strength = encryption_strength.bits40_enc;
+        m_output_encryption_strength = encryption_strength.rc4_40_enc;
         break;
       case encrypt_128bit_k:
-        m_output_encryption_strength = encryption_strength.bits128_enc;
+        m_output_encryption_strength = encryption_strength.rc4_128_enc;
         break;
+      case encrypt_aes128_k:
+        m_output_encryption_strength = encryption_strength.aes128_enc;
       case filt_uncompress_k:
         m_output_uncompress_b = true;
         break;

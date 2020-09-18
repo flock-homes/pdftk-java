@@ -27,7 +27,7 @@ pdftk \- A handy tool for manipulating PDF
 .br
      [ \fBoutput\fR \fI<output filename | - | PROMPT>\fR ]
 .br
-     [ \fBencrypt_40bit\fR | \fBencrypt_128bit\fR ]
+     [ \fBencrypt_40bit\fR | \fBencrypt_128bit\fR | \fencrypt_aes128\fR ]
 .br
      [ \fBallow\fR \fI<permissions>\fR ]
 .br
@@ -361,10 +361,11 @@ output data file. When using the \fBunpack_files\fR operation, use \fBoutput\fR 
 the name of an output directory.  When using the \fBburst\fR operation, you can use \fBoutput\fR
 to control the resulting PDF page filenames (described above).
 .TP
-.B [encrypt_40bit | encrypt_128bit]
-If an output PDF user or owner password is given, output PDF encryption
-strength defaults to 128 bits.  This can be overridden by specifying
-encrypt_40bit.
+.B [encrypt_40bit | encrypt_128bit | encrypt_aes128]
+If an output PDF user or owner password is given, the output PDF
+encryption algorithm defaults to AES-128. The weaker RC4 40-bit and
+RC4 128-bit algorithms can be chosen by specifying encrypt_40bit or
+encrypt_128bit (discouraged).
 .TP
 .B [allow <permissions>]
 Permissions are applied to the output PDF only if an encryption strength

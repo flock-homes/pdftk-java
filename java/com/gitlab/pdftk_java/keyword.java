@@ -73,6 +73,7 @@ enum keyword {
   // output arg.s, only
   encrypt_40bit_k,
   encrypt_128bit_k,
+  encrypt_aes128_k,
 
   // user permissions
   perm_printing_k,

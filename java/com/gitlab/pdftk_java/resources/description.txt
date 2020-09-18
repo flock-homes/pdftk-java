@@ -341,10 +341,11 @@ OPTIONS
               you can use output to control the resulting PDF page filenames
               (described above).
 
-       [encrypt_40bit | encrypt_128bit]
-              If an output PDF user or owner password is given, output PDF
-              encryption strength defaults to 128 bits.  This can be overrid-
-              den by specifying encrypt_40bit.
+       [encrypt_40bit | encrypt_128bit | encrypt_aes128]
+              If an output PDF user or owner password is given, the output PDF
+              encryption algorithm defaults to AES-128. The weaker RC4 40-bit
+              and RC4 128-bit algorithms can be chosen by specifying
+              encrypt_40bit or encrypt_128bit (discouraged).
 
        [allow <permissions>]
               Permissions are applied to the output PDF only if an encryption
