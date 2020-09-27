@@ -1,3 +1,16 @@
+## [3.2.0] - 2020-09-27
+
+### Added
+ - Allow specifying attachment metadata
+ - Support AES encryption
+
+### Changed
+ - Attachments compatible with PDF/A-3u
+ - Default encryption AES-128
+
+### Fixed
+ - Regression: allow reading background/stamp from stdin
+
 ## [3.1.3] - 2020-06-22
 
 ### Fixed
