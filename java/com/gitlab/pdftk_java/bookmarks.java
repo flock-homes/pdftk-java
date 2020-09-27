@@ -229,10 +229,8 @@ class bookmarks {
 
       // recurse into any children
       if (outline_p.contains(PdfName.FIRST)) {
-
         PdfObject child_p = reader_p.getPdfObject(outline_p.get(PdfName.FIRST));
-        if (child_p != null && child_p.isDictionary()) {
-
+        if (child_p.isDictionary()) {
           ret_val +=
               ReadOutlines(bookmark_data, (PdfDictionary) child_p, level + 1, reader_p, utf8_b);
         }
@@ -240,9 +238,8 @@ class bookmarks {
 
       // iterate over siblings
       if (outline_p.contains(PdfName.NEXT)) {
-
         PdfObject sibling_p = reader_p.getPdfObject(outline_p.get(PdfName.NEXT));
-        if (sibling_p != null && sibling_p.isDictionary()) {
+        if (sibling_p.isDictionary()) {
           outline_p = (PdfDictionary) sibling_p;
         } else // break out of loop
         outline_p = null;
@@ -253,20 +250,21 @@ class bookmarks {
     return ret_val;
   }
 
-  static void RemoveBookmarks(PdfReader reader_p, PdfDictionary bookmark_p)
-        // call reader_p->removeUnusedObjects() afterward
-      {
+  static void RemoveBookmarks(PdfReader reader_p, PdfDictionary bookmark_p) {
+    // call reader_p->removeUnusedObjects() afterward
     if (bookmark_p.contains(PdfName.FIRST)) { // recurse
-      PdfDictionary first_p = (PdfDictionary) reader_p.getPdfObject(bookmark_p.get(PdfName.FIRST));
-      RemoveBookmarks(reader_p, first_p);
-
+      PdfObject first_p = reader_p.getPdfObject(bookmark_p.get(PdfName.FIRST));
+      if (first_p.isDictionary()) {
+        RemoveBookmarks(reader_p, (PdfDictionary) first_p);
+      }
       bookmark_p.remove(PdfName.FIRST);
     }
 
     if (bookmark_p.contains(PdfName.NEXT)) { // recurse
-      PdfDictionary next_p = (PdfDictionary) reader_p.getPdfObject(bookmark_p.get(PdfName.NEXT));
-      RemoveBookmarks(reader_p, next_p);
-
+      PdfObject next_p = reader_p.getPdfObject(bookmark_p.get(PdfName.NEXT));
+      if (next_p.isDictionary()) {
+        RemoveBookmarks(reader_p, (PdfDictionary) next_p);
+      }
       bookmark_p.remove(PdfName.NEXT);
     }
 
