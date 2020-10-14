@@ -19,15 +19,11 @@ will be appreciated.
 
 ### Using a package manager
 
-There are pdftk-java packages available in a few repositories, including
-
- - Arch
- - Debian >=10 (buster) / Ubuntu >= 18.10 (cosmic)
- - Gentoo (package `pdftk`)
- - Homebrew (macOS)
- - MacPorts (macOS)
-
-Please refer to the documentation of your package manager for instructions.
+There are pdftk-java packages available in a few
+[repositories](https://repology.org/project/pdftk-java/versions),
+including Arch, Debian / Ubuntu, Gentoo, Homebrew, MacPorts, and
+SUSE. Please refer to the documentation of your package manager for
+instructions.
 
 ### Pre-built binaries
 
@@ -122,7 +118,8 @@ $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.p
 ## Known differences with pdftk
 
 The following differences with respect to the original version of
-pdftk are intended. Issue reports about other differences are welcome.
+pdftk are intended. Issue reports about other differences are welcome
+(when in doubt, open an issue).
 
 - Does not ask for owner password if not needed.
 - Does not report some structure-only form fields.
