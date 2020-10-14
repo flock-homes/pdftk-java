@@ -231,14 +231,18 @@ public class PRStream extends PdfStream {
 
 	// 4.2.0
 	byte[] b= new byte[0];
-	if( ( writer.filterStreams || writer.compressStreams ) && filtersAreKnown() ) { // ssteward
-	    setData( PdfReader.getStreamBytes( this ), // apply filters to yield clear text
-		     writer.compressStreams, DEFAULT_COMPRESSION );
-	    b= bytes;
-	}
-	else { // use temp
-	    b= PdfReader.getStreamBytesRaw( this );
-	}
+        try {
+            if( ( writer.filterStreams || writer.compressStreams ) && filtersAreKnown() ) { // ssteward
+                setData( PdfReader.getStreamBytes( this ), // apply filters to yield clear text
+                         writer.compressStreams, DEFAULT_COMPRESSION );
+                b= bytes;
+            }
+            else { // use temp
+                b= PdfReader.getStreamBytesRaw( this );
+            }
+        } catch (IOException e) {
+            System.err.println("Warning: failed to read stream data. Corrupt input.");
+        }
         PdfEncryption crypto = null;
         if (writer != null)
             crypto = writer.getEncryption();
