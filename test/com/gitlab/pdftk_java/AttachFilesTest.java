@@ -1,11 +1,11 @@
+package com.gitlab.pdftk_java;
+
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
-
-import com.gitlab.pdftk_java.pdftk;
 
 public class AttachFilesTest extends BlackBox {
   @Test

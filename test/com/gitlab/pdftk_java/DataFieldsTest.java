@@ -1,8 +1,8 @@
+package com.gitlab.pdftk_java;
+
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import java.io.IOException;
-
-import com.gitlab.pdftk_java.pdftk;
 
 public class DataFieldsTest extends BlackBox {
   @Test

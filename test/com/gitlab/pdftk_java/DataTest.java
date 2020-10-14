@@ -1,11 +1,11 @@
+package com.gitlab.pdftk_java;
+
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import java.io.IOException;
-
-import com.gitlab.pdftk_java.pdftk;
 
 public class DataTest extends BlackBox {
   @Test

@@ -1,8 +1,8 @@
+package com.gitlab.pdftk_java;
+
 import org.junit.Test;
 
 import java.io.IOException;
-
-import com.gitlab.pdftk_java.pdftk;
 
 public class BurstTest extends BlackBox {
   @Test

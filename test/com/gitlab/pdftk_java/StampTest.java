@@ -1,10 +1,9 @@
+package com.gitlab.pdftk_java;
+
 import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-
-import com.gitlab.pdftk_java.pdftk;
 
 public class StampTest extends BlackBox {
 

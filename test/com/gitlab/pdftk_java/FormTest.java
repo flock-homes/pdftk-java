@@ -1,9 +1,9 @@
+package com.gitlab.pdftk_java;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
 import java.io.IOException;
-
-import com.gitlab.pdftk_java.pdftk;
 
 public class FormTest extends BlackBox {
   @Test
