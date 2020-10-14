@@ -922,7 +922,33 @@ public class PdfReader implements PdfViewerPreferences {
     protected void readPages() throws IOException {
         catalog = trailer.getAsDict(PdfName.ROOT);
         rootPages = catalog.getAsDict(PdfName.PAGES);
+        if (rootPages == null) {
+            System.err.println("Warning: failed to read page tree. Corrupt input.");
+            rootPages = rebuildPages();
+        }
         pageRefs = new PageRefs(this);
+    }
+
+    private PdfDictionary rebuildPages() {
+        PdfDictionary rootPages = new PdfDictionary();
+        rootPages.put(PdfName.TYPE, PdfName.PAGES);
+        rootPages.put(PdfName.KIDS, findOrphanPages());
+        int idx = xrefObj.size();
+        xrefObj.add(rootPages);
+        catalog.put(PdfName.PAGES, new PRIndirectReference(this, idx));
+        return rootPages;
+    }
+
+    private PdfArray findOrphanPages() {
+        PdfArray pages = new PdfArray();
+        for (int idx = 0; idx < xrefObj.size(); ++idx) {
+            PdfObject obj = getPdfObject(idx);
+            if (obj == null || !obj.isDictionary()) continue;
+            PdfDictionary dict = (PdfDictionary)(obj);
+            if (!PdfName.PAGE.equals(dict.get(PdfName.TYPE))) continue;
+            pages.add(new PRIndirectReference(this, idx));
+        }
+        return pages;
     }
 
 	/*
