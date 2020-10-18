@@ -403,6 +403,17 @@ public class AcroFields {
             throw new ExceptionConverter(ioe);
         }
     }
+
+    String getDefaultAppearance(PdfDictionary dict) {
+        PdfObject da = PdfReader.getPdfObject(dict.get(PdfName.DA));
+        if (da == null) return null;
+        if (da.isString()) return ((PdfString)da).toUnicodeString();
+        if (da.isName()) {
+            System.err.println("Warning: input does not conform to the PDF standard.");
+            return PdfName.decodeName(da.toString());
+        }
+        return null;
+    }
     
     PdfAppearance getAppearance(PdfDictionary merged, String text, String fieldName) throws IOException, DocumentException {
         topFirst = 0;
@@ -413,9 +424,9 @@ public class AcroFields {
             tx.setExtraMargin(extraMarginLeft, extraMarginTop);
             tx.setBorderWidth(0);
             // the text size and color
-            PdfString da = (PdfString)PdfReader.getPdfObject(merged.get(PdfName.DA));
+            String da = getDefaultAppearance(merged);
             if (da != null) {
-                Object dab[] = splitDAelements(da.toUnicodeString());
+                Object dab[] = splitDAelements(da);
                 if (dab[DA_SIZE] != null)
                     tx.setFontSize(((Float)dab[DA_SIZE]).floatValue());
                 if (dab[DA_COLOR] != null)
@@ -679,10 +690,10 @@ public class AcroFields {
             if (name.equalsIgnoreCase("textfont")) {
                 for (int k = 0; k < item.merged.size(); ++k) {
                     if (hit.isHit(k)) {
-                        PdfString da = (PdfString)PdfReader.getPdfObject(((PdfDictionary)item.merged.get(k)).get(PdfName.DA));
+                        String da = getDefaultAppearance((PdfDictionary)item.merged.get(k));
                         PdfDictionary dr = (PdfDictionary)PdfReader.getPdfObject(((PdfDictionary)item.merged.get(k)).get(PdfName.DR));
                         if (da != null && dr != null) {
-                            Object dao[] = splitDAelements(da.toUnicodeString());
+                            Object dao[] = splitDAelements(da);
                             PdfAppearance cb = new PdfAppearance();
                             if (dao[DA_FONT] != null) {
                                 BaseFont bf = (BaseFont)value;
@@ -744,9 +755,9 @@ public class AcroFields {
             else if (name.equalsIgnoreCase("textcolor")) {
                 for (int k = 0; k < item.merged.size(); ++k) {
                     if (hit.isHit(k)) {
-                        PdfString da = (PdfString)PdfReader.getPdfObject(((PdfDictionary)item.merged.get(k)).get(PdfName.DA));
+                        String da = getDefaultAppearance((PdfDictionary)item.merged.get(k));
                         if (da != null) {
-                            Object dao[] = splitDAelements(da.toUnicodeString());
+                            Object dao[] = splitDAelements(da);
                             PdfAppearance cb = new PdfAppearance();
                             if (dao[DA_FONT] != null) {
                                 ByteBuffer buf = cb.getInternalBuffer();
@@ -764,9 +775,9 @@ public class AcroFields {
             else if (name.equalsIgnoreCase("textsize")) {
                 for (int k = 0; k < item.merged.size(); ++k) {
                     if (hit.isHit(k)) {
-                        PdfString da = (PdfString)PdfReader.getPdfObject(((PdfDictionary)item.merged.get(k)).get(PdfName.DA));
+                        String da = getDefaultAppearance((PdfDictionary)item.merged.get(k));
                         if (da != null) {
-                            Object dao[] = splitDAelements(da.toUnicodeString());
+                            Object dao[] = splitDAelements(da);
                             PdfAppearance cb = new PdfAppearance();
                             if (dao[DA_FONT] != null) {
                                 ByteBuffer buf = cb.getInternalBuffer();
