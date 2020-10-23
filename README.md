@@ -32,7 +32,7 @@ manager, but if that is not an option there are pre-built binaries
 available:
 
  - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/v3.2.0/file/build/libs/pdftk-all.jar?job=gradle), including dependencies. Requires a JRE at runtime.
- - [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/v3.2.0/file/build/native-image/pdftk?job=nativeimage) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
+ - :warning: **Experimental** [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/artifacts/v3.2.0/file/build/native-image/pdftk?job=nativeimage) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
 
 ## Dependencies
 
@@ -79,7 +79,9 @@ This can then be run with just java installed like:
 java -jar build/libs/pdftk-all.jar
 ```
 
-### Standalone binary (native image)
+### Standalone binary (native image :warning: **Experimental**)
+
+> :warning: Has issues with GraalVM 20.2, see issue #68.
 
 Building a standalone binary requires
 [GraalVM](https://www.graalvm.org), which replaces the standard JDK,

@@ -48,7 +48,7 @@ pages:
   stage: deploy
   image: gradle:latest
   variables:
-    GRADLE_VERSION: "6.3"
+    GRADLE_VERSION: "6.7"
   script:
     - gradle wrapper --gradle-version=$GRADLE_VERSION
     - ./gradlew shadowJar
@@ -85,14 +85,25 @@ nativeimage:
   only:
     - tags
   stage: deploy
-  image: oracle/graalvm-ce:latest
+  # cf https://gitlab.com/pdftk-java/pdftk/-/issues/68 before updating
+  image: oracle/graalvm-ce:20.1.0-java11
   script:
     - gu install native-image
     - yum install -y wget unzip
-    - wget https://services.gradle.org/distributions/gradle-6.3-bin.zip
-    - unzip gradle-6.3-bin.zip
-    - ./gradle-6.3/bin/gradle nativeImage
+    - wget https://services.gradle.org/distributions/gradle-6.7-bin.zip
+    - unzip gradle-6.7-bin.zip
+    - ./gradle-6.7/bin/gradle nativeImage
     - ./build/native-image/pdftk --version
   artifacts:
     paths:
       - build/native-image/pdftk
+
+nativeimage-web:
+  extends: nativeimage
+  stage: test
+  only:
+    - web
+  artifacts:
+    paths:
+      - build/native-image/pdftk
+    expire_in: 1 month
