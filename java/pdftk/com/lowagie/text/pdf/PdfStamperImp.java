@@ -56,6 +56,7 @@ package pdftk.com.lowagie.text.pdf;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -707,9 +708,13 @@ public class PdfStamperImp extends PdfWriter {
             throw new IllegalArgumentException("Field flattening is not supported in append mode.");
         getAcroFields();
         HashMap fields = acroFields.getFields();
+        String[] fieldnames = (String[])fields.keySet().toArray();
+        // Flatten fields in hierarchical order (parent first)
+        // See https://gitlab.com/pdftk-java/pdftk/-/issues/71
+        Arrays.sort(fieldnames);
         if (fieldsAdded && partialFlattening.isEmpty()) {
-            for (Iterator i = fields.keySet().iterator(); i.hasNext();) {
-                partialFlattening.add(i.next());
+            for (String name : fieldnames) {
+                partialFlattening.add(name);
             }
         }
         PdfDictionary acroForm = (PdfDictionary)PdfReader.getPdfObject(reader.getCatalog().get(PdfName.ACROFORM));
@@ -719,8 +724,7 @@ public class PdfStamperImp extends PdfWriter {
             if (array != null)
                 acroFds = array.getArrayList();
         }
-        for (Iterator i = fields.keySet().iterator(); i.hasNext();) {
-            String name = (String)i.next();
+        for (String name : fieldnames) {
             if (!partialFlattening.isEmpty() && !partialFlattening.contains(name))
                 continue;
             AcroFields.Item item = (AcroFields.Item)fields.get(name);
