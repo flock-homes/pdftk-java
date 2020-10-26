@@ -707,8 +707,8 @@ public class PdfStamperImp extends PdfWriter {
         if (append)
             throw new IllegalArgumentException("Field flattening is not supported in append mode.");
         getAcroFields();
-        HashMap fields = acroFields.getFields();
-        String[] fieldnames = (String[])fields.keySet().toArray();
+        HashMap<String,AcroFields.Item> fields = acroFields.getFields();
+        String[] fieldnames = fields.keySet().toArray(new String[0]);
         // Flatten fields in hierarchical order (parent first)
         // See https://gitlab.com/pdftk-java/pdftk/-/issues/71
         Arrays.sort(fieldnames);
