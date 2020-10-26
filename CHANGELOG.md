@@ -1,3 +1,10 @@
+## [3.2.1] - 2020-10-26
+
+### Fixed
+ - Crash with incomplete files
+ - Crash with invalid forms
+ - Flatten form fields in order
+
 ## [3.2.0] - 2020-09-27
 
 ### Added
