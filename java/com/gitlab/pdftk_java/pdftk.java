@@ -40,6 +40,10 @@ public class pdftk {
   static final String PDFTK_VER = "3.2.1";
   static final boolean ASK_ABOUT_WARNINGS = false;
 
+  static {
+    System.setProperty("java.awt.headless", "true");
+  }
+
   // For compatibility with Java < 9
   static void copyStream(InputStream inputStream, OutputStream outputStream) throws IOException {
     final int bufferSize = 0x2000;
