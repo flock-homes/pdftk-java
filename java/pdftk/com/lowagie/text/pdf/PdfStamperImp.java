@@ -746,17 +746,15 @@ public class PdfStamperImp extends PdfWriter {
                         ((PdfDictionary)objReal).put(PdfName.SUBTYPE, PdfName.FORM);
                         app = new PdfAppearance((PdfIndirectReference)obj);
                     }
-                    else {
-                        if (objReal.isDictionary()) {
-                            PdfName as = (PdfName)PdfReader.getPdfObject(merged.get(PdfName.AS));
-                            if (as != null) {
-                                PdfIndirectReference iref = (PdfIndirectReference)((PdfDictionary)objReal).get(as);
-                                if (iref != null) {
-                                    app = new PdfAppearance(iref);
-                                    if (iref.isIndirect()) {
-                                        objReal = PdfReader.getPdfObject(iref);
-                                        ((PdfDictionary)objReal).put(PdfName.SUBTYPE, PdfName.FORM);
-                                    }
+                    else if (objReal != null && objReal.isDictionary()) {
+                        PdfName as = (PdfName)PdfReader.getPdfObject(merged.get(PdfName.AS));
+                        if (as != null) {
+                            PdfIndirectReference iref = (PdfIndirectReference)((PdfDictionary)objReal).get(as);
+                            if (iref != null) {
+                                app = new PdfAppearance(iref);
+                                if (iref.isIndirect()) {
+                                    objReal = PdfReader.getPdfObject(iref);
+                                    ((PdfDictionary)objReal).put(PdfName.SUBTYPE, PdfName.FORM);
                                 }
                             }
                         }
