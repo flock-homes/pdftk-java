@@ -727,7 +727,7 @@ public class PdfStamperImp extends PdfWriter {
         for (String name : fieldnames) {
             if (!partialFlattening.isEmpty() && !partialFlattening.contains(name))
                 continue;
-            AcroFields.Item item = (AcroFields.Item)fields.get(name);
+            AcroFields.Item item = fields.get(name);
             for (int k = 0; k < item.merged.size(); ++k) {
                 PdfDictionary merged = (PdfDictionary)item.merged.get(k);
                 PdfNumber ff = (PdfNumber)PdfReader.getPdfObject(merged.get(PdfName.F));
