@@ -12,8 +12,8 @@ FieldFlags: 0
 FieldValue: Off
 FieldValueDefault: Off
 FieldJustification: Left
-FieldStateOption: Yes
 FieldStateOption: Off
+FieldStateOption: Yes
 ---
 FieldType: Button
 FieldName: Radio1
@@ -22,5 +22,5 @@ FieldValue: Off
 FieldValueDefault: Off
 FieldJustification: Left
 FieldStateOption: 1
-FieldStateOption: 2
 FieldStateOption: Off
+FieldStateOption: 2

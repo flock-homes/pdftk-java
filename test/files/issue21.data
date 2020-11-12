@@ -17,35 +17,35 @@ FieldName: Radio Button3
 FieldFlags: 49152
 FieldValue: Radio Button3
 FieldJustification: Left
-FieldStateOption: Choice 3
 FieldStateOption: Choice 1
-FieldStateOption: Choice 2
 FieldStateOption: Off
+FieldStateOption: Choice 2
+FieldStateOption: Choice 3
 ---
 FieldType: Button
 FieldName: Radio Button4
 FieldFlags: 49152
 FieldValue: Radio Button4
 FieldJustification: Left
-FieldStateOption: Other Choice 2
 FieldStateOption: Other Choice 1
 FieldStateOption: Off
+FieldStateOption: Other Choice 2
 ---
 FieldType: Button
 FieldName: Check Box4
 FieldFlags: 0
 FieldValue: Check Box4
 FieldJustification: Left
-FieldStateOption: Yes
 FieldStateOption: Off
+FieldStateOption: Yes
 ---
 FieldType: Button
 FieldName: Check Box5
 FieldFlags: 0
 FieldValue: Check Box5
 FieldJustification: Left
-FieldStateOption: Yes
 FieldStateOption: Off
+FieldStateOption: Yes
 ---
 FieldType: Choice
 FieldName: List Box6
