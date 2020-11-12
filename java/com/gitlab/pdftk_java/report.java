@@ -27,8 +27,8 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -104,7 +104,7 @@ class report {
     String m_tt = ""; // name
     String m_tu = ""; // alt. name
     int m_ff = 0; // flags
-    Set<String> m_vv = new HashSet<String>(); // value -- may be an array
+    Set<String> m_vv = new LinkedHashSet<String>(); // value -- may be an array
     String m_dv = ""; // default value
 
     // variable-text features
@@ -114,10 +114,11 @@ class report {
 
     int m_maxlen = 0;
 
+    boolean m_have_option_list = false;
     // for checkboxes and such
-    Set<String> m_states = new HashSet<String>(); // possible states
+    Set<String> m_states = new LinkedHashSet<String>(); // possible states
     // states as (value,display) pairs
-    Set<List<String>> m_states_value_display = new HashSet<List<String>>();
+    Set<List<String>> m_states_value_display = new LinkedHashSet<List<String>>();
     String m_state = "";
 
     FormField() {}
@@ -127,14 +128,15 @@ class report {
       m_tt = copy.m_tt;
       m_tu = copy.m_tu;
       m_ff = copy.m_ff;
-      m_vv = new HashSet<String>(copy.m_vv);
+      m_vv = new LinkedHashSet<String>(copy.m_vv);
       m_dv = copy.m_dv;
       m_qq = copy.m_qq;
       m_ds = copy.m_ds;
       m_rv = Arrays.copyOf(copy.m_rv, copy.m_rv.length);
       m_maxlen = copy.m_maxlen;
-      m_states = new HashSet<String>(copy.m_states);
-      m_states_value_display = new HashSet<List<String>>();
+      m_have_option_list = copy.m_have_option_list;
+      m_states = new LinkedHashSet<String>(copy.m_states);
+      m_states_value_display = new LinkedHashSet<List<String>>();
       for (List<String> l : copy.m_states_value_display) {
         m_states_value_display.add(new ArrayList<String>(l));
       }
@@ -174,10 +176,29 @@ class report {
         if (n_p != null && n_p.isDictionary()) {
           Set<PdfName> n_set_p = ((PdfDictionary) n_p).getKeys();
           for (PdfName key_p : n_set_p) {
-            m_states.add(OutputPdfName(key_p, utf8_b));
+            if (!m_have_option_list || PdfName.Off.equals(key_p)) {
+              m_states.add(OutputPdfName(key_p, utf8_b));
+            }
           }
         }
       }
+    }
+
+    String interpretValue(String v) {
+      if (m_ft.equals("Button") && m_have_option_list) {
+        // V is possibly not the value but an index to the Opt array
+        try {
+          int option_index = Integer.parseInt(v);
+          if (option_index >= 0 && option_index < m_states.size()) {
+            Iterator<String> it = m_states.iterator();
+            String ret = "";
+            for (int i = 0; i <= option_index; ++i) ret = it.next();
+            return ret;
+          }
+        } catch (Exception e) {
+        }
+      }
+      return v;
     }
   };
 
@@ -188,9 +209,9 @@ class report {
     if (!ff.m_tu.isEmpty()) ofs.println("FieldNameAlt: " + ff.m_tu);
     ofs.println("FieldFlags: " + ff.m_ff);
     for (String it : ff.m_vv) {
-      ofs.println("FieldValue: " + it);
+      ofs.println("FieldValue: " + ff.interpretValue(it));
     }
-    if (!ff.m_dv.isEmpty()) ofs.println("FieldValueDefault: " + ff.m_dv);
+    if (!ff.m_dv.isEmpty()) ofs.println("FieldValueDefault: " + ff.interpretValue(ff.m_dv));
 
     ofs.print("FieldJustification: ");
     switch (ff.m_qq) {
@@ -297,9 +318,10 @@ class report {
           // field value; inheritable; may be string or name
           if (kid_p.contains(PdfName.V)) {
             PdfObject pdfs_p = reader_p.getPdfObject(kid_p.get(PdfName.V));
-
             if (pdfs_p == null) continue;
+
             String maybe_output = OutputPdfStringOrName(pdfs_p, utf8_b);
+
             if (maybe_output != null) {
               acc_state.m_vv.add(maybe_output);
             } else if (pdfs_p.isArray()) {
@@ -363,6 +385,15 @@ class report {
             }
           }
 
+          // list-box / combo-box possible states
+          if (kid_p.contains(PdfName.OPT)) {
+            PdfObject kid_opts_p = reader_p.getPdfObject(kid_p.get(PdfName.OPT));
+            if (kid_opts_p != null && kid_opts_p.isArray()) {
+              acc_state.m_have_option_list = true;
+              acc_state.addOptions(reader_p, (PdfArray) kid_opts_p, utf8_b);
+            }
+          }
+
           // available states
           if (kid_p.contains(PdfName.AP)) {
             PdfObject ap_po = reader_p.getPdfObject(kid_p.get(PdfName.AP));
@@ -374,14 +405,6 @@ class report {
               acc_state.addApStates(reader_p, ap_p, PdfName.N, utf8_b);
               acc_state.addApStates(reader_p, ap_p, PdfName.D, utf8_b);
               acc_state.addApStates(reader_p, ap_p, PdfName.R, utf8_b);
-            }
-          }
-
-          // list-box / combo-box possible states
-          if (kid_p.contains(PdfName.OPT)) {
-            PdfObject kid_opts_p = reader_p.getPdfObject(kid_p.get(PdfName.OPT));
-            if (kid_opts_p != null && kid_opts_p.isArray()) {
-              acc_state.addOptions(reader_p, (PdfArray) kid_opts_p, utf8_b);
             }
           }
 
