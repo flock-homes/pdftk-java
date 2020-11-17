@@ -273,4 +273,4 @@ public class pdftk {
     System.err.println("Make sure that bcprov and commons-lang3 are installed and included in the");
     System.err.println("classpath. See also https://gitlab.com/pdftk-java/pdftk/issues/2.");
   }
-};
+}

@@ -46,7 +46,7 @@ class InputPdf {
     PagesReader(PdfReader second) {
       this.second = second;
     }
-  };
+  }
 
   ArrayList<PagesReader> m_readers = new ArrayList<PagesReader>();
 
@@ -176,4 +176,4 @@ class InputPdf {
 
     return open_success_b ? pr : null;
   }
-};
+}

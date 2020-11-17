@@ -68,4 +68,4 @@ class LoadableInt {
   public String toString() {
     return Integer.toString(ii);
   }
-};
+}

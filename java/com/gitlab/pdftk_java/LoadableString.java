@@ -71,4 +71,4 @@ class LoadableString {
   public String toString() {
     return ss;
   }
-};
+}

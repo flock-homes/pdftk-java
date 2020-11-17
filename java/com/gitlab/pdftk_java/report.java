@@ -929,4 +929,4 @@ class report {
       }
     }
   } // end: ReportOnPdf
-};
+}

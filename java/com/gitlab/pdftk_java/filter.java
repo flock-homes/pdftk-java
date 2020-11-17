@@ -424,4 +424,4 @@ class filter {
     writer_p.close();
     return ret_val;
   }
-};
+}
