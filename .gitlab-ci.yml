@@ -1,5 +1,8 @@
 .ant-job:
   stage: test
+  except:
+    variables:
+      - $WEB_JOB != null
   image: openjdk:11
   before_script:
   - apt-get update -yqq
@@ -48,7 +51,7 @@ pages:
   stage: deploy
   image: gradle:latest
   variables:
-    GRADLE_VERSION: "6.7"
+    GRADLE_VERSION: "6.7.1"
   script:
     - gradle wrapper --gradle-version=$GRADLE_VERSION
     - ./gradlew shadowJar
@@ -69,7 +72,8 @@ gradle-web:
   extends: .gradle-job
   stage: test
   only:
-    - web
+    variables:
+      - $CI_PIPELINE_SOURCE == "web" && $WEB_JOB == "gradle"
   artifacts:
     paths:
       - build/libs/pdftk-all.jar
@@ -77,6 +81,9 @@ gradle-web:
 
 spotless:
   stage: test
+  except:
+    variables:
+      - $WEB_JOB != null
   image: gradle:latest
   script:
     - gradle spotlessCheck
@@ -87,12 +94,13 @@ nativeimage:
   stage: deploy
   # cf https://gitlab.com/pdftk-java/pdftk/-/issues/68 before updating
   image: oracle/graalvm-ce:20.1.0-java11
-  script:
+  before_script:
     - gu install native-image
     - yum install -y wget unzip
-    - wget https://services.gradle.org/distributions/gradle-6.7-bin.zip
-    - unzip gradle-6.7-bin.zip
-    - ./gradle-6.7/bin/gradle nativeImage
+    - wget https://services.gradle.org/distributions/gradle-6.7.1-bin.zip
+    - unzip gradle-6.7.1-bin.zip
+  script:
+    - ./gradle-6.7.1/bin/gradle nativeImage
     - ./build/native-image/pdftk --version
   artifacts:
     paths:
@@ -102,7 +110,11 @@ nativeimage-web:
   extends: nativeimage
   stage: test
   only:
-    - web
+    variables:
+      - $CI_PIPELINE_SOURCE == "web" && $WEB_JOB == "nativeimage"
+  script:
+    - ./gradle-6.7.1/bin/gradle -Pgeneratedebuginfo=1 nativeImage
+    - ./build/native-image/pdftk --version
   artifacts:
     paths:
       - build/native-image/pdftk
