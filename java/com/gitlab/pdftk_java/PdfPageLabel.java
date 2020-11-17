@@ -129,4 +129,4 @@ class PdfPageLabel {
     m_start = loader.ii;
     return success;
   }
-};
+}

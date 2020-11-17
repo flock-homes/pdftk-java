@@ -78,4 +78,4 @@ class PageRange {
 
     return true;
   }
-};
+}

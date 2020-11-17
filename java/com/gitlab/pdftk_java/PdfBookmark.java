@@ -74,6 +74,6 @@ class PdfBookmark {
     m_page_num = loader.ii;
     return success;
   }
-};
+}
 //
 // ostream& operator<<( ostream& ss, const PdfBookmark& bb );

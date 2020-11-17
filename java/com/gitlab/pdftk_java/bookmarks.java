@@ -277,7 +277,7 @@ class bookmarks {
     PdfDictionary final_child_p;
     PdfIndirectReference final_child_ref_p;
     int num_bookmarks_total;
-  };
+  }
 
   // Translator note: returns num_bookmarks_total
   static int BuildBookmarks(
@@ -522,4 +522,4 @@ class bookmarks {
     state.final_child_p = bookmark_prev_p;
     state.final_child_ref_p = bookmark_prev_ref_p;
   }
-};
+}

@@ -91,4 +91,4 @@ class PdfPageMedia {
     m_crop = loader.rr;
     return success;
   }
-};
+}

@@ -1605,4 +1605,4 @@ class TK_Session {
 
     return true;
   }
-};
+}

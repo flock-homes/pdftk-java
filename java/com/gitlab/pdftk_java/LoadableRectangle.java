@@ -108,4 +108,4 @@ class LoadableRectangle {
     if (r == null) return "";
     return c_format.format(r.right() - r.left()) + " " + c_format.format(r.top() - r.bottom());
   }
-};
+}

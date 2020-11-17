@@ -373,7 +373,7 @@ class data_import {
       m_value = loader.ss;
       return success;
     }
-  };
+  }
 
   static class PdfData {
     ArrayList<PdfInfo> m_info = new ArrayList<PdfInfo>();
@@ -425,9 +425,9 @@ class data_import {
       m_id_1 = loader.ss;
       return success;
     }
-  };
+  }
 
   static String XmlStringToJcharArray(String jvs) {
     return StringEscapeUtils.unescapeXml(jvs);
   }
-};
+}
