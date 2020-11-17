@@ -1,9 +1,9 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.diffplug.gradle.spotless' version '3.26.1'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
-    id "org.mikeneck.graalvm-native-image" version "0.1.1"
+    id 'com.diffplug.spotless' version '5.8.2'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id "org.mikeneck.graalvm-native-image" version "0.8.0"
 }
 
 sourceCompatibility = 1.7
@@ -43,6 +43,7 @@ nativeImage {
       '--no-fallback',
       '-H:+AddAllCharsets',
       '-H:Log=registerResource:',
+      '-H:GenerateDebugInfo=' + (project.hasProperty('generatedebuginfo') ? '1' : '0'),
   )
 }
 
@@ -50,7 +51,6 @@ spotless {
     java {
         target 'java/com/gitlab/pdftk_java/**/*.java'
         googleJavaFormat()
-        paddedCell()
         removeUnusedImports()
     }
 }
