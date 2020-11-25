@@ -25,4 +25,23 @@ public class FormTest extends BlackBox {
     pdftk("test/files/form.pdf", "fill_form", "test/files/form-filled.fdf", "output", "-");
   }
 
+  @Test
+  public void dump_data_fields_utf8_options() throws IOException {
+    pdftk("test/files/form-utf8.pdf", "dump_data_fields_utf8");
+    String expectedData = slurp("test/files/form-utf8.data");
+    assertEquals(expectedData, systemOut.getLog());
+  }
+
+  @Test
+  public void generate_fdf_utf8_options() throws IOException {
+    pdftk("test/files/form-utf8.pdf", "generate_fdf", "output", "-");
+    byte[] expectedData = slurpBytes("test/files/form-utf8.fdf");
+    assertArrayEquals(expectedData, systemOut.getLogAsBytes());
+  }
+
+  @Test
+  public void fill_from_fdf_utf8_options() throws IOException {
+    pdftk("test/files/form-utf8.pdf", "fill_form", "test/files/form-utf8-filled.fdf", "output", "-");
+  }
+
 };

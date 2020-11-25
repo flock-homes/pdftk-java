@@ -18,4 +18,11 @@ public class DataFieldsTest extends BlackBox {
     String expectedData = slurp("test/files/issue21.data");
     assertEquals(expectedData, systemOut.getLog());
   }
+
+  @Test
+  public void dump_data_fields_utf8_options() throws IOException {
+    pdftk("test/files/form-utf8.pdf", "dump_data_fields_utf8");
+    String expectedData = slurp("test/files/form-utf8.data");
+    assertEquals(expectedData, systemOut.getLog());
+  }
 };
