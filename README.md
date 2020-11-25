@@ -128,6 +128,7 @@ pdftk are intended. Issue reports about other differences are welcome
 - Reports some missing values in multi-valued form fields.
 - Does not escape form fields if UTF-8 output is selected.
 - Report entries may be in a different order.
+- Reports annotations other than links.
 
 ## Source organization
 

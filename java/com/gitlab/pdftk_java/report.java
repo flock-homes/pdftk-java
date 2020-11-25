@@ -649,13 +649,12 @@ class report {
 
               PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
+              ofs.println("---"); // delim
+              ReportAnnot(ofs, reader_p, ii, page_p, annot_p, utf8_b); // base annot items
+              ofs.println("AnnotPageNumber: " + ii);
+
               // link annotation
               if (subtype_p.equals(PdfName.LINK)) {
-
-                ofs.println("---"); // delim
-                ReportAnnot(ofs, reader_p, ii, page_p, annot_p, utf8_b); // base annot items
-                ofs.println("AnnotPageNumber: " + ii);
-
                 // link-specific items
                 if (annot_p.contains(PdfName.A)) { // action
                   PdfObject action_p = reader_p.getPdfObject(annot_p.get(PdfName.A));
