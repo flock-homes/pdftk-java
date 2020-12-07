@@ -3,7 +3,7 @@ SYNOPSIS
             [ input_pw <input PDF owner passwords | PROMPT> ]
             [ <operation> <operation arguments> ]
             [ output <output filename | - | PROMPT> ]
-            [ encrypt_40bit | encrypt_128bit | ncrypt_aes128 ]
+            [ encrypt_40bit | encrypt_128bit | encrypt_aes128 ]
             [ allow <permissions> ]
             [ owner_pw <owner password | PROMPT> ]
             [ user_pw <user password | PROMPT> ]

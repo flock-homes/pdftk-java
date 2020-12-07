@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH PDFTK 1 "June 3, 2020"
+.TH PDFTK 1 "December 7, 2020"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -27,7 +27,7 @@ pdftk \- A handy tool for manipulating PDF
 .br
      [ \fBoutput\fR \fI<output filename | - | PROMPT>\fR ]
 .br
-     [ \fBencrypt_40bit\fR | \fBencrypt_128bit\fR | \fencrypt_aes128\fR ]
+     [ \fBencrypt_40bit\fR | \fBencrypt_128bit\fR | \fBencrypt_aes128\fR ]
 .br
      [ \fBallow\fR \fI<permissions>\fR ]
 .br
@@ -452,11 +452,15 @@ pdftk A=even.pdf B=odd.pdf shuffle A B output collated.pdf
 or if odd.pdf is in reverse order:
 .br
 pdftk A=even.pdf B=odd.pdf shuffle A Bend-1 output collated.pdf
-.TP
+.PP
+The following examples use actual passwords as command line
+parameters, which is discouraged (see the SECURITY CONSIDERATIONS
+section).
+.TP 2
 .B Decrypt a PDF
 pdftk secured.pdf input_pw foopass output unsecured.pdf
 .TP
-.B Encrypt a PDF using 128-bit strength (the default), withhold all permissions (the default)
+.B Encrypt a PDF using AES-128 (the default), withhold all permissions (the default)
 pdftk 1.pdf output 1.128.pdf owner_pw foopass
 .TP
 .B Same as above, except password 'baz' must also be used to open output PDF
@@ -464,6 +468,12 @@ pdftk 1.pdf output 1.128.pdf owner_pw foo user_pw baz
 .TP
 .B Same as above, except printing is allowed (once the PDF is open)
 pdftk 1.pdf output 1.128.pdf owner_pw foo user_pw baz allow printing
+.TP
+.B Apply RCA 40-bit encryption to output, revoking all permissions (the default).  Set the owner PW to 'foopass'.
+pdftk 1.pdf 2.pdf cat output 3.pdf encrypt_40bit owner_pw foopass
+.TP
+.B Join two files, one of which requires the password 'foopass'. The output is not encrypted.
+pdftk A=secured.pdf 2.pdf input_pw A=foopass cat output 3.pdf
 .TP
 .B Join in1.pdf and in2.pdf into a new PDF, out1.pdf
 pdftk in1.pdf in2.pdf cat output out1.pdf
@@ -482,12 +492,6 @@ pdftk in.pdf cat 1-12 14-end output out1.pdf
 or:
 .br
 pdftk A=in1.pdf cat A1-12 A14-end output out1.pdf
-.TP
-.B Apply 40-bit encryption to output, revoking all permissions (the default).  Set the owner PW to 'foopass'.
-pdftk 1.pdf 2.pdf cat output 3.pdf encrypt_40bit owner_pw foopass
-.TP
-.B Join two files, one of which requires the password 'foopass'. The output is not encrypted.
-pdftk A=secured.pdf 2.pdf input_pw A=foopass cat output 3.pdf
 .TP
 .B Uncompress PDF page streams for editing the PDF in a text editor (e.g., vim, emacs)
 pdftk doc.pdf output doc.unc.pdf uncompress
@@ -512,8 +516,13 @@ pdftk in.pdf cat 1-endsouth output out.pdf
 .SH NOTES
 This is a port of pdftk to java. See
 .br
-https://gitlab.com/marcvinyals/pdftk
+https://gitlab.com/pdftk-java/pdftk
 .br
 The original program can be found at www.pdftk.com
 .SH AUTHOR
 Original author of pdftk is Sid Steward (sid.steward at pdflabs dot com).
+.SH SECURITY CONSIDERATIONS
+Passing a password as a command line parameter is insecure because it
+can get saved into the shell's history and be accessible by other
+users via /proc. Use the keyword \fBPROMPT\fR and input any passwords via
+standard input instead.

@@ -464,11 +464,14 @@ EXAMPLES
          or if odd.pdf is in reverse order:
          pdftk A=even.pdf B=odd.pdf shuffle A Bend-1 output collated.pdf
 
+       The following examples use actual passwords as command line parameters,
+       which is discouraged (see the SECURITY CONSIDERATIONS section).
+
        Decrypt a PDF
          pdftk secured.pdf input_pw foopass output unsecured.pdf
 
-       Encrypt a PDF using 128-bit strength (the default), withhold all per-
-       missions (the default)
+       Encrypt a PDF using AES-128 (the default), withhold all permissions
+       (the default)
          pdftk 1.pdf output 1.128.pdf owner_pw foopass
 
        Same as above, except password 'baz' must also be used to open output
@@ -477,6 +480,14 @@ EXAMPLES
 
        Same as above, except printing is allowed (once the PDF is open)
          pdftk 1.pdf output 1.128.pdf owner_pw foo user_pw baz allow printing
+
+       Apply RCA 40-bit encryption to output, revoking all permissions (the
+       default). Set the owner PW to 'foopass'.
+         pdftk 1.pdf 2.pdf cat output 3.pdf encrypt_40bit owner_pw foopass
+
+       Join two files, one of which requires the password 'foopass'. The out-
+       put is not encrypted.
+         pdftk A=secured.pdf 2.pdf input_pw A=foopass cat output 3.pdf
 
        Join in1.pdf and in2.pdf into a new PDF, out1.pdf
          pdftk in1.pdf in2.pdf cat output out1.pdf
@@ -489,14 +500,6 @@ EXAMPLES
          pdftk in.pdf cat 1-12 14-end output out1.pdf
          or:
          pdftk A=in1.pdf cat A1-12 A14-end output out1.pdf
-
-       Apply 40-bit encryption to output, revoking all permissions (the
-       default). Set the owner PW to 'foopass'.
-         pdftk 1.pdf 2.pdf cat output 3.pdf encrypt_40bit owner_pw foopass
-
-       Join two files, one of which requires the password 'foopass'. The out-
-       put is not encrypted.
-         pdftk A=secured.pdf 2.pdf input_pw A=foopass cat output 3.pdf
 
        Uncompress PDF page streams for editing the PDF in a text editor (e.g.,
        vim, emacs)
@@ -524,10 +527,16 @@ EXAMPLES
 
 NOTES
        This is a port of pdftk to java. See
-       https://gitlab.com/marcvinyals/pdftk
+       https://gitlab.com/pdftk-java/pdftk
        The original program can be found at www.pdftk.com
 
 AUTHOR
        Original author of pdftk is Sid Steward (sid.steward at pdflabs dot
        com).
+
+SECURITY CONSIDERATIONS
+       Passing a password as a command line parameter is insecure because it
+       can get saved into the shell's history and be accessible by other users
+       via /proc. Use the keyword PROMPT and input any passwords via standard
+       input instead.
 
