@@ -25,6 +25,9 @@ including Arch, Debian / Ubuntu, Gentoo, Homebrew, MacPorts, and
 SUSE. Please refer to the documentation of your package manager for
 instructions.
 
+A third-party [docker image](https://hub.docker.com/r/minidocks/pdftk)
+based on a native image is also available.
+
 ### Pre-built binaries
 
 The recommended way to install pdftk-java is through a package
