@@ -349,122 +349,11 @@ class TK_Session {
           handle = m.group(1);
           data = m.group(2);
         }
-
         if (arg_state == ArgState.input_files_e) {
-          // input_files_e:
-          // expecting input handle=filename pairs, or
-          // an input filename w/o a handle
-          //
-          // treat argv[ii] like an optional input handle and filename
-          // like this: [<handle>=]<filename>
-
-          InputPdf input_pdf = new InputPdf();
-          input_pdf.m_filename = data;
-
-          if (handle == null) { // no handle
-            m_input_pdf.add(input_pdf);
-          } else { // use given handle for filename; test, first
-
-            // look up handle
-            Integer it = m_input_pdf_index.get(handle);
-            if (it != null) { // error: alreay in use
-
-              System.err.println("Error: Handle given here: ");
-              System.err.println("      " + argv);
-              System.err.println("   is already associated with: ");
-              System.err.println("      " + m_input_pdf.get(it).m_filename);
-              System.err.println("   Exiting.");
-              fail_b = true;
-            } else { // add handle/filename association
-              m_input_pdf.add(input_pdf);
-              m_input_pdf_index.put(handle, m_input_pdf.size() - 1);
-            }
-          }
-        } // end: arg_state== input_files_e
-        else if (arg_state == ArgState.input_pw_e) {
-          // expecting input handle=password pairs, or
-          // an input PDF password w/o a handle
-          //
-          // treat argv[ii] like an input handle and password
-          // like this <handle>=<password>; if no handle is
-          // given, assign passwords to input in order;
-
-          // if handles not used for input PDFs, then assume
-          // any equals signs found in p/w are part of p/w
-          if (m_input_pdf_index.size() == 0) {
-            handle = null;
-            data = argv;
-          }
-
-          if (handle == null) { // no equal sign; try using default handles
-            if (password_using_handles_b) { // error: expected a handle
-
-              System.err.println("Error: Expected a user-supplied handle for this input");
-              System.err.println("   PDF password: " + argv);
-              System.err.println();
-              System.err.println("   Handles must be supplied with ~all~ input");
-              System.err.println("   PDF passwords, or with ~no~ input PDF passwords.");
-              System.err.println("   If no handles are supplied, then passwords are applied");
-              System.err.println("   according to input PDF order.");
-              System.err.println();
-              System.err.println("   Handles are given like this: <handle>=<password>, and");
-              System.err.println("   they must be one or more upper-case letters.");
-              fail_b = true;
-            } else {
-              password_using_handles_not_b = true;
-
-              if (password_input_pdf_index < m_input_pdf.size()) {
-                m_input_pdf.get(password_input_pdf_index).m_password = argv;
-                ++password_input_pdf_index;
-              } else { // error
-                System.err.println("Error: more input passwords than input PDF documents.");
-                System.err.println("   Exiting.");
-                fail_b = true;
-              }
-            }
-          } else { // handle given; use for password
-            if (password_using_handles_not_b) { // error; remark and set fail_b
-
-              System.err.println("Error: Expected ~no~ user-supplied handle for this input");
-              System.err.println("   PDF password: " + argv);
-              System.err.println();
-              System.err.println("   Handles must be supplied with ~all~ input");
-              System.err.println("   PDF passwords, or with ~no~ input PDF passwords.");
-              System.err.println("   If no handles are supplied, then passwords are applied");
-              System.err.println("   according to input PDF order.");
-              System.err.println();
-              System.err.println("   Handles are given like this: <handle>=<password>, and");
-              System.err.println("   they must be one or more upper-case letters.");
-              fail_b = true;
-            } else {
-              password_using_handles_b = true;
-
-              // look up this handle
-              Integer it = m_input_pdf_index.get(handle);
-              if (it != null) { // found
-
-                if (m_input_pdf.get(it).m_password.isEmpty()) {
-                  m_input_pdf.get(it).m_password = data; // set
-                } else { // error: password already given
-
-                  System.err.println("Error: Handle given here: ");
-                  System.err.println("      " + argv);
-                  System.err.println("   is already associated with this password: ");
-                  System.err.println("      " + m_input_pdf.get(it).m_password);
-                  System.err.println("   Exiting.");
-                  fail_b = true;
-                }
-              } else { // error: no input file matches this handle
-
-                System.err.println("Error: Password handle: " + argv);
-                System.err.println("   is not associated with an input PDF file.");
-                System.err.println("   Exiting.");
-                fail_b = true;
-              }
-            }
-          }
-        } // end: arg_state== input_pw_e
-        else { // error
+          parse_state_input_files(handle, data);
+        } else if (arg_state == ArgState.input_pw_e) {
+          parse_state_input_pw(handle, data);
+        } else { // error
           System.err.println("Error: Internal error: unexpected arg_state.  Exiting.");
           fail_b = true;
         }
@@ -481,6 +370,122 @@ class TK_Session {
         fail_b = true;
       }
     }
+
+    void parse_state_input_files(String handle, String data) {
+      // input_files_e:
+      // expecting input handle=filename pairs, or
+      // an input filename w/o a handle
+      //
+      // treat argv[ii] like an optional input handle and filename
+      // like this: [<handle>=]<filename>
+
+      InputPdf input_pdf = new InputPdf();
+      input_pdf.m_filename = data;
+
+      if (handle == null) { // no handle
+        m_input_pdf.add(input_pdf);
+      } else { // use given handle for filename; test, first
+
+        // look up handle
+        Integer it = m_input_pdf_index.get(handle);
+        if (it != null) { // error: alreay in use
+
+          System.err.println("Error: Handle given here: ");
+          System.err.println("      " + argv);
+          System.err.println("   is already associated with: ");
+          System.err.println("      " + m_input_pdf.get(it).m_filename);
+          System.err.println("   Exiting.");
+          fail_b = true;
+        } else { // add handle/filename association
+          m_input_pdf.add(input_pdf);
+          m_input_pdf_index.put(handle, m_input_pdf.size() - 1);
+        }
+      }
+    } // end: arg_state== input_files_e
+
+    void parse_state_input_pw(String handle, String data) {
+      // expecting input handle=password pairs, or
+      // an input PDF password w/o a handle
+      //
+      // treat argv[ii] like an input handle and password
+      // like this <handle>=<password>; if no handle is
+      // given, assign passwords to input in order;
+
+      // if handles not used for input PDFs, then assume
+      // any equals signs found in p/w are part of p/w
+      if (m_input_pdf_index.size() == 0) {
+        handle = null;
+        data = argv;
+      }
+
+      if (handle == null) { // no equal sign; try using default handles
+        if (password_using_handles_b) { // error: expected a handle
+
+          System.err.println("Error: Expected a user-supplied handle for this input");
+          System.err.println("   PDF password: " + argv);
+          System.err.println();
+          System.err.println("   Handles must be supplied with ~all~ input");
+          System.err.println("   PDF passwords, or with ~no~ input PDF passwords.");
+          System.err.println("   If no handles are supplied, then passwords are applied");
+          System.err.println("   according to input PDF order.");
+          System.err.println();
+          System.err.println("   Handles are given like this: <handle>=<password>, and");
+          System.err.println("   they must be one or more upper-case letters.");
+          fail_b = true;
+        } else {
+          password_using_handles_not_b = true;
+
+          if (password_input_pdf_index < m_input_pdf.size()) {
+            m_input_pdf.get(password_input_pdf_index).m_password = argv;
+            ++password_input_pdf_index;
+          } else { // error
+            System.err.println("Error: more input passwords than input PDF documents.");
+            System.err.println("   Exiting.");
+            fail_b = true;
+          }
+        }
+      } else { // handle given; use for password
+        if (password_using_handles_not_b) { // error; remark and set fail_b
+
+          System.err.println("Error: Expected ~no~ user-supplied handle for this input");
+          System.err.println("   PDF password: " + argv);
+          System.err.println();
+          System.err.println("   Handles must be supplied with ~all~ input");
+          System.err.println("   PDF passwords, or with ~no~ input PDF passwords.");
+          System.err.println("   If no handles are supplied, then passwords are applied");
+          System.err.println("   according to input PDF order.");
+          System.err.println();
+          System.err.println("   Handles are given like this: <handle>=<password>, and");
+          System.err.println("   they must be one or more upper-case letters.");
+          fail_b = true;
+        } else {
+          password_using_handles_b = true;
+
+          // look up this handle
+          Integer it = m_input_pdf_index.get(handle);
+          if (it != null) { // found
+
+            if (m_input_pdf.get(it).m_password.isEmpty()) {
+              m_input_pdf.get(it).m_password = data; // set
+            } else { // error: password already given
+
+              System.err.println("Error: Handle given here: ");
+              System.err.println("      " + argv);
+              System.err.println("   is already associated with this password: ");
+              System.err.println("      " + m_input_pdf.get(it).m_password);
+              System.err.println("   Exiting.");
+              fail_b = true;
+            }
+          } else { // error: no input file matches this handle
+
+            System.err.println("Error: Password handle: " + argv);
+            System.err.println("   is not associated with an input PDF file.");
+            System.err.println("   Exiting.");
+            fail_b = true;
+          }
+        }
+      }
+    } // end: arg_state== input_pw_e
 
     void parse_state_page_seq() {
       if (m_page_seq.isEmpty()) {
