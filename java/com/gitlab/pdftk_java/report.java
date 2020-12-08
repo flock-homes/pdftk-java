@@ -200,7 +200,7 @@ class report {
       }
       return v;
     }
-  };
+  }
 
   static void OutputFormField(PrintStream ofs, FormField ff) {
     ofs.println("---"); // delim
