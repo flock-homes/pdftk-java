@@ -130,14 +130,13 @@ class InputPdf {
       if (!m_authorized_b) {
         open_success_b = false;
       }
-    } catch (InvalidPdfException e) { // file open error
-      System.err.println("Error: " + e.getMessage());
-      open_success_b = false;
     } catch (IOException ioe_p) { // file open error
       if (ioe_p.getMessage().equals("Bad password")) {
         m_authorized_b = false;
       } else if (ioe_p.getMessage().indexOf("not found as file or resource") != -1) {
         System.err.println("Error: Unable to find file.");
+      } else if (ioe_p instanceof InvalidPdfException) {
+        System.err.println("Error: Invalid PDF: " + ioe_p.getMessage());
       } else { // unexpected error
         System.err.println("Error: Unexpected Exception in open_reader()");
         ioe_p.printStackTrace(); // debug
@@ -152,11 +151,19 @@ class InputPdf {
 
     if (!m_authorized_b && ask_about_warnings_b) {
       // prompt for a new password
-      System.err.println("The password you supplied for the " + m_role + " PDF:");
-      System.err.println("   " + m_filename);
-      System.err.println("   did not work.  This PDF is encrypted, and you must supply the");
-      System.err.println("   owner or the user password to open it. To quit, enter a blank");
-      System.err.println("   password at the next prompt.");
+      if (m_password.isEmpty()) {
+        System.err.println("The password for the " + m_role + " PDF:");
+        System.err.println("   " + m_filename);
+        System.err.println("   is missing.  This PDF is encrypted, and you must supply the");
+        System.err.println("   owner or the user password to open it. To quit, enter a blank");
+        System.err.println("   password at the next prompt.");
+      } else {
+        System.err.println("The password you supplied for the " + m_role + " PDF:");
+        System.err.println("   " + m_filename);
+        System.err.println("   did not work.  This PDF is encrypted, and you must supply the");
+        System.err.println("   owner or the user password to open it. To quit, enter a blank");
+        System.err.println("   password at the next prompt.");
+      }
 
       m_password = pdftk.prompt_for_password("open", "the " + m_role + " PDF:\n   " + m_filename);
       if (!m_password.isEmpty()) { // reset flags try again
@@ -170,7 +177,11 @@ class InputPdf {
       System.err.println("Error: Failed to open " + m_role + " PDF file: ");
       System.err.println("   " + m_filename);
       if (!m_authorized_b) {
-        System.err.println("   OWNER OR USER PASSWORD REQUIRED, but not given (or incorrect)");
+        if (m_password.isEmpty()) {
+          System.err.println("   OWNER OR USER PASSWORD REQUIRED, but not given");
+        } else {
+          System.err.println("   OWNER OR USER PASSWORD REQUIRED, but incorrect");
+        }
       }
     }
 
