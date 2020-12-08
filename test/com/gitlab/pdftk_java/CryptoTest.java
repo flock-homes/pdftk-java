@@ -29,7 +29,7 @@ public class CryptoTest extends BlackBox {
     String encrypted = tmpDirectory.getRoot().getPath()+"/encrypted.pdf";
     pdftk("test/files/blank.pdf", "output", encrypted, "user_pw", "correcthorsebatterystaple");
     pdftk_error(1, encrypted, "output", "-");
-    assertThat(systemErr.getLog(), containsString("Bad password"));
+    assertThat(systemErr.getLog(), containsString("OWNER OR USER PASSWORD REQUIRED, but not given"));
   }
 
   @Test
@@ -37,7 +37,7 @@ public class CryptoTest extends BlackBox {
     String encrypted = tmpDirectory.getRoot().getPath()+"/encrypted.pdf";
     pdftk("test/files/blank.pdf", "output", encrypted, "user_pw", "correcthorsebatterystaple");
     pdftk_error(1, encrypted, "input_pw", "Tr0ub4dor&3", "output", "-");
-    assertThat(systemErr.getLog(), containsString("Bad password"));
+    assertThat(systemErr.getLog(), containsString("OWNER OR USER PASSWORD REQUIRED, but incorrect"));
   }
 
 };
