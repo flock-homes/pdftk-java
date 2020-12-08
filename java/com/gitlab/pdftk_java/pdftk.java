@@ -74,6 +74,16 @@ public class pdftk {
     return password;
   }
 
+  static void warn_if_argument_is_password(String password) {
+    boolean first = true;
+    if (first && !password.isEmpty() && !password.equals("PROMPT")) {
+      first = false;
+      System.err.println(
+          "Warning: Using a password on the command line interface can be insecure.");
+      System.err.println("Use the keyword PROMPT to supply a password via standard input instead.");
+    }
+  }
+
   static String prompt_for_filename(String message) {
     // input could be multibyte, so try working
     // with bytes instead of formatted input features

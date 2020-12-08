@@ -436,6 +436,7 @@ class TK_Session {
           password_using_handles_not_b = true;
 
           if (password_input_pdf_index < m_input_pdf.size()) {
+            pdftk.warn_if_argument_is_password(argv);
             m_input_pdf.get(password_input_pdf_index).m_password = argv;
             ++password_input_pdf_index;
           } else { // error
@@ -466,6 +467,7 @@ class TK_Session {
           if (it != null) { // found
 
             if (m_input_pdf.get(it).m_password.isEmpty()) {
+              pdftk.warn_if_argument_is_password(data);
               m_input_pdf.get(it).m_password = data; // set
             } else { // error: password already given
 
@@ -920,6 +922,7 @@ class TK_Session {
       if (m_output_owner_pw.isEmpty()) {
 
         if (argv.equals("PROMPT") || !argv.equals(m_output_user_pw)) {
+          pdftk.warn_if_argument_is_password(argv);
           m_output_owner_pw = argv;
         } else { // error: identical user and owner password
           // are interpreted by Acrobat (per the spec.) that
@@ -948,6 +951,7 @@ class TK_Session {
     void parse_state_output_user_pw() {
       if (m_output_user_pw.isEmpty()) {
         if (argv.equals("PROMPT") || !m_output_owner_pw.equals(argv)) {
+          pdftk.warn_if_argument_is_password(argv);
           m_output_user_pw = argv;
         } else { // error: identical user and owner password
           // are interpreted by Acrobat (per the spec.) that
