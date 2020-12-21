@@ -809,7 +809,7 @@ public class PdfPKCS7 {
             for(Iterator it = digestalgos.iterator(); it.hasNext();) {
                 ASN1EncodableVector algos = new ASN1EncodableVector();
                 algos.add(new ASN1ObjectIdentifier((String)it.next()));
-                algos.add(new DERNull());
+                algos.add(DERNull.INSTANCE);
                 digestAlgorithms_.add(new DERSequence(algos));
             }
             DERSet digestAlgorithms = new DERSet(digestAlgorithms_);
@@ -847,7 +847,7 @@ public class PdfPKCS7 {
             // Add the digestAlgorithm
             v = new ASN1EncodableVector();
             v.add(new ASN1ObjectIdentifier(digestAlgorithm));
-            v.add(new DERNull());
+            v.add(DERNull.INSTANCE);
             signerinfo.add(new DERSequence(v));
             
             // add the authenticated attribute if present
@@ -870,7 +870,7 @@ public class PdfPKCS7 {
             // Add the digestEncryptionAlgorithm
             v = new ASN1EncodableVector();
             v.add(new ASN1ObjectIdentifier(digestEncryptionAlgorithm));
-            v.add(new DERNull());
+            v.add(DERNull.INSTANCE);
             signerinfo.add(new DERSequence(v));
             
             // Add the digest
