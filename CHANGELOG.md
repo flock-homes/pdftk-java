@@ -1,3 +1,14 @@
+## [3.2.2] - 2020-12-21
+
+### Fixed
+ - Build error with latest bcprov
+ - Crash when flattening forms
+ - Proper error message with missing passwords
+
+### Changed
+ - Better handling of long and non-ASCII form options
+ - Report more annotation types
+
 ## [3.2.1] - 2020-10-26
 
 ### Fixed
