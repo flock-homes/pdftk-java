@@ -42,7 +42,7 @@ available:
  - jdk >= 1.7
  - commons-lang3
  - bcprov
- - gradle >= 4.10.3 or ant (build time)
+ - gradle >= 6.1 or ant (build time)
  - ivy (optionally for ant, for resolving dependencies at build time)
 
 ## Building and running with Gradle
@@ -53,10 +53,10 @@ standalone native binary, which does not require any runtime
 dependencies.
 
 The build configuration is relatively simple so it should work with most
-versions of gradle since 5.0 (tested 5.0 and 6.0.1) but if you have problems try
+versions of gradle since 6.1 (tested 6.1 and 6.7.1) but if you have problems try
 installing gradle wrapper at a particular version and then running the wrapper:
 ```
-gradle wrapper --gradle-version 6.0.1
+gradle wrapper --gradle-version 6.7.1
 ```
 
 ### Standard jar
