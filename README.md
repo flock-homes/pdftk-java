@@ -25,6 +25,10 @@ including Arch, Debian / Ubuntu, Gentoo, Homebrew, MacPorts, and
 SUSE. Please refer to the documentation of your package manager for
 instructions.
 
+:warning: Stable packages provided by some distributions (Debian,
+Gentoo) are older than 3.0.4, which fixed many crashes. Consider
+updating to an unstable package with a more recent version.
+
 A third-party [docker image](https://hub.docker.com/r/minidocks/pdftk)
 based on a native image is also available.
 
