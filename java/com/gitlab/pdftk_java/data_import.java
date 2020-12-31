@@ -24,6 +24,7 @@ package com.gitlab.pdftk_java;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringEscapeUtils;
 import pdftk.com.lowagie.text.Rectangle;
@@ -34,7 +35,6 @@ import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfString;
 
 class data_import {
 
@@ -223,7 +223,12 @@ class data_import {
     return new PdfArray(new float[] {r.left(), r.bottom(), r.right(), r.top()});
   }
 
-  static boolean UpdateInfo(PdfReader reader_p, InputStream ifs, boolean utf8_b) {
+  static class HashMapMutable {
+    HashMap dict;
+  }
+
+  static boolean UpdateInfo(
+      PdfReader reader_p, HashMapMutable info_pm, InputStream ifs, boolean utf8_b) {
     boolean ret_val_b = true;
 
     PdfData pdf_data = LoadDataFile(ifs);
@@ -298,28 +303,25 @@ class data_import {
 
       // metadata
       if (!pdf_data.m_info.isEmpty()) {
-        PdfObject info_po = reader_p.getPdfObject(trailer_p.get(PdfName.INFO));
-        if (info_po != null && info_po.isDictionary()) {
-          PdfDictionary info_p = (PdfDictionary) info_po;
+        HashMap<String, String> info_p = new HashMap<String, String>();
 
-          for (PdfInfo it : pdf_data.m_info) {
-            if (it.m_value.isEmpty()) {
-              info_p.remove(new PdfName(it.m_key));
-            } else {
-              if (utf8_b) { // UTF-8 encoded input
-                // patch by Quentin Godfroy <godfroy@clipper.ens.fr>
-                // and Chris Adams <cadams@salk.edu>
-                info_p.put(new PdfName(it.m_key), new PdfString(it.m_value));
-              } else { // XML entities input
-                String jvs = XmlStringToJcharArray(it.m_value);
-                info_p.put(new PdfName(it.m_key), new PdfString(jvs));
-              }
+        for (PdfInfo it : pdf_data.m_info) {
+          if (it.m_value.isEmpty()) {
+            // An empty string signals deletion
+            info_p.put(it.m_key, "");
+          } else {
+            if (utf8_b) { // UTF-8 encoded input
+              // patch by Quentin Godfroy <godfroy@clipper.ens.fr>
+              // and Chris Adams <cadams@salk.edu>
+              info_p.put(it.m_key, it.m_value);
+            } else { // XML entities input
+              String jvs = XmlStringToJcharArray(it.m_value);
+              info_p.put(it.m_key, jvs);
             }
           }
-        } else { // error
-          System.err.println("pdftk Error in UpdateInfo(): no Info dictionary found;");
-          ret_val_b = false;
         }
+
+        info_pm.dict = info_p;
       }
     } else { // error
       System.err.println("pdftk Error in UpdateInfo(): no document trailer found;");

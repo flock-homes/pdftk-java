@@ -220,20 +220,24 @@ class filter {
     PdfStamperImp writer_p =
         new PdfStamperImp(input_reader_p, ofs_p, '\0', false /* append mode */);
 
+    data_import.HashMapMutable more_info = new data_import.HashMapMutable();
+
     // update the info?
     if (m_update_info_filename.equals("PROMPT")) {
       m_update_info_filename = pdftk.prompt_for_filename("Please enter an Info file filename:");
     }
     if (!m_update_info_filename.isEmpty()) {
       if (m_update_info_filename.equals("-")) {
-        if (!data_import.UpdateInfo(input_reader_p, System.in, session.m_update_info_utf8_b)) {
+        if (!data_import.UpdateInfo(
+            input_reader_p, more_info, System.in, session.m_update_info_utf8_b)) {
           System.err.println("Warning: no Info added to output PDF.");
           ret_val = ErrorCode.WARNING;
         }
       } else {
         try {
           FileInputStream ifs = new FileInputStream(m_update_info_filename);
-          if (!data_import.UpdateInfo(input_reader_p, ifs, session.m_update_info_utf8_b)) {
+          if (!data_import.UpdateInfo(
+              input_reader_p, more_info, ifs, session.m_update_info_utf8_b)) {
             System.err.println("Warning: no Info added to output PDF.");
             ret_val = ErrorCode.WARNING;
           }
@@ -421,7 +425,7 @@ class filter {
     input_reader_p.removeUnusedObjects();
 
     // done; write output
-    writer_p.close();
+    writer_p.close(more_info.dict);
     return ret_val;
   }
 }
