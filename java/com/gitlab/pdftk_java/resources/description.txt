@@ -81,9 +81,9 @@ OPTIONS
 
                  Where the handle identifies one of the input PDF files, and
                  the beginning and ending page numbers are one-based refer-
-                 ences to pages in the PDF file.  The qualifier can be even or
-                 odd, and the page rotation can be north, south, east, west,
-                 left, right, or down.
+                 ences to pages in the PDF file.  The qualifier can be even,
+                 odd, or ~, and the page rotation can be north, south, east,
+                 west, left, right, or down.
 
                  If a PDF handle is given but no pages are specified, then the
                  entire PDF is used. If no pages are specified for any of the
@@ -98,6 +98,12 @@ OPTIONS
                  6-1even yields pages 6, 4 and 2 in that order.
 
                  The odd qualifier works similarly to the even.
+
+                 Pages can be subtracted from a page range using the ~ quali-
+                 fier followed by a page range. For instance, 1-20~5-6 and
+                 1-20~5~6 are equivalent to 1-4 7-20, and ~5 yields all pages
+                 except page 5. Depending on your shell, you may need to quote
+                 this argument because of the ~ at the beginning.
 
                  The page rotation setting can cause pdftk to rotate pages and
                  documents.  Each option sets the page rotation as follows (in

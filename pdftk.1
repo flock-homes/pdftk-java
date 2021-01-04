@@ -158,7 +158,7 @@ Assembles (catenates) pages from input PDFs to create a new PDF. Use \fBcat\fR t
 Where the handle identifies one of the input PDF files, and
 the beginning and ending page numbers are one-based references
 to pages in the PDF file.
-The qualifier can be \fBeven\fR or \fBodd\fR, and the page rotation can be \fBnorth\fR, \fBsouth\fR, \fBeast\fR, \fBwest\fR, \fBleft\fR, \fBright\fR, or \fBdown\fR.
+The qualifier can be \fBeven\fR, \fBodd\fR, or \fB~\fR, and the page rotation can be \fBnorth\fR, \fBsouth\fR, \fBeast\fR, \fBwest\fR, \fBleft\fR, \fBright\fR, or \fBdown\fR.
 
 If a PDF handle is given but no pages are specified, then the entire PDF is used. If no pages are specified for any of the input PDFs, then the input PDFs' bookmarks are also merged and included in the output.
 
@@ -167,6 +167,12 @@ If the handle is omitted from the page range, then the pages are taken from the 
 The \fBeven\fR qualifier causes pdftk to use only the even-numbered PDF pages, so \fB1-6even\fR yields pages 2, 4 and 6 in that order.  \fB6-1even\fR yields pages 6, 4 and 2 in that order.
 
 The \fBodd\fR qualifier works similarly to the \fBeven\fR.
+
+Pages can be subtracted from a page range using the \fB~\fR qualifier
+followed by a page range. For instance, \fB1-20~5-6\fR and
+\fB1-20~5~6\fR are equivalent to \fB1-4 7-20\fR, and \fB~5\fR yields
+all pages except page 5. Depending on your shell, you may need to
+quote this argument because of the ~ at the beginning.
 
 The page rotation setting can cause pdftk to rotate pages and documents.  Each option sets the page rotation as follows (in degrees): \fBnorth\fR: 0, \fBeast\fR: 90, \fBsouth\fR: 180, \fBwest\fR: 270, \fBleft\fR: -90, \fBright\fR: +90, \fBdown\fR: +180. \fBleft\fR, \fBright\fR, and \fBdown\fR make relative adjustments to a page's rotation.
 
