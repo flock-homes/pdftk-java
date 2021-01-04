@@ -22,6 +22,9 @@
 
 package com.gitlab.pdftk_java;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 class PageRange {
   int beg, end;
   final int m_num_pages;
@@ -42,6 +45,20 @@ class PageRange {
     System.err.println("   here: " + m_argv);
     System.err.println("   input PDF has: " + m_num_pages + " pages.");
     System.err.println("   Exiting.");
+  }
+
+  boolean parse(StringBuilder unparsed) {
+    String page_regex = "(r?)(end|[0-9]*)";
+    Pattern range_regex = Pattern.compile(page_regex + "(-" + page_regex + ")?");
+    Matcher m = range_regex.matcher(unparsed.toString());
+    m.lookingAt();
+    unparsed.delete(m.start(), m.end());
+    String pre_reverse = m.group(1);
+    String pre_range = m.group(2);
+    String hyphen = m.group(3);
+    String post_reverse = m.group(4);
+    String post_range = m.group(5);
+    return parse(pre_reverse, pre_range, post_reverse, post_range);
   }
 
   boolean parse(String pre_reverse, String pre_range, String post_reverse, String post_range) {

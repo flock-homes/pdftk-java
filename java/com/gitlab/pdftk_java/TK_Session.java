@@ -28,6 +28,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
@@ -512,19 +513,14 @@ class TK_Session {
 
         boolean even_pages_b = false;
         boolean odd_pages_b = false;
+        StringBuilder unparsed = new StringBuilder(argv);
+        HashSet<Integer> exclude = new HashSet<Integer>();
 
-        Pattern p =
-            Pattern.compile("([A-Z]*)(r?)(end|[0-9]*)(-(r?)(end|[0-9]*))?(.*)", Pattern.DOTALL);
-        Matcher m = p.matcher(argv);
-        m.matches();
-        String handle = m.group(1);
-        String pre_reverse = m.group(2);
-        String pre_range = m.group(3);
-        String hyphen = m.group(4);
-        String post_reverse = m.group(5);
-        String post_range = m.group(6);
-        String keywords = m.group(7);
-
+        Pattern handle_regex = Pattern.compile("([A-Z]*)");
+        Matcher m = handle_regex.matcher(unparsed.toString());
+        m.lookingAt();
+        String handle = m.group();
+        unparsed.delete(m.start(), m.end());
         int range_pdf_index = 0;
         { // defaults to first input document
           if (!handle.isEmpty()) {
@@ -542,9 +538,10 @@ class TK_Session {
             }
           }
         }
+        int num_pages = m_input_pdf.get(range_pdf_index).m_num_pages;
 
-        PageRange page_num = new PageRange(m_input_pdf.get(range_pdf_index).m_num_pages, argv);
-        if (!page_num.parse(pre_reverse, pre_range, post_reverse, post_range)) {
+        PageRange page_num = new PageRange(num_pages, argv);
+        if (!page_num.parse(unparsed)) {
           fail_b = true;
           return;
         }
@@ -553,14 +550,11 @@ class TK_Session {
         PageRotate page_rotate = PageRotate.NORTH;
         boolean page_rotate_absolute = false;
 
-        StringBuilder trailing_keywords = new StringBuilder(keywords);
         // trailing keywords (excluding "end" which should have been handled above)
-        while (trailing_keywords.length()
-            > 0) { // possibly more than one keyword, e.g., 3-endevenwest
-
+        // possibly more than one keyword, e.g., 3-endevenwest
+        while (unparsed.length() > 0) {
           // read keyword
-          arg_keyword = keyword.consume_keyword(trailing_keywords);
-
+          arg_keyword = keyword.consume_keyword(unparsed);
           if (arg_keyword == keyword.even_k) {
             even_pages_b = true;
           } else if (arg_keyword == keyword.odd_k) {
@@ -586,6 +580,17 @@ class TK_Session {
           } else if (arg_keyword == keyword.rot_upside_down_k) {
             page_rotate = PageRotate.SOUTH; // rotate +180
             page_rotate_absolute = false;
+          } else if (arg_keyword == keyword.range_minus_k) {
+            PageRange exclude_range = new PageRange(num_pages, argv);
+            if (exclude_range.parse(unparsed)) {
+              for (int i = exclude_range.beg; i <= exclude_range.end; ++i) {
+                exclude.add(i);
+              }
+            } else {
+              System.err.println("Error: Unexpected/invalid range in input after '~':");
+              System.err.println("   " + argv);
+              System.err.println("   Exiting.");
+            }
           } else { // error
             System.err.println("Error: Unexpected text in page range end, here: ");
             System.err.println("   " + argv /*(argv[ii]+ jj)*/);
@@ -606,7 +611,8 @@ class TK_Session {
           page_num.end = m_input_pdf.get(range_pdf_index).m_num_pages;
 
           // test that it's a /full/ pdf
-          m_cat_full_pdfs_b = m_cat_full_pdfs_b && (!even_pages_b && !odd_pages_b);
+          m_cat_full_pdfs_b =
+              m_cat_full_pdfs_b && (!even_pages_b && !odd_pages_b) && exclude.isEmpty();
         } else if (page_num.beg == 0 || page_num.end == 0) { // error
           System.err.println("Error: Input page numbers include 0 (zero)");
           System.err.println("   The first PDF page is 1 (one)");
@@ -625,46 +631,45 @@ class TK_Session {
         }
 
         for (int kk = page_num.beg; kk <= page_num.end; ++kk) {
-          if ((!even_pages_b || ((kk % 2) == 0)) && (!odd_pages_b || ((kk % 2) == 1))) {
-            if (kk <= m_input_pdf.get(range_pdf_index).m_num_pages) {
+          if (even_pages_b && (kk % 2 != 0)) continue;
+          if (odd_pages_b && (kk % 2 != 1)) continue;
+          if (exclude.contains(kk)) continue;
+          if (kk > num_pages) { // error; break later to get most feedback
+            System.err.println("Error: Page number: " + kk);
+            System.err.println(
+                "   does not exist in file: " + m_input_pdf.get(range_pdf_index).m_filename);
+            fail_b = true;
+            continue;
+          }
 
-              // look to see if this page of this document
-              // has already been referenced; if it has,
-              // create a new reader; associate this page
-              // with a reader;
-              //
-              boolean associated = false;
-              for (InputPdf.PagesReader it : m_input_pdf.get(range_pdf_index).m_readers) {
-                if (!it.first.contains(kk)) { // kk not assoc. w/ this reader
-                  it.first.add(kk); // create association
-                  associated = true;
-                  break;
-                }
-              }
-              //
-              if (!associated) {
-                // need to create a new reader for kk
-                InputPdf.PagesReader new_reader = add_reader(m_input_pdf.get(range_pdf_index));
-                if (new_reader != null) {
-                  new_reader.first.add(kk);
-                } else {
-                  System.err.println("Internal Error: unable to add reader");
-                  fail_b = true;
-                  break;
-                }
-              }
+          // look to see if this page of this document
+          // has already been referenced; if it has,
+          // create a new reader; associate this page
+          // with a reader;
 
-              //
-              temp_page_seq.add(
-                  new PageRef(range_pdf_index, kk, page_rotate, page_rotate_absolute)); // DF rotate
-
-            } else { // error; break later to get most feedback
-              System.err.println("Error: Page number: " + kk);
-              System.err.println(
-                  "   does not exist in file: " + m_input_pdf.get(range_pdf_index).m_filename);
-              fail_b = true;
+          boolean associated = false;
+          for (InputPdf.PagesReader it : m_input_pdf.get(range_pdf_index).m_readers) {
+            if (!it.first.contains(kk)) { // kk not assoc. w/ this reader
+              it.first.add(kk); // create association
+              associated = true;
+              break;
             }
           }
+
+          if (!associated) {
+            // need to create a new reader for kk
+            InputPdf.PagesReader new_reader = add_reader(m_input_pdf.get(range_pdf_index));
+            if (new_reader != null) {
+              new_reader.first.add(kk);
+            } else {
+              System.err.println("Internal Error: unable to add reader");
+              fail_b = true;
+              break;
+            }
+          }
+
+          temp_page_seq.add(
+              new PageRef(range_pdf_index, kk, page_rotate, page_rotate_absolute)); // DF rotate
         }
         if (fail_b) return;
 

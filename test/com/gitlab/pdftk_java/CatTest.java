@@ -41,6 +41,20 @@ public class CatTest extends BlackBox {
   }
 
   @Test
+  public void cat_exclude_range() {
+    byte[] expected = getPdf("test/files/refs.pdf", "cat", "1-3", "6-8", "output", "-");
+    byte[] actual = getPdf("test/files/refs.pdf", "cat", "~4-5", "output", "-");
+    assertPdfEqualsAsSVG(expected, actual);
+  }
+
+  @Test
+  public void cat_include_exclude_range() {
+    byte[] expected = getPdf("test/files/refs.pdf", "cat", "2-3", "6-7", "output", "-");
+    byte[] actual = getPdf("test/files/refs.pdf", "cat", "2-end~4-5~end", "output", "-");
+    assertPdfEqualsAsSVG(expected, actual);
+  }
+
+  @Test
   public void duplicate_stdin() throws IOException {
     InputStream stdinMock = new FileInputStream("test/files/blank.pdf");
     InputStream originalIn = System.in;

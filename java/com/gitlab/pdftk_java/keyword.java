@@ -61,6 +61,7 @@ enum keyword {
   // cat page range keywords
   even_k,
   odd_k,
+  range_minus_k,
 
   output_k,
 
@@ -233,13 +234,15 @@ enum keyword {
       return keyword.rot_right_k;
     } else if (ss.equals("down")) {
       return keyword.rot_upside_down_k;
+    } else if (ss.equals("~")) {
+      return keyword.range_minus_k;
     }
 
     return keyword.none_k;
   }
 
   static keyword consume_keyword(StringBuilder ssb) {
-    String ss = new String(ssb).toLowerCase();
+    String ss = ssb.toString().toLowerCase();
     // cat range keywords
     if (ss.startsWith("even")) { // note: strncmp
       ssb.delete(0, 4);
@@ -247,6 +250,9 @@ enum keyword {
     } else if (ss.startsWith("odd")) { // note: strncmp
       ssb.delete(0, 3);
       return keyword.odd_k;
+    } else if (ss.startsWith("~")) {
+      ssb.delete(0, 1);
+      return keyword.range_minus_k;
     } else {
       ssb.setLength(0);
       return is_keyword(ss);
