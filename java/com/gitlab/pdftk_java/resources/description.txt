@@ -129,7 +129,7 @@ OPTIONS
                  three pages of a PDF.
 
                  Page Range Examples without Handles:
-                 1-endeast - rotate entire document 90 degrees
+                 1\-endeast - rotate entire document 90 degrees
                  5 11 20 - take single pages from input PDF
                  5-25oddwest - take odd pages in range, rotate 90 degrees
                  6-1 - reverse pages in range from input PDF
@@ -236,7 +236,7 @@ OPTIONS
 
                  If the input PDF does not have a transparent background (such
                  as a PDF created from page scans) then the resulting back-
-                 ground won't be visible -- use the stamp operation instead.
+                 ground won't be visible - use the stamp operation instead.
 
           multibackground <background PDF filename | - | PROMPT>
                  Same as the background operation, but applies each page of
@@ -298,7 +298,7 @@ OPTIONS
                  PDF's XMP stream, if it has one. (For this reason you should
                  include a ModDate entry in your updated info with a current
                  date/timestamp, format: D:YYYYMMDDHHmmSS, e.g. D:201307241346
-                 -- omitted data after YYYY revert to default values.)
+                 - omitted data after YYYY revert to default values.)
 
                  For example:
 
@@ -440,12 +440,12 @@ OPTIONS
               the XMP stream.  The proper remedy for this is to include a
               ModDate entry in your updated info with a current date/time-
               stamp. The date/timestamp format is: D:YYYYMMDDHHmmSS, e.g.
-              D:201307241346 -- omitted data after YYYY revert to default val-
+              D:201307241346 - omitted data after YYYY revert to default val-
               ues. This newer ModDate should cue PDF viewers that the Info
               metadata is more current than the XMP data.
 
               Alternatively, you might prefer to remove the XMP stream from
-              the PDF altogether -- that's what this option does.  Note that
+              the PDF altogether - that's what this option does.  Note that
               objects inside the PDF might have their own, separate XMP meta-
               data streams, and that drop_xmp does not remove those.  It only
               removes the PDF's document-level XMP stream.
