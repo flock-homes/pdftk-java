@@ -88,7 +88,7 @@ java -jar build/libs/pdftk-all.jar
 
 ### Standalone binary (native image :warning: **Experimental**)
 
-> :warning: Has issues with GraalVM 20.2, see issue #68.
+> :warning: Has issues with GraalVM 20.2 and 20.3, see issue #68.
 
 Building a standalone binary requires
 [GraalVM](https://www.graalvm.org), which replaces the standard JDK,
