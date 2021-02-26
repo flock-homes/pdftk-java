@@ -53,6 +53,7 @@ class filter {
   String m_stamp_filename;
   String m_update_info_filename;
   boolean m_output_need_appearances_b;
+  String m_replacement_font;
 
   filter(TK_Session session) {
     this.session = session;
@@ -64,6 +65,7 @@ class filter {
     m_stamp_filename = session.m_stamp_filename;
     m_update_info_filename = session.m_update_info_filename;
     m_output_need_appearances_b = session.m_output_need_appearances_b;
+    m_replacement_font = session.m_replacement_font;
   }
 
   ////
@@ -291,6 +293,7 @@ class filter {
 
         AcroFields fields_p = writer_p.getAcroFields();
         fields_p.setGenerateAppearances(true); // have iText create field appearances
+        if (m_replacement_font != null) fields_p.setReplacementFont(m_replacement_font);
         if ((fdf_reader_p != null && fields_p.setFields(fdf_reader_p))
             || (xfdf_reader_p != null
                 && fields_p.setFields(xfdf_reader_p))) { // Rich Text input found

@@ -122,7 +122,9 @@ public class AcroFields {
     private boolean generateAppearances = true;
     
     private HashMap localFonts = new HashMap();
-    
+
+    private BaseFont replacementFont = null;
+
     private float extraMarginLeft;
     private float extraMarginTop;
     
@@ -440,7 +442,10 @@ public class AcroFields {
                     tx.setTextColor((Color)dab[DA_COLOR]);
                 if (dab[DA_LEADING] != null)
                     tx.setTextLeading((Float)dab[DA_LEADING]);
-                if (dab[DA_FONT] != null) {
+                if (replacementFont != null) {
+                    tx.setFont(replacementFont);
+                }
+                else if (dab[DA_FONT] != null) {
                     PdfDictionary font = (PdfDictionary)PdfReader.getPdfObject(merged.get(PdfName.DR));
                     if (font != null) {
                         font = (PdfDictionary)PdfReader.getPdfObject(font.get(PdfName.FONT));
@@ -1328,6 +1333,10 @@ public class AcroFields {
             top.remove(PdfName.NEEDAPPEARANCES);
         else
             top.put(PdfName.NEEDAPPEARANCES, PdfBoolean.PDFTRUE);
+    }
+
+    public void setReplacementFont(String filename) throws DocumentException, IOException {
+        replacementFont = BaseFont.createFont(filename, BaseFont.IDENTITY_H, true);
     }
     
     /** The field representations for retrieval and modification. */    
