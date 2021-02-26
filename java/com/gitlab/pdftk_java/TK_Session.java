@@ -103,6 +103,7 @@ class TK_Session {
   String m_form_data_filename = "";
   String m_background_filename = "";
   String m_stamp_filename = "";
+  String m_replacement_font = null;
   String m_output_filename = "";
   boolean m_output_utf8_b = false;
   String m_output_owner_pw = "";
@@ -224,6 +225,9 @@ class TK_Session {
             break;
           case stamp_filename_e:
             parse_state_stamp_filename();
+            break;
+          case replacement_font_filename_e:
+            parse_state_replacement_font_filename();
             break;
           default:
             // error
@@ -1097,6 +1101,11 @@ class TK_Session {
       // advance state
       arg_state = ArgState.output_e; // look for an output filename
     }
+
+    void parse_state_replacement_font_filename() {
+      m_replacement_font = argv;
+      arg_state = ArgState.output_args_e;
+    }
   }
 
   void parse(String[] args) {
@@ -1537,6 +1546,7 @@ class TK_Session {
 
     background_filename_e,
     stamp_filename_e,
+    replacement_font_filename_e,
 
     done_e
   };
@@ -1627,6 +1637,10 @@ class TK_Session {
         }
         // change state
         arg_state_p.value = ArgState.background_filename_e;
+        break;
+
+      case replacement_font_k:
+        arg_state_p.value = ArgState.replacement_font_filename_e;
         break;
 
       default: // not handled here; no change to *arg_state_p

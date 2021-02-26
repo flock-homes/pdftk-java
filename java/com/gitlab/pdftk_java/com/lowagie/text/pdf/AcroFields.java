@@ -125,6 +125,7 @@ public class AcroFields {
     private float extraMarginLeft;
     private float extraMarginTop;
     private ArrayList substitutionFonts;
+    private BaseFont replacementFont;
 
     AcroFields(PdfReader reader, PdfWriter writer) {
         this.reader = reader;
@@ -557,7 +558,10 @@ public class AcroFields {
                 tx.setTextColor((Color)dab[DA_COLOR]);
             if (dab[DA_LEADING] != null)
                 tx.setTextLeading((Float)dab[DA_LEADING]);
-            if (dab[DA_FONT] != null) {
+            if (replacementFont != null) {
+                tx.setFont(replacementFont);
+            }
+            else if (dab[DA_FONT] != null) {
                 PdfDictionary font = merged.getAsDict(PdfName.DR);
                 if (font != null) {
                     font = font.getAsDict(PdfName.FONT);
@@ -2464,6 +2468,10 @@ public class AcroFields {
      */
     public void setSubstitutionFonts(ArrayList substitutionFonts) {
         this.substitutionFonts = substitutionFonts;
+    }
+
+    public void setReplacementFont(String filename) throws DocumentException, IOException {
+        replacementFont = BaseFont.createFont(filename, BaseFont.IDENTITY_H, true);
     }
 
     private static final PdfName[] buttonRemove = {PdfName.MK, PdfName.F , PdfName.FF , PdfName.Q , PdfName.BS , PdfName.BORDER};
