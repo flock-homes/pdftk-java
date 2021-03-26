@@ -128,6 +128,7 @@ public abstract class BaseField {
     protected Color textColor;
     protected BaseFont font;
     protected float fontSize = 0;
+    protected float textLeading = 0;
     protected int alignment = Element.ALIGN_LEFT;
     protected PdfWriter writer;
     protected String text;
@@ -499,6 +500,21 @@ public abstract class BaseField {
      */
     public void setFontSize(float fontSize) {
         this.fontSize = fontSize;
+    }
+    
+    /** Gets the text leading size.
+     * @return the text leading size
+     */
+    public float getTextLeading() {
+        return this.textLeading;
+    }
+    
+    /** Sets the text leading size. If 0 then auto-sizing will be used but
+     * only for text fields.
+     * @param leading the text leading size
+     */
+    public void setTextLeading(float leading) {
+        this.textLeading = leading;
     }
     
     /** Gets the text horizontal alignment.

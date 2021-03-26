@@ -159,6 +159,9 @@ public class TextField extends BaseField {
             }
             else
                 lines = breakLines(breaks, ufont, usize, width);
+            if (textLeading != 0) {
+                factor = textLeading / usize;
+            }
             app.setFontAndSize(ufont, usize);
             app.setLeading(usize * factor);
             float offsetY = offsetX + h - ufont.getFontDescriptor(BaseFont.BBOXURY, usize);
