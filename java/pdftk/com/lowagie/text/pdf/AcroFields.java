@@ -82,6 +82,7 @@ public class AcroFields {
     static private final int DA_FONT = 0;
     static private final int DA_SIZE = 1;
     static private final int DA_COLOR = 2;
+    static private final int DA_LEADING = 3;
     /**
      * A field type invalid or not found.
      */    
@@ -356,7 +357,7 @@ public class AcroFields {
         try {
             PRTokeniser tk = new PRTokeniser(PdfEncodings.convertToBytes(da, null));
             ArrayList stack = new ArrayList();
-            Object ret[] = new Object[3];
+            Object ret[] = new Object[4];
             while (tk.nextToken()) {
                 if (tk.getTokenType() == PRTokeniser.TK_COMMENT)
                     continue;
@@ -390,6 +391,12 @@ public class AcroFields {
                             float yellow = new Float((String)stack.get(stack.size() - 2)).floatValue();
                             float black = new Float((String)stack.get(stack.size() - 1)).floatValue();
                             ret[DA_COLOR] = new CMYKColor(cyan, magenta, yellow, black);
+                        }
+                    }
+                    else if (operator.equals("TL")) {
+                        if (stack.size() >= 1) {
+                            float leading = new Float((String)stack.get(stack.size() - 1)).floatValue();
+                            ret[DA_LEADING] = new Float(leading);
                         }
                     }
                     stack.clear();
@@ -431,6 +438,8 @@ public class AcroFields {
                     tx.setFontSize(((Float)dab[DA_SIZE]).floatValue());
                 if (dab[DA_COLOR] != null)
                     tx.setTextColor((Color)dab[DA_COLOR]);
+                if (dab[DA_LEADING] != null)
+                    tx.setTextLeading((Float)dab[DA_LEADING]);
                 if (dab[DA_FONT] != null) {
                     PdfDictionary font = (PdfDictionary)PdfReader.getPdfObject(merged.get(PdfName.DR));
                     if (font != null) {
