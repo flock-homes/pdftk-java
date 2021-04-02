@@ -113,10 +113,10 @@ public abstract class DocWriter implements DocListener {
     // ssteward omit: protected Document document;
 
 /** The outputstream of this writer. */
-    protected OutputStreamCounter os;
+    public OutputStreamCounter os;
 
 /** Is the writer open for writing? */
-    protected boolean open = false;
+    public boolean open = false;
 
 /** Do we have to pause all writing actions? */
     // ssteward: changed from "pause" to "m_pause" to

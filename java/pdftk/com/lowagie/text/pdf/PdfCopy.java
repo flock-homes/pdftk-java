@@ -171,6 +171,13 @@ public class PdfCopy extends PdfWriter {
         topPageParent = getPdfIndirectReference();
         getRoot().setLinearMode(topPageParent);
     }
+    // Overlay on top of another writer
+    public PdfCopy(PdfWriter master) {
+        os=master.os;
+        body=master.body;
+        open=true;
+        indirectMap = new HashMap();
+    }
 
     /**
      * Grabs a page from the input document
@@ -207,7 +214,7 @@ public class PdfCopy extends PdfWriter {
      * we do from their namespace to ours is *at best* heuristic, and guaranteed to
      * fail under some circumstances.
      */
-    protected PdfIndirectReference copyIndirect(PRIndirectReference in) throws IOException, BadPdfFormatException {
+    public PdfIndirectReference copyIndirect(PRIndirectReference in) throws IOException, BadPdfFormatException {
         RefKey key = new RefKey(in);
         IndirectReferences iRef = (IndirectReferences)indirects.get(key);
 		boolean recurse_b= true; // ssteward

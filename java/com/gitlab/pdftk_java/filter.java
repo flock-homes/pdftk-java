@@ -32,12 +32,15 @@ import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.Rectangle;
 import pdftk.com.lowagie.text.pdf.AcroFields;
 import pdftk.com.lowagie.text.pdf.FdfReader;
+import pdftk.com.lowagie.text.pdf.PRIndirectReference;
 import pdftk.com.lowagie.text.pdf.PdfAnnotation;
 import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfBoolean;
 import pdftk.com.lowagie.text.pdf.PdfContentByte;
+import pdftk.com.lowagie.text.pdf.PdfCopy;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfImportedPage;
+import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
 import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
@@ -339,6 +342,8 @@ class filter {
       Rectangle mark_page_size_p = null;
       int mark_page_rotation = 0;
       ArrayList<PdfDictionary> mark_annots = new ArrayList();
+      PdfCopy copy = new PdfCopy(writer_p);
+      copy.setFromReader(mark_p);
 
       // iterate over document's pages, adding mark_page as
       // a layer above (stamp) or below (watermark) the page content;
@@ -431,6 +436,13 @@ class filter {
         for (PdfDictionary annot : mark_annots) {
           PdfAnnotation new_annot = new PdfAnnotation(writer_p, null);
           new_annot.putAll(annot);
+          for (Object key : new_annot.getKeys()) {
+            Object value = new_annot.get((PdfName) key);
+            if (value instanceof PRIndirectReference) {
+              PdfIndirectReference ind = copy.copyIndirect((PRIndirectReference) value);
+              new_annot.put((PdfName) key, ind);
+            }
+          }
           PdfArray rect = (PdfArray) annot.get(PdfName.RECT);
           float[] rect_f = new float[4];
           for (int i = 0; i < 4; ++i) rect_f[i] = rect.getAsNumber(i).floatValue();
