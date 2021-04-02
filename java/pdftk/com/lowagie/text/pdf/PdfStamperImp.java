@@ -1122,7 +1122,7 @@ public class PdfStamperImp extends PdfWriter {
         }
     }
     
-    void addAnnotation(PdfAnnotation annot, int page) {
+    public void addAnnotation(PdfAnnotation annot, int page) {
         addAnnotation(annot, reader.getPageN(page));
     }
 

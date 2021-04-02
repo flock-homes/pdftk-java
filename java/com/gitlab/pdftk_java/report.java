@@ -607,6 +607,28 @@ class report {
         "AnnotRect: " + rot_rect[0] + " " + rot_rect[1] + " " + rot_rect[2] + " " + rot_rect[3]);
   }
 
+  static ArrayList<PdfDictionary> getAnnots(PdfReader reader_p, PdfDictionary page_p) {
+    ArrayList<PdfDictionary> ret = new ArrayList<PdfDictionary>();
+    PdfObject annots_p = reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
+    if (annots_p == null || !annots_p.isArray()) return ret;
+
+    ArrayList<PdfObject> annots_al_p = ((PdfArray) annots_p).getArrayList();
+
+    for (PdfObject jj : annots_al_p) {
+
+      PdfObject annot_po = reader_p.getPdfObject(jj);
+      if (annot_po == null || !annot_po.isDictionary()) continue;
+
+      PdfDictionary annot_p = (PdfDictionary) annot_po;
+      PdfObject type_p = reader_p.getPdfObject(annot_p.get(PdfName.TYPE));
+      if (!PdfName.ANNOT.equals(type_p)) continue;
+
+      ret.add(annot_p);
+    }
+
+    return ret;
+  }
+
   static void ReportAnnots(PrintStream ofs, PdfReader reader_p, boolean utf8_b) {
     reader_p.resetReleasePage();
 
@@ -631,39 +653,24 @@ class report {
 
     for (int ii = 1; ii <= reader_p.getNumberOfPages(); ++ii) {
       PdfDictionary page_p = reader_p.getPageN(ii);
+      List<PdfDictionary> annots = getAnnots(reader_p, page_p);
 
-      PdfObject annots_p = reader_p.getPdfObject(page_p.get(PdfName.ANNOTS));
-      if (annots_p != null && annots_p.isArray()) {
+      // iterate over annotations
+      for (PdfDictionary annot_p : annots) {
+        PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
 
-        ArrayList<PdfObject> annots_al_p = ((PdfArray) annots_p).getArrayList();
+        ofs.println("---"); // delim
+        ReportAnnot(ofs, reader_p, ii, page_p, annot_p, utf8_b); // base annot items
+        ofs.println("AnnotPageNumber: " + ii);
 
-        // iterate over annotations
-        for (PdfObject jj : annots_al_p) {
+        // link annotation
+        if (subtype_p.equals(PdfName.LINK)) {
+          // link-specific items
+          if (annot_p.contains(PdfName.A)) { // action
+            PdfObject action_p = reader_p.getPdfObject(annot_p.get(PdfName.A));
+            if (action_p != null && action_p.isDictionary()) {
 
-          PdfObject annot_po = reader_p.getPdfObject(jj);
-          if (annot_po != null && annot_po.isDictionary()) {
-            PdfDictionary annot_p = (PdfDictionary) annot_po;
-
-            PdfObject type_p = reader_p.getPdfObject(annot_p.get(PdfName.TYPE));
-            if (type_p != null && type_p.equals(PdfName.ANNOT)) {
-
-              PdfObject subtype_p = reader_p.getPdfObject(annot_p.get(PdfName.SUBTYPE));
-
-              ofs.println("---"); // delim
-              ReportAnnot(ofs, reader_p, ii, page_p, annot_p, utf8_b); // base annot items
-              ofs.println("AnnotPageNumber: " + ii);
-
-              // link annotation
-              if (subtype_p.equals(PdfName.LINK)) {
-                // link-specific items
-                if (annot_p.contains(PdfName.A)) { // action
-                  PdfObject action_p = reader_p.getPdfObject(annot_p.get(PdfName.A));
-                  if (action_p != null && action_p.isDictionary()) {
-
-                    ReportAction(ofs, reader_p, (PdfDictionary) action_p, utf8_b, "Annot");
-                  }
-                }
-              }
+              ReportAction(ofs, reader_p, (PdfDictionary) action_p, utf8_b, "Annot");
             }
           }
         }

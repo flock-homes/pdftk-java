@@ -22,6 +22,7 @@
 
 package com.gitlab.pdftk_java;
 
+import java.awt.geom.AffineTransform;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,6 +32,8 @@ import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.Rectangle;
 import pdftk.com.lowagie.text.pdf.AcroFields;
 import pdftk.com.lowagie.text.pdf.FdfReader;
+import pdftk.com.lowagie.text.pdf.PdfAnnotation;
+import pdftk.com.lowagie.text.pdf.PdfArray;
 import pdftk.com.lowagie.text.pdf.PdfBoolean;
 import pdftk.com.lowagie.text.pdf.PdfContentByte;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
@@ -39,6 +42,7 @@ import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
 import pdftk.com.lowagie.text.pdf.PdfObject;
 import pdftk.com.lowagie.text.pdf.PdfReader;
+import pdftk.com.lowagie.text.pdf.PdfRectangle;
 import pdftk.com.lowagie.text.pdf.PdfStamperImp;
 import pdftk.com.lowagie.text.pdf.XfdfReader;
 
@@ -334,6 +338,7 @@ class filter {
       PdfImportedPage mark_page_p = null;
       Rectangle mark_page_size_p = null;
       int mark_page_rotation = 0;
+      ArrayList<PdfDictionary> mark_annots = new ArrayList();
 
       // iterate over document's pages, adding mark_page as
       // a layer above (stamp) or below (watermark) the page content;
@@ -354,6 +359,9 @@ class filter {
           // create a PdfTemplate from the first page of mark
           // (PdfImportedPage is derived from PdfTemplate)
           mark_page_p = writer_p.getImportedPage(mark_p, ii);
+
+          PdfDictionary mark_full_page_p = mark_p.getPageN(ii);
+          mark_annots = report.getAnnots(mark_p, mark_full_page_p);
         }
 
         // the target page geometry
@@ -381,35 +389,58 @@ class filter {
         PdfContentByte content_byte_p =
             (background_b) ? writer_p.getUnderContent(ii) : writer_p.getOverContent(ii);
 
+        float[] trans = null;
         if (mark_page_rotation == 0) {
-          content_byte_p.addTemplate(mark_page_p, mark_scale, 0, 0, mark_scale, h_trans, v_trans);
+          trans = new float[] {mark_scale, 0, 0, mark_scale, h_trans, v_trans};
         } else if (mark_page_rotation == 90) {
-          content_byte_p.addTemplate(
-              mark_page_p,
-              0,
-              -1 * mark_scale,
-              mark_scale,
-              0,
-              h_trans,
-              v_trans + mark_page_size_p.height() * mark_scale);
+          trans =
+              new float[] {
+                0,
+                -1 * mark_scale,
+                mark_scale,
+                0,
+                h_trans,
+                v_trans + mark_page_size_p.height() * mark_scale
+              };
         } else if (mark_page_rotation == 180) {
-          content_byte_p.addTemplate(
-              mark_page_p,
-              -1 * mark_scale,
-              0,
-              0,
-              -1 * mark_scale,
-              h_trans + mark_page_size_p.width() * mark_scale,
-              v_trans + mark_page_size_p.height() * mark_scale);
+          trans =
+              new float[] {
+                -1 * mark_scale,
+                0,
+                0,
+                -1 * mark_scale,
+                h_trans + mark_page_size_p.width() * mark_scale,
+                v_trans + mark_page_size_p.height() * mark_scale
+              };
         } else if (mark_page_rotation == 270) {
+          trans =
+              new float[] {
+                0,
+                mark_scale,
+                -1 * mark_scale,
+                0,
+                h_trans + mark_page_size_p.width() * mark_scale,
+                v_trans
+              };
+        }
+        if (trans != null) {
           content_byte_p.addTemplate(
-              mark_page_p,
-              0,
-              mark_scale,
-              -1 * mark_scale,
-              0,
-              h_trans + mark_page_size_p.width() * mark_scale,
-              v_trans);
+              mark_page_p, trans[0], trans[1], trans[2], trans[3], trans[4], trans[5]);
+        }
+
+        for (PdfDictionary annot : mark_annots) {
+          PdfAnnotation new_annot = new PdfAnnotation(writer_p, null);
+          new_annot.putAll(annot);
+          PdfArray rect = (PdfArray) annot.get(PdfName.RECT);
+          float[] rect_f = new float[4];
+          for (int i = 0; i < 4; ++i) rect_f[i] = rect.getAsNumber(i).floatValue();
+          AffineTransform M = new AffineTransform(trans);
+          float[] new_rect_f = new float[4];
+          M.transform(rect_f, 0, new_rect_f, 0, 2);
+          PdfRectangle new_rect =
+              new PdfRectangle(new_rect_f[0], new_rect_f[1], new_rect_f[2], new_rect_f[3], 0);
+          new_annot.put(PdfName.RECT, new_rect);
+          writer_p.addAnnotation(new_annot, ii);
         }
       }
     }
