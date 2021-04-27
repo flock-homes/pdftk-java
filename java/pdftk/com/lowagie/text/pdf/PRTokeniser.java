@@ -222,15 +222,20 @@ public class PRTokeniser {
         file.setStartOffset(idx);
     }
 
+    // "startxref" should always be at the end of a file
+    // Some non-compliant files have additional, unrelated data at the end
+    // (see https://gitlab.com/pdftk-java/pdftk/-/issues/90)
+    // So we have to keep searching if we do not find startxref at the end
     public int getStartxref() throws IOException {
         int size = Math.min(1024, file.length());
-        int pos = file.length() - size;
-        file.seek(pos);
-        String str = readString(1024);
-        int idx = str.lastIndexOf("startxref");
-        if (idx < 0)
-            throw new InvalidPdfException("PDF startxref not found.");
-        return pos + idx;
+        for (int pos = file.length() - size; pos>=0; pos-=1024) {
+            file.seek(pos);
+            // read a bit past a block, in case "startxref" is split between blocks
+            String str = readString(1024+10);
+            int idx = str.lastIndexOf("startxref");
+            if (idx >= 0) return pos + idx;
+        }
+        throw new InvalidPdfException("PDF startxref not found.");
     }
 
     public static int getHex(int v) {
