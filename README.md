@@ -25,9 +25,14 @@ including Arch, Debian / Ubuntu, Gentoo, Homebrew, MacPorts, and
 SUSE. Please refer to the documentation of your package manager for
 instructions.
 
-:warning: Stable packages provided by some distributions (Debian,
-Gentoo) are older than 3.0.4, which fixed many crashes. Consider
+:warning: Some distributions provide stable packages that
+are older than 3.0.4, which fixed many crashes. Consider
 updating to an unstable package with a more recent version.
+
+:warning: As of May 2021 homebrew packages do not yet support M1
+chips; a temporary alternative is to [install an Intel version of
+homebrew](https://gitlab.com/pdftk-java/pdftk/-/issues/89#note_576347882)
+alongside the M1 version.
 
 A third-party [docker image](https://hub.docker.com/r/minidocks/pdftk)
 based on a native image is also available.
