@@ -431,141 +431,152 @@ public class PdfCopy extends PdfWriter {
 			}
 			TopFormFieldData readerData= (TopFormFieldData)topFormFieldReadersData.get(reader);
 
-			// ssteward
-			// if duplicate form field names are encountered
-			// make names unique by inserting a new top parent "field";
-			// insert this new parent into the PdfReader of the input document,
-			// since any PdfWriter material may have been written already; our
-			// changes to the PdfReader will be copied, below, into the PdfWriter;
-			//
-			{
-				PdfObject annots= PdfReader.getPdfObject(thePage.get(PdfName.ANNOTS));
-				if( annots!= null && annots.isArray() ) {
-					ArrayList<PdfObject> annots_arr= ((PdfArray)annots).getArrayList();
-					for( PdfObject annot_ref_obj : annots_arr ) {
-						// an annotation may be direct or indirect; ours must be indirect
-						if( annot_ref_obj!= null && annot_ref_obj.isIndirect() ) {
-							PdfIndirectReference annot_ref= (PdfIndirectReference)annot_ref_obj;
-							PdfObject annot_obj= PdfReader.getPdfObject(annot_ref);
-							if( annot_obj!= null && annot_obj.isDictionary() ) {
-								PdfDictionary annot = (PdfDictionary)annot_obj;
-								PdfObject subtype= PdfReader.getPdfObject(annot.get(PdfName.SUBTYPE));
-								if( PdfName.WIDGET.equals(subtype) ) {
-									// we have a form field
-
-									// get its full name
-									//
-									String full_name= ""; // construct a full name from partial names using '.', e.g.: foo.bar.
-									String top_name= "";
-									boolean is_unicode_b= false; // if names are unicode, they must all be unicode
-									PdfObject tt_obj= PdfReader.getPdfObject(annot.get(PdfName.T));
-									if( tt_obj!= null && tt_obj.isString() ) {
-										PdfString tt = (PdfString)tt_obj;
-										top_name= tt.toString();
-										is_unicode_b= ( is_unicode_b || PdfString.isUnicode( tt.getBytes() ) );
-									}
-									//
-									// dig upwards, parent-wise; replace annot as we go with the
-									// top-most form field dictionary
-									PdfIndirectReference parent_ref=
-										(PdfIndirectReference)annot.get(PdfName.PARENT);
-									while( parent_ref!= null && parent_ref.isIndirect() ) {
-										annot_ref= parent_ref;
-										annot= (PdfDictionary)PdfReader.getPdfObject(annot_ref);
-										parent_ref= (PdfIndirectReference)annot.get(PdfName.PARENT);
-
-										tt_obj= PdfReader.getPdfObject(annot.get(PdfName.T));
-										if( tt_obj!= null && tt_obj.isString() ) {
-											PdfString tt = (PdfString)tt_obj;
-											if( top_name.length()!= 0 ) {
-												full_name+= top_name;
-												full_name+= ".";
-											}
-											top_name= tt.toString();
-											is_unicode_b= ( is_unicode_b || PdfString.isUnicode( tt.getBytes() ) );
-										}
-									}
-									
-									// once we have seen a top-level field parent, we wave
-									// it through and assume that it harbors no illegal field duplicates;
-									// this is good, because sometimes authors want a single field
-									// represented by more than one annotation on the page; this logic
-									// respects that programming
-									//
-									//System.err.println( full_name+ top_name+ "." ); // debug
-									if( readerData.allNames.contains( top_name ) ) {
-										// a parent we have seen or created in this reader
-										this.fullFormFieldNames.add( full_name+ top_name+ "." ); // tally
-									}
-									else if( this.fullFormFieldNames.contains( full_name+ top_name+ "." ) ) {
-										// insert new, top-most parent
-
-										// name for new parent
-										int new_parent_name_ii= 1;
-										String new_parent_name= Integer.toString( new_parent_name_ii );
-										while( this.fullFormFieldNames.contains( full_name+ top_name+ "."+ new_parent_name+ "." ) ||
-											   this.topFormFieldNames.contains( new_parent_name ) &&
-											   !readerData.newNamesKids.containsKey( new_parent_name ) )
-											{
-												new_parent_name= Integer.toString( ++new_parent_name_ii );
-											}
-
-										PdfIndirectReference new_parent_ref= null;
-										PdfArray new_parent_kids= null;
-										//
-										if( readerData.newNamesKids.containsKey( new_parent_name ) ) {
-											// a new parent we already created
-											new_parent_ref= (PdfIndirectReference)
-												readerData.newNamesRefs.get( new_parent_name );
-											new_parent_kids= (PdfArray)
-												readerData.newNamesKids.get( new_parent_name );
-										}
-										else { // create a new parent using this name
-											PdfDictionary new_parent= new PdfDictionary();
-											PdfString new_parent_name_pdf= new PdfString( new_parent_name );
-											if( is_unicode_b ) { // if names are unicode, they must all be unicode
-												new_parent_name_pdf= new PdfString( new_parent_name, PdfObject.TEXT_UNICODE );
-											}
-											new_parent_ref= reader.getPRIndirectReference( new_parent );
-											new_parent.put( PdfName.T, new_parent_name_pdf );
-
-											new_parent_kids= new PdfArray();
-											PdfIndirectReference new_parent_kids_ref=
-												reader.getPRIndirectReference( new_parent_kids );
-											new_parent.put(PdfName.KIDS, new_parent_kids_ref);
-
-											// tally new parent
-											readerData.newNamesRefs.put( new_parent_name, new_parent_ref );
-											readerData.newNamesKids.put( new_parent_name, new_parent_kids );
-											readerData.allNames.add( new_parent_name );
-											this.topFormFieldNames.add( new_parent_name );
-										}
-
-										// wire annot and new parent together
-										annot.put( PdfName.PARENT, new_parent_ref );
-										new_parent_kids.add( annot_ref ); // the new parent must point at the field, too
-
-										// tally full field name
-										this.fullFormFieldNames.add( full_name+ top_name+ "."+ new_parent_name+ "." );
-									}
-									else {
-										// tally parent
-										readerData.allNames.add( top_name );
-										this.topFormFieldNames.add( top_name );
-
-										// tally full field name
-										this.fullFormFieldNames.add( full_name+ top_name+ "." );
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+            renameDuplicateFields(thePage, readerData);
 
 			// copy the page; this will copy our work, above, into the target document
             PdfDictionary newPage = copyDictionary(thePage);
 			
+
+            copyFormRefs(thePage);
+
+            mergeForms();
+
+
+
+            newPage.put(PdfName.PARENT, topPageParent);
+            addToBody(newPage, pageRef);
+        }
+        getRoot().addPage(pageRef);
+        pageNumbersToRefs.add(pageRef);
+    }
+
+    // ssteward
+    // if duplicate form field names are encountered
+    // make names unique by inserting a new top parent "field";
+    // insert this new parent into the PdfReader of the input document,
+    // since any PdfWriter material may have been written already; our
+    // changes to the PdfReader will be copied, below, into the PdfWriter;
+    //
+    public void renameDuplicateFields(PdfDictionary thePage, TopFormFieldData readerData) {
+        PdfObject annots= PdfReader.getPdfObject(thePage.get(PdfName.ANNOTS));
+        if( annots== null || !annots.isArray() ) return;
+        ArrayList<PdfObject> annots_arr= ((PdfArray)annots).getArrayList();
+        for( PdfObject annot_ref_obj : annots_arr ) {
+            // an annotation may be direct or indirect; ours must be indirect
+            if( annot_ref_obj== null || !annot_ref_obj.isIndirect() ) continue;
+            PdfIndirectReference annot_ref= (PdfIndirectReference)annot_ref_obj;
+            PdfObject annot_obj= PdfReader.getPdfObject(annot_ref);
+            if( annot_obj== null || !annot_obj.isDictionary() ) continue;
+            PdfDictionary annot = (PdfDictionary)annot_obj;
+            PdfObject subtype= PdfReader.getPdfObject(annot.get(PdfName.SUBTYPE));
+            if( !PdfName.WIDGET.equals(subtype) ) continue;
+            // we have a form field
+
+            // get its full name
+            //
+            String full_name= ""; // construct a full name from partial names using '.', e.g.: foo.bar.
+            String top_name= "";
+            boolean is_unicode_b= false; // if names are unicode, they must all be unicode
+            PdfObject tt_obj= PdfReader.getPdfObject(annot.get(PdfName.T));
+            if( tt_obj!= null && tt_obj.isString() ) {
+                PdfString tt = (PdfString)tt_obj;
+                top_name= tt.toString();
+                is_unicode_b= ( is_unicode_b || PdfString.isUnicode( tt.getBytes() ) );
+            }
+            //
+            // dig upwards, parent-wise; replace annot as we go with the
+            // top-most form field dictionary
+            PdfIndirectReference parent_ref=
+                (PdfIndirectReference)annot.get(PdfName.PARENT);
+            while( parent_ref!= null && parent_ref.isIndirect() ) {
+                annot_ref= parent_ref;
+                annot= (PdfDictionary)PdfReader.getPdfObject(annot_ref);
+                parent_ref= (PdfIndirectReference)annot.get(PdfName.PARENT);
+
+                tt_obj= PdfReader.getPdfObject(annot.get(PdfName.T));
+                if( tt_obj!= null && tt_obj.isString() ) {
+                    PdfString tt = (PdfString)tt_obj;
+                    if( top_name.length()!= 0 ) {
+                        full_name+= top_name;
+                        full_name+= ".";
+                    }
+                    top_name= tt.toString();
+                    is_unicode_b= ( is_unicode_b || PdfString.isUnicode( tt.getBytes() ) );
+                }
+            }
+
+            // once we have seen a top-level field parent, we wave
+            // it through and assume that it harbors no illegal field duplicates;
+            // this is good, because sometimes authors want a single field
+            // represented by more than one annotation on the page; this logic
+            // respects that programming
+            //
+            // System.err.println( full_name+"@"+ top_name+ "." ); // debug
+            if( readerData.allNames.contains( top_name ) ) {
+                // a parent we have seen or created in this reader
+                this.fullFormFieldNames.add( full_name+ top_name+ "." ); // tally
+            }
+            else if( this.fullFormFieldNames.contains( full_name+ top_name+ "." ) ) {
+                // insert new, top-most parent
+
+                // name for new parent
+                int new_parent_name_ii= 1;
+                String new_parent_name= Integer.toString( new_parent_name_ii );
+                while( this.fullFormFieldNames.contains( full_name+ top_name+ "."+ new_parent_name+ "." ) ||
+                       this.topFormFieldNames.contains( new_parent_name ) &&
+                       !readerData.newNamesKids.containsKey( new_parent_name ) )
+                    {
+                        new_parent_name= Integer.toString( ++new_parent_name_ii );
+                    }
+
+                PdfIndirectReference new_parent_ref= null;
+                PdfArray new_parent_kids= null;
+                //
+                if( readerData.newNamesKids.containsKey( new_parent_name ) ) {
+                    // a new parent we already created
+                    new_parent_ref= (PdfIndirectReference)
+                        readerData.newNamesRefs.get( new_parent_name );
+                    new_parent_kids= (PdfArray)
+                        readerData.newNamesKids.get( new_parent_name );
+                }
+                else { // create a new parent using this name
+                    PdfDictionary new_parent= new PdfDictionary();
+                    PdfString new_parent_name_pdf= new PdfString( new_parent_name );
+                    if( is_unicode_b ) { // if names are unicode, they must all be unicode
+                        new_parent_name_pdf= new PdfString( new_parent_name, PdfObject.TEXT_UNICODE );
+                    }
+                    new_parent_ref= reader.getPRIndirectReference( new_parent );
+                    new_parent.put( PdfName.T, new_parent_name_pdf );
+
+                    new_parent_kids= new PdfArray();
+                    PdfIndirectReference new_parent_kids_ref=
+                        reader.getPRIndirectReference( new_parent_kids );
+                    new_parent.put(PdfName.KIDS, new_parent_kids_ref);
+
+                    // tally new parent
+                    readerData.newNamesRefs.put( new_parent_name, new_parent_ref );
+                    readerData.newNamesKids.put( new_parent_name, new_parent_kids );
+                    readerData.allNames.add( new_parent_name );
+                    this.topFormFieldNames.add( new_parent_name );
+                }
+
+                // wire annot and new parent together
+                annot.put( PdfName.PARENT, new_parent_ref );
+                new_parent_kids.add( annot_ref ); // the new parent must point at the field, too
+
+                // tally full field name
+                this.fullFormFieldNames.add( full_name+ top_name+ "."+ new_parent_name+ "." );
+            }
+            else {
+                // tally parent
+                readerData.allNames.add( top_name );
+                this.topFormFieldNames.add( top_name );
+
+                // tally full field name
+                this.fullFormFieldNames.add( full_name+ top_name+ "." );
+            }
+        }
+    }
 
 			// ssteward: pdftk-1.00;
 			// copy page form field ref.s into document AcroForm
@@ -574,7 +585,7 @@ public class PdfCopy extends PdfWriter {
 			// not the PdfCopy acroForm (which isn't really a PdfAcroForm, anyhow);
 			//
 			// dig down to annot, and then dig up to topmost Parent
-			{
+    public void copyFormRefs(PdfDictionary thePage) throws DocumentException {
 				PdfObject annots= PdfReader.getPdfObject(thePage.get(PdfName.ANNOTS));
 				if( annots!= null && annots.isArray() ) {
 					ArrayList<PdfObject> annots_arr= ((PdfArray)annots).getArrayList();
@@ -597,7 +608,7 @@ public class PdfCopy extends PdfWriter {
 										annot= (PdfDictionary)PdfReader.getPdfObject(annot_ref);
 										parent_ref= (PdfIndirectReference)annot.get(PdfName.PARENT);
 									}
-								
+
 									RefKey annot_key= new RefKey(annot_ref);
 									IndirectReferences annot_iRef= (IndirectReferences)indirects.get(annot_key);
 									PdfAcroForm acroForm= this.getAcroForm();
@@ -607,13 +618,14 @@ public class PdfCopy extends PdfWriter {
 						}
 					}
 				}
-			}
+    }
 
 			// ssteward: pdftk-1.00;
 			// merge the reader AcroForm/DR dictionary with the target
 			//
 			// pdftk-1.10: I noticed that the PdfAcroForm.isValid() apprears to stomp on this (TODO)
 			//
+    public void mergeForms() throws DocumentException, IOException {
 			PdfObject catalog_obj= reader.getCatalog();
 			if( catalog_obj!= null && catalog_obj.isDictionary() ) {
 				PdfDictionary catalog= (PdfDictionary)catalog_obj;
@@ -641,13 +653,7 @@ public class PdfCopy extends PdfWriter {
 					}
 				}
 			}
-			
 
-            newPage.put(PdfName.PARENT, topPageParent);
-            addToBody(newPage, pageRef);
-        }
-        getRoot().addPage(pageRef);
-        pageNumbersToRefs.add(pageRef);
     }
     
     public PdfIndirectReference getPageReference(int page) {
