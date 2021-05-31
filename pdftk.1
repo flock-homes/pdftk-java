@@ -41,6 +41,10 @@ pdftk \- A handy tool for manipulating PDF
 .br
      [ \fBkeep_first_id\fR | \fBkeep_final_id\fR ] [ \fBdrop_xfa\fR ] [ \fBdrop_xmp\fR ]
 .br
+     [ \fBrename_fields_always\fR | \fBrename_fields_as_needed\fR |
+.br
+       \fBrename_fields_never\fR ]
+.br
      [ \fBverbose\fR ] [ \fBdont_ask\fR | \fBdo_ask\fR ]
 .br
 Where:
@@ -439,6 +443,9 @@ This option is only useful when running pdftk on a single input PDF.  When assem
 Many PDFs store document metadata using both an Info dictionary (old school) and an XMP stream (new school).  Pdftk's \fBupdate_info\fR operation can update the Info dictionary, but not the XMP stream.  The proper remedy for this is to include a \%\fBModDate\fR entry in your updated info with a current date/timestamp. The date/timestamp format is: \fBD:YYYYMMDDHHmmSS\fR, e.g. D:201307241346 \(en omitted data after YYYY revert to default values. This newer ModDate should cue PDF viewers that the Info metadata is more current than the XMP data.
 
 Alternatively, you might prefer to remove the XMP stream from the PDF altogether \(en that's what this option does.  Note that objects inside the PDF might have their own, separate XMP metadata streams, and that \fBdrop_xmp\fR does not remove those.  It only removes the PDF's document-level XMP stream.
+.TP
+.B [rename_fields_always | rename_fields_as_needed | rename_fields_never]
+When merging forms, field names may collide. \fBrename_fields_always\fR prefixes every field with a number indicating which input PDF the field comes from. The default option is \fBrename_fields_as_needed\fR, which only renames fields when it detects a collision. This uses a heuristic that may not work with complex forms. \fBrename_fields_never\fR leaves field names untouched. Any fields with the same name will be merged and must contain the same value.
 .TP
 .B [verbose]
 By default, pdftk runs quietly. Append \fBverbose\fR to the end and it 

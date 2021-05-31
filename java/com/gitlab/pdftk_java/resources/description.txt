@@ -450,6 +450,16 @@ OPTIONS
               data streams, and that drop_xmp does not remove those.  It only
               removes the PDF's document-level XMP stream.
 
+       [rename_fields_always | rename_fields_as_needed | rename_fields_never]
+              When merging forms, field names may collide.
+              rename_fields_always prefixes every field with a number indicat-
+              ing which input PDF the field comes from. The default option is
+              rename_fields_as_needed, which only renames fields when it
+              detects a collision. This uses a heuristic that may not work
+              with complex forms. rename_fields_never leaves field names
+              untouched. Any fields with the same name will be merged and must
+              contain the same value.
+
        [verbose]
               By default, pdftk runs quietly. Append verbose to the end and it
               will speak up.

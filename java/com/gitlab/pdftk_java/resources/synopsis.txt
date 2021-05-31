@@ -10,6 +10,8 @@ SYNOPSIS
             [ flatten ] [ need_appearances ]
             [ compress | uncompress ]
             [ keep_first_id | keep_final_id ] [ drop_xfa ] [ drop_xmp ]
+            [ rename_fields_always | rename_fields_as_needed |
+              rename_fields_never ]
             [ verbose ] [ dont_ask | do_ask ]
        Where:
             <operation> may be empty, or:
