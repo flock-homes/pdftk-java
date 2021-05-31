@@ -31,6 +31,7 @@ import java.util.Set;
 import pdftk.com.lowagie.text.Document;
 import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.pdf.PdfCopy;
+import pdftk.com.lowagie.text.pdf.PdfCopy.rename_fields;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfImportedPage;
 import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
@@ -48,6 +49,7 @@ class cat {
   ArrayList<ArrayList<PageRef>> m_page_seq;
   boolean m_output_keep_first_id_b;
   boolean m_output_keep_final_id_b;
+  rename_fields m_rename_fields;
 
   cat(TK_Session session) {
     this.session = session;
@@ -56,6 +58,7 @@ class cat {
     m_page_seq = session.m_page_seq;
     m_output_keep_first_id_b = session.m_output_keep_first_id_b;
     m_output_keep_final_id_b = session.m_output_keep_final_id_b;
+    m_rename_fields = session.m_rename_fields;
   }
 
   static char GetPdfVersionChar(PdfName version_p) {
@@ -152,6 +155,7 @@ class cat {
       return ErrorCode.ERROR;
     }
     PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
+    writer_p.m_rename_fields = m_rename_fields;
 
     output_doc_p.addCreator(TK_Session.creator);
 

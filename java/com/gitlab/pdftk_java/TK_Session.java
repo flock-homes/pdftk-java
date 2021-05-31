@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
 import pdftk.com.lowagie.text.DocumentException;
 import pdftk.com.lowagie.text.pdf.FdfWriter;
+import pdftk.com.lowagie.text.pdf.PdfCopy.rename_fields;
 import pdftk.com.lowagie.text.pdf.PdfDictionary;
 import pdftk.com.lowagie.text.pdf.PdfName;
 import pdftk.com.lowagie.text.pdf.PdfNumber;
@@ -135,6 +136,8 @@ class TK_Session {
   };
 
   encryption_strength m_output_encryption_strength = encryption_strength.none_enc;
+
+  rename_fields m_rename_fields = rename_fields.as_needed;
 
   byte[] m_output_owner_pw_pdfdoc = new byte[0];
   byte[] m_output_user_pw_pdfdoc = new byte[0];
@@ -1602,6 +1605,15 @@ class TK_Session {
         break;
       case keep_final_id_k:
         m_output_keep_final_id_b = true;
+        break;
+      case rename_fields_always_k:
+        m_rename_fields = rename_fields.always;
+        break;
+      case rename_fields_as_needed_k:
+        m_rename_fields = rename_fields.as_needed;
+        break;
+      case rename_fields_never_k:
+        m_rename_fields = rename_fields.never;
         break;
       case verbose_k:
         m_verbose_reporting_b = true;

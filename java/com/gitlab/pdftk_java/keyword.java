@@ -98,6 +98,9 @@ enum keyword {
   drop_xmp_k,
   keep_first_id_k,
   keep_final_id_k,
+  rename_fields_always_k,
+  rename_fields_as_needed_k,
+  rename_fields_never_k,
 
   // pdftk options
   verbose_k,

@@ -105,6 +105,10 @@ public class PdfCopy extends PdfWriter {
 	protected PdfIndirectReference m_new_bookmarks = null; // ssteward: pdftk 1.46
 	protected PdfIndirectReference m_new_extensions = null; // ssteward: pdftk 1.46
     
+    public enum rename_fields {
+        always, as_needed, never
+    };
+    protected rename_fields m_rename_fields = rename_fields.as_needed;
 	// ssteward: pdftk 1.10; to ensure unique form field names, as pages are added
 	protected HashSet fullFormFieldNames = null; // all full field names; track to prevent collision
 	protected HashSet topFormFieldNames = null; // across all readers; track to prevent collision
@@ -170,6 +174,9 @@ public class PdfCopy extends PdfWriter {
         super.open();
         topPageParent = getPdfIndirectReference();
         getRoot().setLinearMode(topPageParent);
+    }
+    public void setRenameFields(rename_fields rename_fields) {
+        m_rename_fields = rename_fields;
     }
 
     /**
@@ -431,7 +438,9 @@ public class PdfCopy extends PdfWriter {
 			}
 			TopFormFieldData readerData= (TopFormFieldData)topFormFieldReadersData.get(reader);
 
-            renameDuplicateFields(thePage, readerData);
+            if (m_rename_fields != rename_fields.never) {
+                renameDuplicateFields(thePage, readerData);
+            }
 
 			// copy the page; this will copy our work, above, into the target document
             PdfDictionary newPage = copyDictionary(thePage);
@@ -511,12 +520,15 @@ public class PdfCopy extends PdfWriter {
             // represented by more than one annotation on the page; this logic
             // respects that programming
             //
-            // System.err.println( full_name+"@"+ top_name+ "." ); // debug
+            // System.err.println( "  " + full_name+"@"+ top_name+ "." ); // debug
             if( readerData.allNames.contains( top_name ) ) {
+                // System.err.println( "    Skip" );
                 // a parent we have seen or created in this reader
                 this.fullFormFieldNames.add( full_name+ top_name+ "." ); // tally
             }
-            else if( this.fullFormFieldNames.contains( full_name+ top_name+ "." ) ) {
+            else if( m_rename_fields == rename_fields.always ||
+                     this.fullFormFieldNames.contains( full_name+ top_name+ "." ) ) {
+                // System.err.println( "Rename" );
                 // insert new, top-most parent
 
                 // name for new parent
@@ -568,6 +580,7 @@ public class PdfCopy extends PdfWriter {
                 this.fullFormFieldNames.add( full_name+ top_name+ "."+ new_parent_name+ "." );
             }
             else {
+                // System.err.println("    Ignore");
                 // tally parent
                 readerData.allNames.add( top_name );
                 this.topFormFieldNames.add( top_name );
