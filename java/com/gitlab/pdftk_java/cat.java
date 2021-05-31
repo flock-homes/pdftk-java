@@ -155,7 +155,7 @@ class cat {
       return ErrorCode.ERROR;
     }
     PdfCopy writer_p = new PdfCopy(output_doc_p, ofs_p);
-    writer_p.m_rename_fields = m_rename_fields;
+    writer_p.setRenameFields(m_rename_fields);
 
     output_doc_p.addCreator(TK_Session.creator);
 
