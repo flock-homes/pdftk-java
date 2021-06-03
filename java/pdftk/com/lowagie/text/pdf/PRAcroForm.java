@@ -160,7 +160,7 @@ public class PRAcroForm extends PdfDictionary {
                 else myTitle = title + '.' + tField.toString();
             }
             
-            PdfArray kids = (PdfArray)dict.get(PdfName.KIDS);
+            PdfArray kids = (PdfArray)PdfReader.getPdfObject(dict.get(PdfName.KIDS));
             if (kids != null) {
                 pushAttrib(dict);
                 iterateFields(kids, myFieldDict, myTitle);
