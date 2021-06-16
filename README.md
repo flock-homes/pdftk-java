@@ -43,8 +43,8 @@ The recommended way to install pdftk-java is through a package
 manager, but if that is not an option there are pre-built binaries
 available:
 
- - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/924565145/artifacts/raw/build/libs/pdftk-all.jar), including dependencies. Requires a JRE at runtime.
- - :warning: **Experimental** [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/924565150/artifacts/raw/build/native-image/pdftk) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
+ - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/1353200058/artifacts/raw/build/libs/pdftk-all.jar), including dependencies. Requires a JRE at runtime.
+ - :warning: **Experimental** [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/1353200062/artifacts/raw/build/native-image/pdftk) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
 
 ## Dependencies
 
@@ -128,6 +128,14 @@ To run:
 ```
 $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.pdftk_java.pdftk
 ```
+
+## Troubleshooting
+
+If reading the manual does not solve your problems, a good place to
+find help is StackExchange (in particular the
+[superuser](https://superuser.com/) and [Unix &
+Linux](https://unix.stackexchange.com/) sites). Issues and feature
+requests can be reported [over here](https://gitlab.com/pdftk-java/pdftk/-/issues).
 
 ## Known differences with pdftk
 
