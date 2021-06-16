@@ -1,3 +1,18 @@
+## [3.2.3] - 2021-06-16
+
+### Added
+ - Support excluding pages from a page range with ~
+ - Support TextLeading parameter in form field appearances
+
+### Changed
+ - update_info adds a new Info dictionary if none is found
+
+### Fixed
+ - Crash with non-conforming encrypted inputs
+ - Misleading URL in producer string
+ - Better detection of xref table in non-conforming inputs
+ - Better form detection (in particular forms created by pdftk cat)
+
 ## [3.2.2] - 2020-12-21
 
 ### Fixed
