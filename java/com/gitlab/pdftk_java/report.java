@@ -22,6 +22,16 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PRStream;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfArray;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfBoolean;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfDictionary;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfName;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfNumber;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfObject;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfString;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -34,16 +44,6 @@ import java.util.Set;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
 import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
-import pdftk.com.lowagie.text.Rectangle;
-import pdftk.com.lowagie.text.pdf.PRStream;
-import pdftk.com.lowagie.text.pdf.PdfArray;
-import pdftk.com.lowagie.text.pdf.PdfBoolean;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfNumber;
-import pdftk.com.lowagie.text.pdf.PdfObject;
-import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfString;
 
 class report {
 

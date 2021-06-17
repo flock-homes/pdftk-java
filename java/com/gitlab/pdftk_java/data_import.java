@@ -22,19 +22,19 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PRIndirectReference;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfArray;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfDictionary;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfName;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfNumber;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfObject;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringEscapeUtils;
-import pdftk.com.lowagie.text.Rectangle;
-import pdftk.com.lowagie.text.pdf.PRIndirectReference;
-import pdftk.com.lowagie.text.pdf.PdfArray;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfNumber;
-import pdftk.com.lowagie.text.pdf.PdfObject;
-import pdftk.com.lowagie.text.pdf.PdfReader;
 
 class data_import {
 

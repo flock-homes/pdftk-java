@@ -22,7 +22,7 @@
 
 package com.gitlab.pdftk_java;
 
-import pdftk.com.lowagie.text.Rectangle;
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 class PdfPageMedia {
   static final String PREFIX = "PageMedia";

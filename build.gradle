@@ -49,7 +49,7 @@ nativeImage {
 
 spotless {
     java {
-        target 'java/com/gitlab/pdftk_java/**/*.java'
+        target 'java/com/gitlab/pdftk_java/*.java'
         googleJavaFormat()
         removeUnusedImports()
     }

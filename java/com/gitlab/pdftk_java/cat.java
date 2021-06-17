@@ -22,23 +22,23 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.Document;
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfCopy;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfDictionary;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfImportedPage;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfIndirectReference;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfName;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfNumber;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfObject;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import pdftk.com.lowagie.text.Document;
-import pdftk.com.lowagie.text.DocumentException;
-import pdftk.com.lowagie.text.pdf.PdfCopy;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfImportedPage;
-import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfNumber;
-import pdftk.com.lowagie.text.pdf.PdfObject;
-import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfWriter;
 
 class cat {
 

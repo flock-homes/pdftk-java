@@ -22,11 +22,11 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.exceptions.InvalidPdfException;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import pdftk.com.lowagie.text.exceptions.InvalidPdfException;
-import pdftk.com.lowagie.text.pdf.PdfReader;
 
 class InputPdf {
   String m_filename = "";

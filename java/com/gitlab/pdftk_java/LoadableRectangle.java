@@ -22,11 +22,11 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import pdftk.com.lowagie.text.Rectangle;
 
 class LoadableRectangle {
   static final NumberFormat c_format = NumberFormat.getInstance(Locale.ROOT);

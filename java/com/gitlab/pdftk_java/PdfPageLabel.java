@@ -22,11 +22,11 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfDictionary;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfName;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfPageLabels;
 import java.util.ArrayList;
 import java.util.HashMap;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfPageLabels;
 
 class PdfPageLabel {
   static final String PREFIX = "PageLabel";

@@ -22,6 +22,20 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PRStream;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfAnnotation;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfArray;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfDictionary;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfFileSpecification;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfIndirectReference;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfName;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfNameTree;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfNumber;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfObject;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfString;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,20 +44,6 @@ import java.util.HashMap;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import pdftk.com.lowagie.text.Rectangle;
-import pdftk.com.lowagie.text.pdf.PRStream;
-import pdftk.com.lowagie.text.pdf.PdfAnnotation;
-import pdftk.com.lowagie.text.pdf.PdfArray;
-import pdftk.com.lowagie.text.pdf.PdfDictionary;
-import pdftk.com.lowagie.text.pdf.PdfFileSpecification;
-import pdftk.com.lowagie.text.pdf.PdfIndirectReference;
-import pdftk.com.lowagie.text.pdf.PdfName;
-import pdftk.com.lowagie.text.pdf.PdfNameTree;
-import pdftk.com.lowagie.text.pdf.PdfNumber;
-import pdftk.com.lowagie.text.pdf.PdfObject;
-import pdftk.com.lowagie.text.pdf.PdfReader;
-import pdftk.com.lowagie.text.pdf.PdfString;
-import pdftk.com.lowagie.text.pdf.PdfWriter;
 
 class attachments {
 

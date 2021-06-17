@@ -152,10 +152,10 @@ pdftk are intended. Issue reports about other differences are welcome
 
 ## Source code organization
 
-`java/com/` contains the translated Java sources. Currently these are
+`java/com/gitlab/pdftk_java/` contains the translated Java sources. Currently these are
 a few large files, but they should be split into one class per file.
 
-`java/pdftk/` contains the sources for an old, yet-to-be-determined
+`java/com/gitlab/pdftk_java/com/lowagie/text/` contains the sources for an old, yet-to-be-determined
 version of the iText library. They were modified in the original C++
 sources, hence it is not obvious whether they can be replaced by a
 more recent vanilla version.
