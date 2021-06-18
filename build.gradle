@@ -1,12 +1,12 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.diffplug.spotless' version '5.8.2'
+    id 'com.diffplug.spotless' version '5.14.0'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id "org.mikeneck.graalvm-native-image" version "0.8.0"
+    id "org.mikeneck.graalvm-native-image" version "1.4.1"
 }
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 tasks.withType(JavaCompile) {
   options.encoding = "UTF-8"
 }
@@ -31,8 +31,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.apache.commons:commons-lang3:3.9'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.64'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
 }
 
 nativeImage {

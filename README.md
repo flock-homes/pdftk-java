@@ -48,7 +48,7 @@ available:
 
 ## Dependencies
 
- - jdk >= 1.7
+ - jdk >= 1.8
  - commons-lang3
  - bcprov
  - gradle >= 6.1 or ant (build time)
@@ -62,10 +62,10 @@ standalone native binary, which does not require any runtime
 dependencies.
 
 The build configuration is relatively simple so it should work with most
-versions of gradle since 6.1 (tested 6.1 and 6.7.1) but if you have problems try
+versions of gradle since 6.1 (tested 6.1 and 7.1) but if you have problems try
 installing gradle wrapper at a particular version and then running the wrapper:
 ```
-gradle wrapper --gradle-version 6.7.1
+gradle wrapper --gradle-version 7.1
 ```
 
 ### Standard jar

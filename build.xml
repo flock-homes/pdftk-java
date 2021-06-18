@@ -13,7 +13,7 @@
   <target name="compile">
     <mkdir dir="lib"/>
     <mkdir dir="build/classes"/>
-    <javac srcdir="java" destdir="build/classes" source="1.7" target="1.7">
+    <javac srcdir="java" destdir="build/classes" source="1.8" target="1.8">
       <classpath>
         <fileset dir="lib" includes="*.jar"/>
       </classpath>

@@ -51,7 +51,7 @@ pages:
   stage: deploy
   image: gradle:latest
   variables:
-    GRADLE_VERSION: "6.7.1"
+    GRADLE_VERSION: "7.1"
   script:
     - gradle wrapper --gradle-version=$GRADLE_VERSION
     - ./gradlew shadowJar
@@ -97,10 +97,10 @@ nativeimage:
   before_script:
     - gu install native-image
     - microdnf install wget unzip
-    - wget https://services.gradle.org/distributions/gradle-6.7.1-bin.zip
-    - unzip gradle-6.7.1-bin.zip
+    - wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip
+    - unzip gradle-$GRADLE_VERSION-bin.zip
   script:
-    - ./gradle-6.7.1/bin/gradle nativeImage
+    - ./gradle-$GRADLE_VERSION/bin/gradle nativeImage
     - ./build/native-image/pdftk --version
   artifacts:
     paths:
@@ -113,7 +113,7 @@ nativeimage-web:
     variables:
       - $CI_PIPELINE_SOURCE == "web" && $WEB_JOB == "nativeimage"
   script:
-    - ./gradle-6.7.1/bin/gradle -Pgeneratedebuginfo=1 nativeImage
+    - ./gradle-$GRADLE_VERSION/bin/gradle -Pgeneratedebuginfo=1 nativeImage
     - ./build/native-image/pdftk --version
   artifacts:
     paths:
