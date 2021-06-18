@@ -142,7 +142,7 @@ pdftk are intended. Issue reports about other differences are welcome
 - Report entries may be in a different order.
 - Reports annotations other than links.
 
-## Source organization
+## Source code organization
 
 `java/com/` contains the translated Java sources. Currently these are
 a few large files, but they should be split into one class per file.
@@ -151,3 +151,10 @@ a few large files, but they should be split into one class per file.
 version of the iText library. They were modified in the original C++
 sources, hence it is not obvious whether they can be replaced by a
 more recent vanilla version.
+
+## Applications using pdftk-java
+
+- [PDF Chain](https://pdfchain.sourceforge.io/) is a GUI interface for PDFtk. It's available on [flathub.org](https://flathub.org)
+which means it's easily installable on any Linux distro:\
+https://pdfchain.sourceforge.io/
+https://flathub.org/apps/details/net.sourceforge.pdfchain
