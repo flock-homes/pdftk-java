@@ -129,13 +129,42 @@ To run:
 $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.pdftk_java.pdftk
 ```
 
-## Troubleshooting
+## FAQ
 
-If reading the manual does not solve your problems, a good place to
-find help is StackExchange (in particular the
+**Q: Should I use pdftk-java?**
+
+**A:** If you are already using pdftk, then pdftk-java should be a
+seamless replacement. If you are looking for a command line tool to
+use occasionally and in scripts, pdftk-java should do the job. If you
+want a robust library to call from a Java program (or a similar
+language), then it it probably better to use a proper library, for
+instance the [iText](https://itextpdf.com) library that pdftk-java
+uses internally or its more permissively licensed fork
+[OpenPDF](https://github.com/LibrePDF/OpenPDF).
+
+**Q: How do I get help?**
+
+**A:** If reading the manual does not solve your problem, a good place to
+find help is StackExchange, and in particular the
 [superuser](https://superuser.com/) and [Unix &
-Linux](https://unix.stackexchange.com/) sites). Issues and feature
+Linux](https://unix.stackexchange.com/) sites. Issues and feature
 requests can be reported [over here](https://gitlab.com/pdftk-java/pdftk/-/issues).
+
+**Q: I am trying to fill a form with non-ASCII characters but they do
+not show up. How can I fix it?**
+
+**A:** Often the problem with disappearing characters is that the PDF
+does not contain the appropriate fonts. There is some experimental
+code to fix this, see #96 and #84. CJK languages are a different
+story, see #37.
+
+**Q: Is there a GUI?**
+
+**A:** There are a few GUIs that were designed with pdftk as a backend
+that should still work. One of them is [PDF
+Chain](https://pdfchain.sourceforge.io/), also available on
+[Flathub](https://flathub.org/apps/details/net.sourceforge.pdfchain),
+which means it's easily installable on any Linux distro.
 
 ## Known differences with pdftk
 
@@ -159,10 +188,3 @@ a few large files, but they should be split into one class per file.
 version of the iText library. They were modified in the original C++
 sources, hence it is not obvious whether they can be replaced by a
 more recent vanilla version.
-
-## Applications using pdftk-java
-
-- [PDF Chain](https://pdfchain.sourceforge.io/) is a GUI interface for PDFtk. It's available on [flathub.org](https://flathub.org)
-which means it's easily installable on any Linux distro:\
-https://pdfchain.sourceforge.io/
-https://flathub.org/apps/details/net.sourceforge.pdfchain
