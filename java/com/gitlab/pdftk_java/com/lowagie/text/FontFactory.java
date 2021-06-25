@@ -615,10 +615,15 @@ public class FontFactory extends java.lang.Object {
             for (int k = 0; k < files.length; ++k) {
                 try {
                     file = new File(dir, files[k]);
-                    String name = file.getPath().toLowerCase();
-                    if (name.endsWith(".ttf") || name.endsWith(".otf") || name.endsWith(".afm") || name.endsWith(".ttc")) {
-                        register(file.getPath(), null);
-                        ++count;
+                    if (file.isDirectory()) {
+                        registerDirectory(file.getPath());
+                    }
+                    else {
+                        String name = file.getPath().toLowerCase();
+                        if (name.endsWith(".ttf") || name.endsWith(".otf") || name.endsWith(".afm") || name.endsWith(".ttc")) {
+                            register(file.getPath(), null);
+                            ++count;
+                        }
                     }
                 }
                 catch (Exception e) {
@@ -644,7 +649,7 @@ public class FontFactory extends java.lang.Object {
         count += registerDirectory("d:/winnt/fonts");
         count += registerDirectory("/usr/X/lib/X11/fonts/TrueType");
         count += registerDirectory("/usr/openwin/lib/X11/fonts/TrueType");
-        count += registerDirectory("/usr/share/fonts/default/TrueType");
+        count += registerDirectory("/usr/share/fonts");
         count += registerDirectory("/usr/X11R6/lib/X11/fonts/ttf");
         return count;
     }

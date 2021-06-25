@@ -61,6 +61,7 @@ import java.util.Comparator;
 import java.util.Collections;
 import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import com.gitlab.pdftk_java.com.lowagie.text.Element;
+import com.gitlab.pdftk_java.com.lowagie.text.FontFactory;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import java.io.IOException;
@@ -1335,8 +1336,9 @@ public class AcroFields {
             top.put(PdfName.NEEDAPPEARANCES, PdfBoolean.PDFTRUE);
     }
 
-    public void setReplacementFont(String filename) throws DocumentException, IOException {
-        replacementFont = BaseFont.createFont(filename, BaseFont.IDENTITY_H, true);
+    public boolean setReplacementFont(String fontName) {
+        replacementFont = FontFactory.getFont(fontName, BaseFont.IDENTITY_H, true).getBaseFont();
+        return replacementFont != null;
     }
     
     /** The field representations for retrieval and modification. */    
