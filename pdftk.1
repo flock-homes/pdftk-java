@@ -41,6 +41,8 @@ pdftk \- A handy tool for manipulating PDF
 .br
      [ \fBkeep_first_id\fR | \fBkeep_final_id\fR ] [ \fBdrop_xfa\fR ] [ \fBdrop_xmp\fR ]
 .br
+     [ \fBreplacement_font\fR \fI<font name>\fR ]
+.br
      [ \fBverbose\fR ] [ \fBdont_ask\fR | \fBdo_ask\fR ]
 .br
 Where:
@@ -269,7 +271,7 @@ user's PDF viewer does not support Rich Text, then the user will see the plain t
 If you flatten this form before Acrobat has a chance to create (and save) new field appearances,
 then the plain text field data is what you'll see.
 
-Also see the \fBflatten\fR and \fBneed_appearances\fR options.
+Also see the \fBflatten\fR, \fBneed_appearances\fR, and \fBreplacement_font\fR options.
 .TP
 .B background <background PDF filename | \- | PROMPT>
 Applies a PDF watermark to the background of a single input PDF.  Pass the background PDF's
@@ -426,6 +428,9 @@ the PDF's pages. Only one input PDF may be given. Sometimes used with the \fBfil
 .TP
 .B [need_appearances]
 Sets a flag that cues Reader/Acrobat to generate new field appearances based on the form field values.  Use this when filling a form with non-ASCII text to ensure the best presentation in Adobe Reader or Acrobat.  It won't work when combined with the \fBflatten\fR option.
+.TP
+.B [replacement_font <font name>]
+Use the specified font to display text in form fields. This option is useful when filling a form with non-ASCII text that is not supported by the fonts included in the input PDF. \fBfont name\fR may be either the file name or the family name of a font, but using a file name is more reliable. Currently only TrueType fonts with Unicode text are supported.
 .TP
 .B [keep_first_id | keep_final_id]
 When combining pages from multiple PDFs, use one of these options to copy the document ID from either the first or final input document into the new output PDF. Otherwise pdftk creates a new document ID for the output PDF. When no operation is given, pdftk always uses the ID from the (single) input PDF.
