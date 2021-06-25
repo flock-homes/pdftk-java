@@ -52,6 +52,7 @@ import org.w3c.dom.Node;
 
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.Element;
+import com.gitlab.pdftk_java.com.lowagie.text.FontFactory;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
@@ -2470,8 +2471,9 @@ public class AcroFields {
         this.substitutionFonts = substitutionFonts;
     }
 
-    public void setReplacementFont(String filename) throws DocumentException, IOException {
-        replacementFont = BaseFont.createFont(filename, BaseFont.IDENTITY_H, true);
+    public boolean setReplacementFont(String fontName) {
+        replacementFont = FontFactory.getFont(fontName, BaseFont.IDENTITY_H, true).getBaseFont();
+        return replacementFont != null;
     }
 
     private static final PdfName[] buttonRemove = {PdfName.MK, PdfName.F , PdfName.FF , PdfName.Q , PdfName.BS , PdfName.BORDER};
