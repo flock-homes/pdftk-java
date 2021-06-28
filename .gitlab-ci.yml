@@ -12,14 +12,14 @@ php-pdftk:
   extends: .ant-job
   script:
     - ant -lib /usr/share/java
-    - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.64.jar:'`pwd`'/lib/commons-lang3-3.9.jar com.gitlab.pdftk_java.pdftk "$@"' > /usr/bin/pdftk
+    - echo -e '#!/bin/bash\njava -cp' `pwd`'/build/jar/pdftk.jar:'`pwd`'/lib/bcprov-jdk15on-1.69.jar:'`pwd`'/lib/commons-lang3-3.12.0.jar com.gitlab.pdftk_java.pdftk "$@"' > /usr/bin/pdftk
     - chmod +x /usr/bin/pdftk
-    - apt-get install php-mbstring phpunit composer -yqq
+    - apt-get install php-mbstring php-xml composer -yqq
     - git clone --depth 1 https://github.com/marcvinyals/php-pdftk
     - cd php-pdftk
     - composer install
     - pdftk --version
-    - phpunit
+    - ./vendor/bin/phpunit
 
 test:
   extends: .ant-job
