@@ -112,7 +112,11 @@ public class DocumentFont extends BaseFont {
         this.refFont = refFont;
         fontType = FONT_TYPE_DOCUMENT;
         font = (PdfDictionary)PdfReader.getPdfObject(refFont);
-        fontName = PdfName.decodeName(((PdfName)PdfReader.getPdfObject(font.get(PdfName.BASEFONT))).toString());
+        // fontNameObj should always be a PdfName (cf PDF Reference 1.7 Table 111)
+        // but seen PdfString in the wild (cf pdftk-java issue 99)
+        PdfObject fontNameObj = PdfReader.getPdfObject(font.get(PdfName.BASEFONT));
+        if (fontNameObj.isName()) fontName = PdfName.decodeName(fontNameObj.toString());
+        else if (fontNameObj.isString()) fontName = fontNameObj.toString();
         PdfName subType = (PdfName)PdfReader.getPdfObject(font.get(PdfName.SUBTYPE));
         if (PdfName.TYPE1.equals(subType) || PdfName.TRUETYPE.equals(subType))
             doType1TT();
