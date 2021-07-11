@@ -16,6 +16,13 @@ public class DataTest extends BlackBox {
   }
 
   @Test
+  public void dump_data_xml() throws IOException {
+    pdftk("test/files/blank.pdf", "dump_data");
+    String expectedData = slurp("test/files/blank.xmlesc.data");
+    assertEquals(expectedData, systemOut.getLog());
+  }
+
+  @Test
   public void idempotent() {
     pdftk("test/files/refs.pdf", "dump_data_utf8");
     String expectedData = systemOut.getLog();

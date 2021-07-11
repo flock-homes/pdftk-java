@@ -55,6 +55,26 @@ public class CatTest extends BlackBox {
   }
 
   @Test
+  public void cat_even() {
+    byte[] expected = getPdf("test/files/refs.pdf", "cat", "2", "4", "6", "output", "-");
+    byte[] actual = getPdf("test/files/refs.pdf", "cat", "2-7even", "output", "-");
+    assertPdfEqualsAsSVG(expected, actual);
+  }
+
+  @Test
+  public void cat_odd() {
+    byte[] expected = getPdf("test/files/refs.pdf", "cat", "3", "5", "7", "output", "-");
+    byte[] actual = getPdf("test/files/refs.pdf", "cat", "2-7odd", "output", "-");
+    assertPdfEqualsAsSVG(expected, actual);
+  }
+
+  @Test
+  public void cat_handles() {
+    byte[] expected = getPdf("test/files/refs.pdf", "test/files/refsalt.pdf", "cat", "output", "-");
+    byte[] actual = getPdf("A=test/files/refs.pdf", "B=test/files/refsalt.pdf", "cat", "B", "A", "output", "-");
+  }
+
+  @Test
   public void duplicate_stdin() throws IOException {
     InputStream stdinMock = new FileInputStream("test/files/blank.pdf");
     InputStream originalIn = System.in;
