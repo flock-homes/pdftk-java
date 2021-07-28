@@ -59,6 +59,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream; // ssteward
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -77,7 +78,9 @@ public class XfdfReader implements SimpleXMLDocHandler {
 	
     // storage for the field list and their rich text; ssteward
 	HashMap	fieldsRichText;
-	
+
+    HashMap<String, ArrayList<String>> fieldsMultiValue;
+
 	// storage for the path to referenced PDF, if any
 	String	fileSpec;
 	
@@ -159,7 +162,18 @@ public class XfdfReader implements SimpleXMLDocHandler {
         else
         	return field;
     }
-    
+
+    public String[] getFieldMultiValue(String name) {
+        ArrayList<String> field = (ArrayList)fieldsMultiValue.get(name);
+        if (field == null)
+            return null;
+        else {
+            String[] ret = new String[field.size()];
+            ret = field.toArray(ret);
+            return ret;
+        }
+    }
+
     /** Gets the PDF file specification contained in the FDF.
      * @return the PDF file specification contained in the FDF
      */    
@@ -188,9 +202,11 @@ public class XfdfReader implements SimpleXMLDocHandler {
     	} else if ( tag.equals("fields") ) {
             fields = new HashMap();		// init it!
             fieldsRichText = new HashMap();
+            fieldsMultiValue = new HashMap();
     	} else if ( tag.equals("field") ) {
     		String	fName = (String) h.get( "name" );
     		fieldNames.push( fName );
+            fieldsMultiValue.put( fName, new ArrayList() );
     	} else if ( tag.equals("value") ||
 					tag.equals("value-richtext") ) // ssteward
 			{
@@ -216,6 +232,7 @@ public class XfdfReader implements SimpleXMLDocHandler {
 
 				if (tag.equals("value")) { // ssteward
 					fields.put( fName, fVal );
+                    fieldsMultiValue.get( fName ).add( fVal );
 				}
 				else { // rich text value
 					fieldsRichText.put( fName, fVal );

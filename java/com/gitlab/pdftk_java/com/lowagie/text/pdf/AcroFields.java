@@ -959,10 +959,11 @@ public class AcroFields {
             String f = (String)i.next();
             String v = fdf.getFieldValue(f);
 			String rv = fdf.getFieldRichValue(f); // ssteward
+            String[] vv = fdf.getFieldMultiValue(f);
 			if (rv != null)
 				ret_val_b= true;
             if (v != null)
-                setField(f, v, v, rv); // ssteward
+                setField(f, v, v, rv, vv); // ssteward
         }
 		return ret_val_b; // ssteward
     }
@@ -979,10 +980,11 @@ public class AcroFields {
             String f = (String)i.next();
             String v = xfdf.getFieldValue(f);
 			String rv = xfdf.getFieldRichValue(f); // ssteward
+            String[] vv = xfdf.getFieldMultiValue(f);
 			if (rv != null)
 				ret_val_b= true;
             if (v != null)
-                setField(f, v, v, rv); // ssteward
+                setField(f, v, v, rv, vv); // ssteward
         }
 		return ret_val_b; // ssteward
     }
@@ -1002,6 +1004,36 @@ public class AcroFields {
     public boolean setField(String name, String value, String display) throws IOException, DocumentException {
         return setField(name, value, display, null);
     }
+    public boolean setField(String name, String value, String display, String rich_value) throws IOException, DocumentException {
+        return setField(name, value, display, rich_value, null);
+    }
+
+    public ArrayList<String> getOptAllowedValues(Item item) {
+        ArrayList lopt = new ArrayList();
+        PdfObject opts = PdfReader.getPdfObject(((PdfDictionary)item.values.get(0)).get(PdfName.OPT));
+        if (opts != null && opts.isArray()) {
+            ArrayList list = ((PdfArray)opts).getArrayList();
+            for (int k = 0; k < list.size(); ++k) {
+                PdfObject vv = PdfReader.getPdfObject((PdfObject)list.get(k));
+                if (vv != null && vv.isString()) {
+                    lopt.add(((PdfString)vv).toUnicodeString());
+                }
+                else if (vv != null && vv.isArray()) {
+                    PdfObject vv0 = ((PdfArray)vv).getPdfObject(0);
+                    if (vv0.isString()) {
+                        lopt.add(((PdfString)vv0).toUnicodeString());
+                    }
+                    else {
+                        lopt.add(null);
+                    }
+                }
+                else {
+                    lopt.add(null);
+                }
+            }
+        }
+        return lopt;
+    }
     
     /** Sets the field value and the display string. The display string
      * is used to build the appearance in the cases where the value
@@ -1016,7 +1048,7 @@ public class AcroFields {
      * @throws IOException on error
      * @throws DocumentException on error
      */    
-    public boolean setField(String name, String value, String display, String rich_value) throws IOException, DocumentException {
+    public boolean setField(String name, String value, String display, String rich_value, String[] chvalues) throws IOException, DocumentException {
         if (writer == null)
             throw new DocumentException("This AcroFields instance is read-only.");
         Item item = (Item)fields.get(name);
@@ -1032,27 +1064,60 @@ public class AcroFields {
                 value = value.substring(0, Math.min(len, value.length()));
         }
         if (PdfName.TX.equals(type) || PdfName.CH.equals(type)) {
+
             PdfString v = new PdfString(value, PdfObject.TEXT_UNICODE);
 			// ssteward
 			PdfString rv = null;
 			if( rich_value != null )
 				rv = new PdfString(rich_value, PdfObject.TEXT_UNICODE); // ssteward
+
+            PdfArray vv = null;
+            PdfArray ii = null;
+            boolean multiselect = false;
+            if (PdfName.CH.equals(type)) {
+                PdfObject flags = ((PdfDictionary)item.merged.get(0)).get(PdfName.FF);
+                if (flags != null && flags.isNumber()) {
+                    int flags_ = ((PdfNumber)flags).intValue();
+                    multiselect = (flags_ & PdfFormField.FF_MULTISELECT) != 0;
+                }
+            }
+            if (multiselect && chvalues != null && chvalues.length != 1) {
+                vv = new PdfArray();
+                ii = new PdfArray();
+                ArrayList lopt = getOptAllowedValues(item);
+                for (String s : chvalues) {
+                    vv.add(new PdfString(s, PdfObject.TEXT_UNICODE));
+                    int vidx = lopt.indexOf(s);
+                    if (vidx >= 0) {
+                        ii.add(new PdfNumber(vidx));
+                    }
+                }
+            }
+
             for (int idx = 0; idx < item.values.size(); ++idx) {
 
 				PdfDictionary item_value= (PdfDictionary)item.values.get(idx);
-                item_value.put(PdfName.V, v);
-                markUsed(item_value);
-				if( rich_value != null ) // ssteward
-					item_value.put(PdfName.RV, rv);
-				item_value.remove(PdfName.I); // ssteward; it might disagree w/ V in a Ch widget
-				// PDF spec this shouldn't matter, but Reader 9 gives I precedence over V
-
                 PdfDictionary merged = (PdfDictionary)item.merged.get(idx);
-                merged.put(PdfName.V, v);
-				if( rich_value != null ) // ssteward
-					merged.put(PdfName.RV, rv);
-				merged.remove(PdfName.I); // ssteward
-				
+
+                if (vv != null) {
+                    item_value.put(PdfName.V, vv);
+                    merged.put(PdfName.V, vv);
+                    item_value.put(PdfName.I, ii);
+                    merged.put(PdfName.I, ii);
+                }
+                else {
+                    item_value.put(PdfName.V, v);
+                    merged.put(PdfName.V, v);
+                    if( rich_value != null ) { // ssteward
+                        item_value.put(PdfName.RV, rv);
+                        merged.put(PdfName.RV, rv);
+                    }
+                    item_value.remove(PdfName.I); // ssteward; it might disagree w/ V in a Ch widget
+                    // PDF spec this shouldn't matter, but Reader 9 gives I precedence over V
+                    merged.remove(PdfName.I); // ssteward
+                }
+                markUsed(item_value);
+
                 PdfDictionary widget = (PdfDictionary)item.widgets.get(idx);
                 if (generateAppearances) {
                     PdfAppearance app = getAppearance(merged, display, name);
@@ -1086,20 +1151,7 @@ public class AcroFields {
             if ((flags & PdfFormField.FF_PUSHBUTTON) != 0)
                 return true;
 
-            ArrayList lopt = new ArrayList();
-            PdfObject opts = PdfReader.getPdfObject(((PdfDictionary)item.values.get(0)).get(PdfName.OPT));
-            if (opts != null && opts.isArray()) {
-                ArrayList list = ((PdfArray)opts).getArrayList();
-                for (int k = 0; k < list.size(); ++k) {
-                    PdfObject vv = PdfReader.getPdfObject((PdfObject)list.get(k));
-                    if (vv != null && vv.isString()) {
-                        lopt.add(((PdfString)vv).toUnicodeString());
-                    }
-                    else {
-                        lopt.add(null);
-                    }
-                }
-            }
+            ArrayList lopt = getOptAllowedValues(item);
             int vidx = lopt.indexOf(value);
             PdfName vt;
             if (vidx >= 0) {

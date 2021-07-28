@@ -195,23 +195,8 @@ public class FdfReader extends PdfReader {
     public PdfDictionary getField(String name) {
         return (PdfDictionary)fields.get(name);
     }
-    
-    /** Gets the field value or <CODE>null</CODE> if the field does not
-     * exist or has no value defined.
-     * @param name the fully qualified field name
-     * @return the field value or <CODE>null</CODE>
-     */    
-    public String getFieldValue(String name) {
-        PdfDictionary field = (PdfDictionary)fields.get(name);
-        if (field == null)
-            return null;
-        PdfObject v = getPdfObject(field.get(PdfName.V));
-        if (v == null)
-            return null;
-        if (v.isName())
-            return PdfName.decodeName(((PdfName)v).toString());
-        else if (v.isString()) {
-            PdfString vs = (PdfString)v;
+
+    private String decodeString(PdfString vs) {
             if (encoding == null || vs.getEncoding() != null)
                 return vs.toUnicodeString();
             byte b[] = vs.getBytes();
@@ -230,6 +215,24 @@ public class FdfReader extends PdfReader {
             catch (Exception e) {
             }
             return vs.toUnicodeString();
+    }
+    
+    /** Gets the field value or <CODE>null</CODE> if the field does not
+     * exist or has no value defined.
+     * @param name the fully qualified field name
+     * @return the field value or <CODE>null</CODE>
+     */    
+    public String getFieldValue(String name) {
+        PdfDictionary field = (PdfDictionary)fields.get(name);
+        if (field == null)
+            return null;
+        PdfObject v = getPdfObject(field.get(PdfName.V));
+        if (v == null)
+            return null;
+        if (v.isName())
+            return PdfName.decodeName(((PdfName)v).toString());
+        else if (v.isString()) {
+            return decodeString((PdfString)v);
         }
         return null;
     }
@@ -251,6 +254,27 @@ public class FdfReader extends PdfReader {
         else
             return null;
 	}
+
+    public String[] getFieldMultiValue(String name) {
+        PdfDictionary field = (PdfDictionary)fields.get(name);
+        if (field == null)
+            return null;
+        PdfObject v = getPdfObject(field.get(PdfName.V));
+        if (v == null)
+            return null;
+        ArrayList<String> values = new ArrayList();
+        if (v.isArray()) {
+            ArrayList<PdfObject> vv = ((PdfArray)v).getArrayList();
+            for (PdfObject vi : vv) {
+                if (vi.isString()) {
+                    values.add(decodeString((PdfString)vi));
+                }
+            }
+        }
+        String[] ret = new String[values.size()];
+        ret = values.toArray(ret);
+        return ret;
+    }
 
     /** Gets the PDF file specification contained in the FDF.
      * @return the PDF file specification contained in the FDF
