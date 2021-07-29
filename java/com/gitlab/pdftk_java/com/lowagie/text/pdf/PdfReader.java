@@ -3472,6 +3472,13 @@ public class PdfReader implements PdfViewerPreferences {
 							kidsPR.remove(k);
 						break;
 					}
+                    int rpageObjectNumber = rpage.getNumber();
+                    PRIndirectReference kidObjIndirectRef = (PRIndirectReference)obj;
+                    int kidObjectNumber = kidObjIndirectRef.getNumber();
+                    if (rpageObjectNumber == kidObjectNumber) {
+                        System.err.println("Error: Invalid referece on Kids: ");
+                        System.exit(0);
+                    }
 					iteratePages((PRIndirectReference)obj);
 				}
 				popPageAttributes();
