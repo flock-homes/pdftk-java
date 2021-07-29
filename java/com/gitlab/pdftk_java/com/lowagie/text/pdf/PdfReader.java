@@ -3476,8 +3476,7 @@ public class PdfReader implements PdfViewerPreferences {
                     PRIndirectReference kidObjIndirectRef = (PRIndirectReference)obj;
                     int kidObjectNumber = kidObjIndirectRef.getNumber();
                     if (rpageObjectNumber == kidObjectNumber) {
-                        System.err.println("Error: Invalid referece on Kids: ");
-                        System.exit(0);
+                        throw new InvalidPdfException("Invalid reference on Kids: " + kidObjectNumber);
                     }
 					iteratePages((PRIndirectReference)obj);
 				}
