@@ -229,6 +229,12 @@ public class FdfReader extends PdfReader {
         PdfObject v = getPdfObject(field.get(PdfName.V));
         if (v == null)
             return null;
+        if (v.isArray()) {
+            ArrayList<PdfObject> vv = ((PdfArray)v).getArrayList();
+            for (PdfObject vi : vv) {
+                v = vi;
+            }
+        }
         if (v.isName())
             return PdfName.decodeName(((PdfName)v).toString());
         else if (v.isString()) {
