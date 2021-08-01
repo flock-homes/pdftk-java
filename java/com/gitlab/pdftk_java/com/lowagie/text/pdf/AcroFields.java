@@ -1080,8 +1080,7 @@ public class AcroFields {
                     int flags_ = ((PdfNumber)flags).intValue();
                     multiselect = (flags_ & PdfFormField.FF_MULTISELECT) != 0;
                 }
-            }
-            if (multiselect && chvalues != null && chvalues.length != 1) {
+                if (chvalues == null || !multiselect) chvalues = new String[]{value};
                 vv = new PdfArray();
                 ii = new PdfArray();
                 ArrayList lopt = getOptAllowedValues(item);
@@ -1099,11 +1098,9 @@ public class AcroFields {
 				PdfDictionary item_value= (PdfDictionary)item.values.get(idx);
                 PdfDictionary merged = (PdfDictionary)item.merged.get(idx);
 
-                if (vv != null) {
+                if (vv != null && vv.size() != 1) {
                     item_value.put(PdfName.V, vv);
                     merged.put(PdfName.V, vv);
-                    item_value.put(PdfName.I, ii);
-                    merged.put(PdfName.I, ii);
                 }
                 else {
                     item_value.put(PdfName.V, v);
@@ -1112,6 +1109,12 @@ public class AcroFields {
                         item_value.put(PdfName.RV, rv);
                         merged.put(PdfName.RV, rv);
                     }
+                }
+                if (ii != null) {
+                    item_value.put(PdfName.I, ii);
+                    merged.put(PdfName.I, ii);
+                }
+                else {
                     item_value.remove(PdfName.I); // ssteward; it might disagree w/ V in a Ch widget
                     // PDF spec this shouldn't matter, but Reader 9 gives I precedence over V
                     merged.remove(PdfName.I); // ssteward
