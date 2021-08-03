@@ -556,6 +556,9 @@ public class Rectangle implements Element, MarkupAttributes {
 	public float left() {
 		return llx;
 	}
+	public float getLeft() {
+		return llx;
+	}
 
 	/**
 	 * Returns the upper right x-coordinate.
@@ -564,6 +567,9 @@ public class Rectangle implements Element, MarkupAttributes {
 	 */
 
 	public float right() {
+		return urx;
+	}
+	public float getRight() {
 		return urx;
 	}
 
@@ -576,6 +582,9 @@ public class Rectangle implements Element, MarkupAttributes {
 	public float top() {
 		return ury;
 	}
+	public float getTop() {
+		return ury;
+	}
 
 	/**
 	 * Returns the lower left y-coordinate.
@@ -584,6 +593,9 @@ public class Rectangle implements Element, MarkupAttributes {
 	 */
 
 	public float bottom() {
+		return lly;
+	}
+	public float getBottom() {
 		return lly;
 	}
 
@@ -644,6 +656,9 @@ public class Rectangle implements Element, MarkupAttributes {
 	public float width() {
 		return urx - llx;
 	}
+	public float getWidth() {
+		return urx - llx;
+	}
 
 	/**
 	 * Returns the height of the rectangle.
@@ -652,6 +667,9 @@ public class Rectangle implements Element, MarkupAttributes {
 	 */
 
 	public float height() {
+		return ury - lly;
+	}
+	public float getHeight() {
 		return ury - lly;
 	}
 

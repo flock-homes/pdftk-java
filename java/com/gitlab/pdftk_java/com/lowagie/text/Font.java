@@ -600,6 +600,9 @@ public class Font implements Comparable {
 	public float size() {
 		return size;
 	}
+	public float getSize() {
+		return size;
+	}
 
 	/**
 	 * Gets the style of this font.
@@ -670,6 +673,9 @@ public class Font implements Comparable {
 	 */
 
 	public Color color() {
+		return color;
+	}
+	public Color getColor() {
 		return color;
 	}
 

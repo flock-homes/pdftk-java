@@ -229,12 +229,6 @@ public class FdfReader extends PdfReader {
         PdfObject v = getPdfObject(field.get(PdfName.V));
         if (v == null)
             return null;
-        if (v.isArray()) {
-            ArrayList<PdfObject> vv = ((PdfArray)v).getArrayList();
-            for (PdfObject vi : vv) {
-                v = vi;
-            }
-        }
         if (v.isName())
             return PdfName.decodeName(((PdfName)v).toString());
         else if (v.isString()) {
@@ -265,21 +259,24 @@ public class FdfReader extends PdfReader {
         PdfDictionary field = (PdfDictionary)fields.get(name);
         if (field == null)
             return null;
-        PdfObject v = getPdfObject(field.get(PdfName.V));
-        if (v == null)
-            return null;
-        ArrayList<String> values = new ArrayList();
-        if (v.isArray()) {
-            ArrayList<PdfObject> vv = ((PdfArray)v).getArrayList();
+        PdfArray v = field.getAsArray(PdfName.V);
+        if (v == null) {
+            String singlevalue = getFieldValue(name);
+            if (singlevalue != null) return new String[]{singlevalue};
+        }
+        else {
+            ArrayList<String> values = new ArrayList();
+            ArrayList<PdfObject> vv = v.getArrayList();
             for (PdfObject vi : vv) {
                 if (vi.isString()) {
                     values.add(decodeString((PdfString)vi));
                 }
             }
+            String[] ret = new String[values.size()];
+            ret = values.toArray(ret);
+            return ret;
         }
-        String[] ret = new String[values.size()];
-        ret = values.toArray(ret);
-        return ret;
+        return null;
     }
 
     /** Gets the PDF file specification contained in the FDF.
