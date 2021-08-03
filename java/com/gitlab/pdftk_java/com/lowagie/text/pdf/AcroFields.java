@@ -1252,9 +1252,9 @@ public class AcroFields {
                 ret_val_b= true;
             if (v != null)
                 setField(f, v, v, rv); // ssteward
-            String[] l = xfdf.getFieldMultiValue(f);
+            List l = xfdf.getListValues(f);
             if (l != null)
-            	setListSelection(f, l);
+            	setListSelection(f, (String[])l.toArray(new String[l.size()]));
         }
         return ret_val_b; // ssteward
     }

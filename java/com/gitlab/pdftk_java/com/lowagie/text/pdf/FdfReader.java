@@ -1,4 +1,3 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4 -*- */
 /*
  * Copyright 2003 by Paulo Soares.
  *
@@ -30,33 +29,20 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
- *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (rich text, multi-valued fields)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.ArrayList;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 /** Reads an FDF form and makes the fields available
  * @author Paulo Soares (psoares@consiste.pt)
  */
@@ -111,7 +97,6 @@ public class FdfReader extends PdfReader {
                 tokens.close();
             }
             catch (Exception e) {
-                System.err.println("Something fishy");
                 // empty on purpose
             }
         }
@@ -119,20 +104,19 @@ public class FdfReader extends PdfReader {
     }
     
     protected void kidNode(PdfDictionary merged, String name) {
-        PdfArray kids = (PdfArray)getPdfObject(merged.get(PdfName.KIDS));
-        if (kids == null || kids.getArrayList().size() == 0) {
+        PdfArray kids = merged.getAsArray(PdfName.KIDS);
+        if (kids == null || kids.isEmpty()) {
             if (name.length() > 0)
                 name = name.substring(1);
             fields.put(name, merged);
         }
         else {
             merged.remove(PdfName.KIDS);
-            ArrayList ar = kids.getArrayList();
-            for (int k = 0; k < ar.size(); ++k) {
+            for (int k = 0; k < kids.size(); ++k) {
                 PdfDictionary dic = new PdfDictionary();
                 dic.merge(merged);
-                PdfDictionary newDic = (PdfDictionary)getPdfObject((PdfObject)ar.get(k));
-                PdfString t = (PdfString)getPdfObject(newDic.get(PdfName.T));
+                PdfDictionary newDic = kids.getAsDict(k);
+                PdfString t = newDic.getAsString(PdfName.T);
                 String newName = name;
                 if (t != null)
                     newName += "." + t.toUnicodeString();
@@ -166,14 +150,16 @@ public class FdfReader extends PdfReader {
         }
     }
     
-    protected void readFields() throws IOException {
-        catalog = (PdfDictionary)getPdfObject(trailer.get(PdfName.ROOT));
-        PdfDictionary fdf = (PdfDictionary)getPdfObject(catalog.get(PdfName.FDF));
+    protected void readFields() {
+        catalog = trailer.getAsDict(PdfName.ROOT);
+        PdfDictionary fdf = catalog.getAsDict(PdfName.FDF);
+        if (fdf == null)
+            return;
         readFileSpecification(fdf);
-        PdfArray fld = (PdfArray)getPdfObject(fdf.get(PdfName.FIELDS));
+        PdfArray fld = fdf.getAsArray(PdfName.FIELDS);
         if (fld == null)
             return;
-        encoding = (PdfName)getPdfObject(fdf.get(PdfName.ENCODING));
+        encoding = fdf.getAsName(PdfName.ENCODING);
         PdfDictionary merged = new PdfDictionary();
         merged.put(PdfName.KIDS, fld);
         kidNode(merged, "");

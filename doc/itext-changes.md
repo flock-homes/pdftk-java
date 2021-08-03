@@ -1,3 +1,15 @@
+## Updated to itext-4.2.0
+
+Changes are listed in individual file headers.
+
+* com/lowagie/text/pdf/AcroFields.java
+* com/lowagie/text/pdf/BaseField.java
+* com/lowagie/text/pdf/FdfReader.java
+* com/lowagie/text/pdf/GrayColor.java
+* com/lowagie/text/pdf/TextField.java
+* com/lowagie/text/pdf/XfdfReader.java
+* com/lowagie/text/Utilities.java
+
 ## Based on itext-2.1.7
 
 * com/lowagie/text/exceptions/BadPasswordException.java
@@ -107,12 +119,10 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
   * Commented out code
 * com/lowagie/text/markup/MarkupTags.java
 
-* com/lowagie/text/pdf/AcroFields.java
   * **Multiple changes**
 * com/lowagie/text/pdf/ArabicLigaturizer.java
 * com/lowagie/text/pdf/AsianFontMapper.java
 * com/lowagie/text/pdf/BadPdfFormatException.java
-* com/lowagie/text/pdf/BaseField.java
 * com/lowagie/text/pdf/BaseFont.java
   * Cosmetic type casts
 * com/lowagie/text/pdf/BidiLine.java
@@ -134,14 +144,11 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/EnumerateTTC.java
 * com/lowagie/text/pdf/ExtendedColor.java
 * com/lowagie/text/pdf/ExtraEncoding.java
-* com/lowagie/text/pdf/FdfReader.java
-  * **Added `getFieldRichValue` method**
 * com/lowagie/text/pdf/FdfWriter.java
   * **Multiple changes**
 * com/lowagie/text/pdf/FontDetails.java
 * com/lowagie/text/pdf/FontMapper.java
 * com/lowagie/text/pdf/GlyphList.java
-* com/lowagie/text/pdf/GrayColor.java
 * com/lowagie/text/pdf/HyphenationEvent.java
 * com/lowagie/text/pdf/OutputStreamCounter.java
 * com/lowagie/text/pdf/PRAcroForm.java
@@ -272,7 +279,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/SimpleXMLParser.java
 * com/lowagie/text/pdf/SpotColor.java
 * com/lowagie/text/pdf/StampContent.java
-* com/lowagie/text/pdf/TextField.java
 * com/lowagie/text/pdf/TrueTypeFont.java
   * Commented out code
 * com/lowagie/text/pdf/TrueTypeFontSubSet.java
@@ -280,9 +286,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/Type1Font.java
   * Cosmetic type casts
 * com/lowagie/text/pdf/VerticalText.java
-* com/lowagie/text/pdf/XfdfReader.java
-  * Added rich value handling code
-  * Added reading from stdin
 
 * com/lowagie/text/pdf/codec/postscript/paparser.jj
 
