@@ -5,6 +5,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/AcroFields.java
 * com/lowagie/text/pdf/BaseField.java
 * com/lowagie/text/pdf/FdfReader.java
+* com/lowagie/text/pdf/FontSelector.java
 * com/lowagie/text/pdf/GrayColor.java
 * com/lowagie/text/pdf/TextField.java
 * com/lowagie/text/pdf/XfdfReader.java
