@@ -204,6 +204,7 @@ public class pdftk {
       // per https://bugs.launchpad.net/ubuntu/+source/pdftk/+bug/544636
       catch (java.lang.ClassCastException c_p) {
         String message = c_p.getMessage();
+        if (message == null) message = "";
         if (message.indexOf("com.lowagie.text.pdf.PdfDictionary") >= 0
             && message.indexOf("com.lowagie.text.pdf.PRIndirectReference") >= 0) {
           System.err.println("Error: One input PDF seems to not conform to the PDF standard.");

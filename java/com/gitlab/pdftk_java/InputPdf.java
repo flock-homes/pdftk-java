@@ -131,12 +131,14 @@ class InputPdf {
         open_success_b = false;
       }
     } catch (IOException ioe_p) { // file open error
-      if (ioe_p.getMessage().equals("Bad password")) {
+      String message = ioe_p.getMessage();
+      if (message == null) message = "";
+      if (message.equals("Bad password")) {
         m_authorized_b = false;
-      } else if (ioe_p.getMessage().indexOf("not found as file or resource") != -1) {
+      } else if (message.indexOf("not found as file or resource") != -1) {
         System.err.println("Error: Unable to find file.");
       } else if (ioe_p instanceof InvalidPdfException) {
-        System.err.println("Error: Invalid PDF: " + ioe_p.getMessage());
+        System.err.println("Error: Invalid PDF: " + message);
       } else { // unexpected error
         System.err.println("Error: Unexpected Exception in open_reader()");
         ioe_p.printStackTrace(); // debug
