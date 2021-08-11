@@ -240,7 +240,7 @@ Encryption can be applied to the output by appending output options such as \fBo
 pdftk in.pdf burst owner_pw foopass
 .TP
 .B rotate [<page ranges>]
-Takes a single input PDF and rotates just the specified pages.  All other pages remain unchanged.  The page order remains unchaged.  Specify the pages to rotate using the same notation as you would with \fBcat\fR, except you omit the pages that you aren't rotating:
+Takes a single input PDF and rotates just the specified pages.  All other pages remain unchanged.  The page order remains unchanged.  Specify the pages to rotate using the same notation as you would with \fBcat\fR, except you omit the pages that you aren't rotating:
 
 [\fI<begin page number>\fR[\fB\-\fR\fI<end page number>\fR[\fI<qualifier>\fR]]][\fI<page rotation>\fR]
 
@@ -296,7 +296,7 @@ Same as the \fBstamp\fR operation, but applies each page of the background PDF t
 Reads a single input PDF file and reports its metadata, bookmarks (a/k/a outlines), page metrics (media, rotation and labels), data embedded by STAMPtk (see STAMPtk's \fBembed\fR option) and other data to the given output filename or (if no output is given) to stdout.  Non-ASCII characters are encoded as XML numerical entities.  Does not create a new PDF.
 .TP
 .B dump_data_utf8
-Same as \fBdump_data\fR excepct that the output is encoded as UTF-8.
+Same as \fBdump_data\fR except that the output is encoded as UTF-8.
 .TP
 .B dump_data_fields
 Reads a single input PDF file and reports form field statistics to the given output
@@ -304,7 +304,7 @@ filename or (if no output is given) to stdout. Non-ASCII characters are encoded
 as XML numerical entities. Does not create a new PDF.
 .TP
 .B dump_data_fields_utf8
-Same as \fBdump_data_fields\fR excepct that the output is encoded as UTF-8.
+Same as \fBdump_data_fields\fR except that the output is encoded as UTF-8.
 .TP
 .B dump_data_annots
 \fBThis operation currently reports only link annotations.\fR
