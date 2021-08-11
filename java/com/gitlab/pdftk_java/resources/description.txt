@@ -176,7 +176,7 @@ OPTIONS
           rotate [<page ranges>]
                  Takes a single input PDF and rotates just the specified
                  pages.  All other pages remain unchanged.  The page order
-                 remains unchaged.  Specify the pages to rotate using the same
+                 remains unchanged.  Specify the pages to rotate using the same
                  notation as you would with cat, except you omit the pages
                  that you aren't rotating:
 
@@ -267,7 +267,7 @@ OPTIONS
                  as XML numerical entities.  Does not create a new PDF.
 
           dump_data_utf8
-                 Same as dump_data excepct that the output is encoded as
+                 Same as dump_data except that the output is encoded as
                  UTF-8.
 
           dump_data_fields
@@ -277,7 +277,7 @@ OPTIONS
                  entities. Does not create a new PDF.
 
           dump_data_fields_utf8
-                 Same as dump_data_fields excepct that the output is encoded
+                 Same as dump_data_fields except that the output is encoded
                  as UTF-8.
 
           dump_data_annots
