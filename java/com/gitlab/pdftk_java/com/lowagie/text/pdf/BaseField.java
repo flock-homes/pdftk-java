@@ -18,12 +18,12 @@
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
@@ -34,12 +34,12 @@
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
@@ -51,16 +51,20 @@
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (textLeading)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.awt.Color;
-import com.gitlab.pdftk_java.com.lowagie.text.Element;
-import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
-import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
+
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+import com.gitlab.pdftk_java.com.lowagie.text.Element;
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 /** Common field variables.
  * @author Paulo Soares (psoares@consiste.pt)
@@ -82,44 +86,49 @@ public abstract class BaseField {
     /** The field is hidden but is printable. */    
     public static final int HIDDEN_BUT_PRINTABLE = 3;
     /** The user may not change the value of the field. */    
-    public static final int READ_ONLY = 1;
+    public static final int READ_ONLY = PdfFormField.FF_READ_ONLY;
     /** The field must have a value at the time it is exported by a submit-form
      * action.
      */    
-    public static final int REQUIRED = 2;
+    public static final int REQUIRED = PdfFormField.FF_REQUIRED;
     /** The field may contain multiple lines of text.
      * This flag is only meaningful with text fields.
      */    
-    public static final int MULTILINE = 4;
+    public static final int MULTILINE = PdfFormField.FF_MULTILINE;
     /** The field will not scroll (horizontally for single-line
      * fields, vertically for multiple-line fields) to accommodate more text
      * than will fit within its annotation rectangle. Once the field is full, no
      * further text will be accepted.
      */    
-    public static final int DO_NOT_SCROLL = 8;
+    public static final int DO_NOT_SCROLL = PdfFormField.FF_DONOTSCROLL;
     /** The field is intended for entering a secure password that should
      * not be echoed visibly to the screen.
      */    
-    public static final int PASSWORD = 16;
+    public static final int PASSWORD = PdfFormField.FF_PASSWORD;
     /** The text entered in the field represents the pathname of
      * a file whose contents are to be submitted as the value of the field.
      */    
-    public static final int FILE_SELECTION = 32;
+    public static final int FILE_SELECTION = PdfFormField.FF_FILESELECT;
     /** The text entered in the field will not be spell-checked.
      * This flag is meaningful only in text fields and in combo
      * fields with the <CODE>EDIT</CODE> flag set.
      */    
-    public static final int DO_NOT_SPELL_CHECK = 64;
+    public static final int DO_NOT_SPELL_CHECK = PdfFormField.FF_DONOTSPELLCHECK;
     /** If set the combo box includes an editable text box as well as a drop list; if
      * clear, it includes only a drop list.
      * This flag is only meaningful with combo fields.
      */    
-    public static final int EDIT = 128;
+    public static final int EDIT = PdfFormField.FF_EDIT;
+    
+    /** whether or not a list may have multiple selections.  Only applies to /CH LIST
+     * fields, not combo boxes.
+     */
+    public static final int MULTISELECT = PdfFormField.FF_MULTISELECT;
 
     /**
      * combo box flag.
      */
-    public static final int COMB = 256;
+    public static final int COMB = PdfFormField.FF_COMB;
 
     protected float borderWidth = BORDER_WIDTH_THIN;
     protected int borderStyle = PdfBorderDictionary.STYLE_SOLID;
@@ -163,7 +172,7 @@ public abstract class BaseField {
      */
     public BaseField(PdfWriter writer, Rectangle box, String fieldName) {
         this.writer = writer;
-        this.box = box;
+        setBox(box);
         this.fieldName = fieldName;
     }
     
@@ -174,23 +183,24 @@ public abstract class BaseField {
             return font;
     }
     
-    protected PdfAppearance getBorderAppearance() throws IOException, DocumentException {
-        PdfAppearance app = writer.getDirectContent().createAppearance(box.width(), box.height());
+    protected PdfAppearance getBorderAppearance() {
+        PdfAppearance app = writer.getDirectContent().createAppearance(box.getWidth(), box.getHeight());
         switch (rotation) {
             case 90:
-                app.setMatrix(0, 1, -1, 0, box.height(), 0);
+                app.setMatrix(0, 1, -1, 0, box.getHeight(), 0);
                 break;
             case 180:
-                app.setMatrix(-1, 0, 0, -1, box.width(), box.height());
+                app.setMatrix(-1, 0, 0, -1, box.getWidth(), box.getHeight());
                 break;
             case 270:
-                app.setMatrix(0, -1, 1, 0, 0, box.width());
+                app.setMatrix(0, -1, 1, 0, 0, box.getWidth());
                 break;
         }
+        app.saveState();
         // background
         if (backgroundColor != null) {
             app.setColorFill(backgroundColor);
-            app.rectangle(0, 0, box.width(), box.height());
+            app.rectangle(0, 0, box.getWidth(), box.getHeight());
             app.fill();
         }
         // border
@@ -199,7 +209,7 @@ public abstract class BaseField {
                 app.setColorStroke(borderColor);
                 app.setLineWidth(borderWidth);
                 app.moveTo(0, borderWidth / 2);
-                app.lineTo(box.width(), borderWidth / 2);
+                app.lineTo(box.getWidth(), borderWidth / 2);
                 app.stroke();
             }
         }
@@ -207,7 +217,7 @@ public abstract class BaseField {
             if (borderWidth != 0 && borderColor != null) {
                 app.setColorStroke(borderColor);
                 app.setLineWidth(borderWidth);
-                app.rectangle(borderWidth / 2, borderWidth / 2, box.width() - borderWidth, box.height() - borderWidth);
+                app.rectangle(borderWidth / 2, borderWidth / 2, box.getWidth() - borderWidth, box.getHeight() - borderWidth);
                 app.stroke();
             }
             // beveled
@@ -223,7 +233,7 @@ public abstract class BaseField {
             if (borderWidth != 0 && borderColor != null) {
                 app.setColorStroke(borderColor);
                 app.setLineWidth(borderWidth);
-                app.rectangle(borderWidth / 2, borderWidth / 2, box.width() - borderWidth, box.height() - borderWidth);
+                app.rectangle(borderWidth / 2, borderWidth / 2, box.getWidth() - borderWidth, box.getHeight() - borderWidth);
                 app.stroke();
             }
             // inset
@@ -238,12 +248,12 @@ public abstract class BaseField {
                     app.setLineDash(3, 0);
                 app.setColorStroke(borderColor);
                 app.setLineWidth(borderWidth);
-                app.rectangle(borderWidth / 2, borderWidth / 2, box.width() - borderWidth, box.height() - borderWidth);
+                app.rectangle(borderWidth / 2, borderWidth / 2, box.getWidth() - borderWidth, box.getHeight() - borderWidth);
                 app.stroke();
                 if ((options & COMB) != 0 && maxCharacterLength > 1) {
-                    float step = box.width() / maxCharacterLength;
+                    float step = box.getWidth() / maxCharacterLength;
                     float yb = borderWidth / 2;
-                    float yt = box.height() - borderWidth / 2;
+                    float yt = box.getHeight() - borderWidth / 2;
                     for (int k = 1; k < maxCharacterLength; ++k) {
                         float x = step * k;
                         app.moveTo(x, yb);
@@ -253,6 +263,7 @@ public abstract class BaseField {
                 }
             }
         }
+        app.restoreState();
         return app;
     }
     
@@ -376,10 +387,10 @@ public abstract class BaseField {
         
     private void drawTopFrame(PdfAppearance app) {
         app.moveTo(borderWidth, borderWidth);
-        app.lineTo(borderWidth, box.height() - borderWidth);
-        app.lineTo(box.width() - borderWidth, box.height() - borderWidth);
-        app.lineTo(box.width() - 2 * borderWidth, box.height() - 2 * borderWidth);
-        app.lineTo(2 * borderWidth, box.height() - 2 * borderWidth);
+        app.lineTo(borderWidth, box.getHeight() - borderWidth);
+        app.lineTo(box.getWidth() - borderWidth, box.getHeight() - borderWidth);
+        app.lineTo(box.getWidth() - 2 * borderWidth, box.getHeight() - 2 * borderWidth);
+        app.lineTo(2 * borderWidth, box.getHeight() - 2 * borderWidth);
         app.lineTo(2 * borderWidth, 2 * borderWidth);
         app.lineTo(borderWidth, borderWidth);
         app.fill();
@@ -387,10 +398,10 @@ public abstract class BaseField {
     
     private void drawBottomFrame(PdfAppearance app) {
         app.moveTo(borderWidth, borderWidth);
-        app.lineTo(box.width() - borderWidth, borderWidth);
-        app.lineTo(box.width() - borderWidth, box.height() - borderWidth);
-        app.lineTo(box.width() - 2 * borderWidth, box.height() - 2 * borderWidth);
-        app.lineTo(box.width() - 2 * borderWidth, 2 * borderWidth);
+        app.lineTo(box.getWidth() - borderWidth, borderWidth);
+        app.lineTo(box.getWidth() - borderWidth, box.getHeight() - borderWidth);
+        app.lineTo(box.getWidth() - 2 * borderWidth, box.getHeight() - 2 * borderWidth);
+        app.lineTo(box.getWidth() - 2 * borderWidth, 2 * borderWidth);
         app.lineTo(2 * borderWidth, 2 * borderWidth);
         app.lineTo(borderWidth, borderWidth);
         app.fill();
@@ -501,14 +512,14 @@ public abstract class BaseField {
     public void setFontSize(float fontSize) {
         this.fontSize = fontSize;
     }
-    
+
     /** Gets the text leading size.
      * @return the text leading size
      */
     public float getTextLeading() {
         return this.textLeading;
     }
-    
+
     /** Sets the text leading size. If 0 then auto-sizing will be used but
      * only for text fields.
      * @param leading the text leading size
@@ -516,7 +527,7 @@ public abstract class BaseField {
     public void setTextLeading(float leading) {
         this.textLeading = leading;
     }
-    
+
     /** Gets the text horizontal alignment.
      * @return the text horizontal alignment
      */
@@ -557,7 +568,13 @@ public abstract class BaseField {
      * @param box the field dimension and position
      */
     public void setBox(Rectangle box) {
-        this.box = box;
+    	if (box == null) {
+    		this.box = null;
+    	}
+    	else {
+    		this.box = new Rectangle(box);
+    		this.box.normalize();
+    	}
     }
     
     /** Gets the field rotation.

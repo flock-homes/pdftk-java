@@ -31,35 +31,23 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
- *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (read from stdin, rich text)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream; // ssteward
-import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -74,10 +62,17 @@ public class XfdfReader implements SimpleXMLDocHandler {
 
     // storage for the field list and their values
 	HashMap	fields;
+	/**
+	 * Storage for field values if there's more than one value for a field.
+	 * @since	2.1.4
+	 */
+	protected HashMap listFields;
 	
     // storage for the field list and their rich text; ssteward
 	HashMap	fieldsRichText;
-	
+
+    HashMap<String, ArrayList<String>> fieldsMultiValue;
+
 	// storage for the path to referenced PDF, if any
 	String	fileSpec;
 	
@@ -149,6 +144,17 @@ public class XfdfReader implements SimpleXMLDocHandler {
         else
         	return field;
     }
+
+    /**
+     * Gets the field values for a list or <CODE>null</CODE> if the field does not
+     * exist or has no value defined.
+     * @param name the fully qualified field name
+     * @return the field values or <CODE>null</CODE>
+     * @since	2.1.4
+     */    
+    public List getListValues(String name) {
+        return (List)listFields.get(name);
+    }
     
 	// ssteward
 	// for parity with FdfReader addition
@@ -159,7 +165,7 @@ public class XfdfReader implements SimpleXMLDocHandler {
         else
         	return field;
     }
-    
+
     /** Gets the PDF file specification contained in the FDF.
      * @return the PDF file specification contained in the FDF
      */    
@@ -187,6 +193,7 @@ public class XfdfReader implements SimpleXMLDocHandler {
     		fileSpec = (String)h.get( "href" );
     	} else if ( tag.equals("fields") ) {
             fields = new HashMap();		// init it!
+            listFields = new HashMap();
             fieldsRichText = new HashMap();
     	} else if ( tag.equals("field") ) {
     		String	fName = (String) h.get( "name" );
@@ -215,7 +222,16 @@ public class XfdfReader implements SimpleXMLDocHandler {
 				String	fVal = (String) fieldValues.pop();
 
 				if (tag.equals("value")) { // ssteward
-					fields.put( fName, fVal );
+                    String old = (String) fields.put( fName, fVal );
+                    if (old != null) {
+                        List l = (List) listFields.get(fName);
+                        if (l == null) {
+                            l = new ArrayList();
+                            l.add(old);
+                        }
+                        l.add(fVal);
+                        listFields.put(fName, l);
+                    }
 				}
 				else { // rich text value
 					fieldsRichText.put( fName, fVal );

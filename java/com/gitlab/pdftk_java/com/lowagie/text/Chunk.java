@@ -395,6 +395,9 @@ public class Chunk implements Element, MarkupAttributes {
 	public Font font() {
 		return font;
 	}
+	public Font getFont() {
+		return font;
+	}
 
 	/**
 	 * Sets the font of this <CODE>Chunk</CODE>.
