@@ -98,6 +98,7 @@ enum keyword {
   drop_xmp_k,
   keep_first_id_k,
   keep_final_id_k,
+  replacement_font_k,
 
   // pdftk options
   verbose_k,

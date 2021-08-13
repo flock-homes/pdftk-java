@@ -52,6 +52,7 @@ import org.w3c.dom.Node;
 
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.Element;
+import com.gitlab.pdftk_java.com.lowagie.text.FontFactory;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
@@ -125,6 +126,7 @@ public class AcroFields {
     private float extraMarginLeft;
     private float extraMarginTop;
     private ArrayList substitutionFonts;
+    private BaseFont replacementFont;
 
     AcroFields(PdfReader reader, PdfWriter writer) {
         this.reader = reader;
@@ -557,7 +559,10 @@ public class AcroFields {
                 tx.setTextColor((Color)dab[DA_COLOR]);
             if (dab[DA_LEADING] != null)
                 tx.setTextLeading((Float)dab[DA_LEADING]);
-            if (dab[DA_FONT] != null) {
+            if (replacementFont != null) {
+                tx.setFont(replacementFont);
+            }
+            else if (dab[DA_FONT] != null) {
                 PdfDictionary font = merged.getAsDict(PdfName.DR);
                 if (font != null) {
                     font = font.getAsDict(PdfName.FONT);
@@ -2464,6 +2469,11 @@ public class AcroFields {
      */
     public void setSubstitutionFonts(ArrayList substitutionFonts) {
         this.substitutionFonts = substitutionFonts;
+    }
+
+    public boolean setReplacementFont(String fontName) {
+        replacementFont = FontFactory.getFont(fontName, BaseFont.IDENTITY_H, true).getBaseFont();
+        return replacementFont != null;
     }
 
     private static final PdfName[] buttonRemove = {PdfName.MK, PdfName.F , PdfName.FF , PdfName.Q , PdfName.BS , PdfName.BORDER};
