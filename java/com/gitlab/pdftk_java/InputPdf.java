@@ -145,10 +145,9 @@ class InputPdf {
       }
       open_success_b = false;
     } catch (Throwable t_p) { // unexpected error
-      System.err.println("Error: Unexpected Exception in open_reader()");
-      t_p.printStackTrace(); // debug
-
       open_success_b = false;
+      System.err.println("Error: Unexpected Exception in open_reader()");
+      throw (t_p);
     }
 
     if (!m_authorized_b && ask_about_warnings_b) {
