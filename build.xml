@@ -21,6 +21,7 @@
     <copy todir="build/classes">
       <fileset dir="java" includes="**/*.afm"/>
       <fileset dir="java" includes="**/*.txt"/>
+      <fileset dir="java" includes="**/*.lng"/>
     </copy>
   </target>
 

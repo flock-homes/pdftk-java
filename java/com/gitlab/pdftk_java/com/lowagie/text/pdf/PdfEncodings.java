@@ -13,7 +13,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -28,49 +27,32 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no (reverted backwards-compatibility patch)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
-import java.io.UnsupportedEncodingException;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+
 /** Supports fast encodings for winansi and PDFDocEncoding.
  * Supports conversions from CJK encodings to CID.
  * Supports custom encodings.
  * @author Paulo Soares (psoares@consiste.pt)
  */
 public class PdfEncodings {
-
-    // ssteward
-    //protected static Class c1= gnu.gcj.convert.Input_UnicodeBig.class;
-
     protected static final int CIDNONE = 0;
     protected static final int CIDRANGE = 1;
     protected static final int CIDCHAR = 2;
@@ -115,10 +97,10 @@ public class PdfEncodings {
     
     static final IntHashtable pdfEncoding = new IntHashtable();
     
-    static final HashMap extraEncodings = new HashMap();
+    static HashMap extraEncodings = new HashMap();
     
     static {        
-        for (int k = 128; k < 160; ++k) {
+        for (int k = 128; k < 161; ++k) {
             char c = winansiByteToChar[k];
             if (c != 65533)
                 winansi.put(c, k);
@@ -140,7 +122,7 @@ public class PdfEncodings {
     /** Converts a <CODE>String</CODE> to a </CODE>byte</CODE> array according
      * to the font's encoding.
      * @return an array of <CODE>byte</CODE> representing the conversion according to the font's encoding
-     * @param encoding the encoding fo the return byte array
+     * @param encoding the encoding
      * @param text the <CODE>String</CODE> to be converted
      */
     public static final byte[] convertToBytes(String text, String encoding) {
@@ -149,15 +131,11 @@ public class PdfEncodings {
         if (encoding == null || encoding.length() == 0) {
             int len = text.length();
             byte b[] = new byte[len];
-            for (int k = 0; k < len; ++k) {
+            for (int k = 0; k < len; ++k)
                 b[k] = (byte)text.charAt(k);
-	    }
             return b;
         }
-        ExtraEncoding extra = null;
-        synchronized (extraEncodings) {
-            extra = (ExtraEncoding)extraEncodings.get(encoding.toLowerCase());
-        }
+        ExtraEncoding extra = (ExtraEncoding)extraEncodings.get(encoding.toLowerCase());
         if (extra != null) {
             byte b[] = extra.charToByte(text, encoding);
             if (b != null)
@@ -176,7 +154,7 @@ public class PdfEncodings {
             int c = 0;
             for (int k = 0; k < len; ++k) {
                 char char1 = cc[k];
-                if (char1 < 128 || (char1 >= 160 && char1 <= 255))
+                if (char1 < 128 || (char1 > 160 && char1 <= 255))
                     c = char1;
                 else
                     c = hash.get(char1);
@@ -212,89 +190,107 @@ public class PdfEncodings {
         }
     }
     
+    /** Converts a <CODE>String</CODE> to a </CODE>byte</CODE> array according
+     * to the font's encoding.
+     * @return an array of <CODE>byte</CODE> representing the conversion according to the font's encoding
+     * @param encoding the encoding
+     * @param char1 the <CODE>char</CODE> to be converted
+     */
+    public static final byte[] convertToBytes(char char1, String encoding) {
+        if (encoding == null || encoding.length() == 0)
+            return new byte[]{(byte)char1};
+        ExtraEncoding extra = (ExtraEncoding)extraEncodings.get(encoding.toLowerCase());
+        if (extra != null) {
+            byte b[] = extra.charToByte(char1, encoding);
+            if (b != null)
+                return b;
+        }
+        IntHashtable hash = null;
+        if (encoding.equals(BaseFont.WINANSI))
+            hash = winansi;
+        else if (encoding.equals(PdfObject.TEXT_PDFDOCENCODING))
+            hash = pdfEncoding;
+        if (hash != null) {
+            int c = 0;
+            if (char1 < 128 || (char1 > 160 && char1 <= 255))
+                c = char1;
+            else
+                c = hash.get(char1);
+            if (c != 0)
+                return new byte[]{(byte)c};
+            else
+                return new byte[0];
+        }
+        if (encoding.equals(PdfObject.TEXT_UNICODE)) {
+            // workaround for jdk 1.2.2 bug
+            byte b[] = new byte[4];
+            b[0] = -2;
+            b[1] = -1;
+            b[2] = (byte)(char1 >> 8);
+            b[3] = (byte)(char1 & 0xff);
+            return b;
+        }
+        try {
+            return String.valueOf(char1).getBytes(encoding);
+        }
+        catch (UnsupportedEncodingException e) {
+            throw new ExceptionConverter(e);
+        }
+    }
+    
     /** Converts a </CODE>byte</CODE> array to a <CODE>String</CODE> according
      * to the some encoding.
      * @param bytes the bytes to convert
-     * @param encoding the encoding of input bytes
+     * @param encoding the encoding
      * @return the converted <CODE>String</CODE>
-     */
-    // ssteward: reorganized for 1.45, added TEXT_UNICODE case
-    public static final String convertToString( byte bytes[], String encoding ) {
-
-	String ret_val= PdfObject.NOTHING;
-	char[] ch= null;
-
-        if( bytes!= null ) {
-
-	    if( encoding== null || encoding.length()== 0 ) {
-		char cc[]= new char[bytes.length];
-		for( int ii = 0; ii < bytes.length; ++ii ) {
-		    cc[ii]= (char)(bytes[ii] & 0xff);
-		}
-		ret_val=new String( cc );
-	    }
-	    else if( encoding== PdfObject.TEXT_UNICODE ) {
-		// ssteward: we aren't really decoding UTF-16, but simply converting 8-bit splits into UTF-16;
-		// added this in 1.45 because of trouble with String( byte, encoding ) in older gcj (3.4.5)
-
-		int jj= 0;
-		if( bytes.length>= 2 && bytes[0]== (byte)254 && bytes[1]== (byte)255 ) {
-		    jj= 2;
-		}
-		int cc_len= (int)Math.floor( (bytes.length- jj)/ 2 );
-		char cc[]= new char[cc_len];
-		for( int ii= 0; ii< cc_len; ++ii, ++jj ) {
-		    cc[ii]= (char)( (((int)bytes[  jj] & 0xff) << 8) +
-				     ((int)bytes[++jj] & 0xff) );
-		}
-		ret_val= new String( cc );
-	    }
-	    else if( encoding== PdfObject.TEXT_PDFDOCENCODING && (ch= pdfEncodingByteToChar)!= null ||
-		     encoding== BaseFont.WINANSI && (ch= winansiByteToChar)!= null )
-		{
-		    char cc[]= new char[bytes.length];
-		    for( int ii= 0; ii< bytes.length; ++ii ) {
-			cc[ii]= ch[ bytes[ii] & 0xff ];
-		    }
-		    ret_val= new String( cc );
-		}
-	    else {
-		ExtraEncoding extra= null;
-		synchronized (extraEncodings) {
-		    extra = (ExtraEncoding)extraEncodings.get( encoding.toLowerCase() );
-		}
-
-		if( extra!= null ) {
-		    String text = extra.byteToChar(bytes, encoding);
-		    if (text != null)
-			ret_val= text;
-		}
-		else {
-		    try {
-			ret_val= new String( bytes, encoding );
-		    }
-		    catch( UnsupportedEncodingException e ) {
-			throw new ExceptionConverter( e );
-		    }
-		}
-	    }
-	}
-
-	return ret_val;
+     */    
+    public static final String convertToString(byte bytes[], String encoding) {
+        if (bytes == null)
+            return PdfObject.NOTHING;
+        if (encoding == null || encoding.length() == 0) {
+            char c[] = new char[bytes.length];
+            for (int k = 0; k < bytes.length; ++k)
+                c[k] = (char)(bytes[k] & 0xff);
+            return new String(c);
+        }
+        ExtraEncoding extra = (ExtraEncoding)extraEncodings.get(encoding.toLowerCase());
+        if (extra != null) {
+            String text = extra.byteToChar(bytes, encoding);
+            if (text != null)
+                return text;
+        }
+        char ch[] = null;
+        if (encoding.equals(BaseFont.WINANSI))
+            ch = winansiByteToChar;
+        else if (encoding.equals(PdfObject.TEXT_PDFDOCENCODING))
+            ch = pdfEncodingByteToChar;
+        if (ch != null) {
+            int len = bytes.length;
+            char c[] = new char[len];
+            for (int k = 0; k < len; ++k) {
+                c[k] = ch[bytes[k] & 0xff];
+            }
+            return new String(c);
+        }
+        try {
+            return new String(bytes, encoding);
+        }
+        catch (UnsupportedEncodingException e) {
+            throw new ExceptionConverter(e);
+        }
     }
     
     /** Checks is <CODE>text</CODE> only has PdfDocEncoding characters.
      * @param text the <CODE>String</CODE> to test
      * @return <CODE>true</CODE> if only PdfDocEncoding characters are present
      */    
-    // text is unicode, right?
     public static boolean isPdfDocEncoding(String text) {
         if (text == null)
             return true;
         int len = text.length();
         for (int k = 0; k < len; ++k) {
             char char1 = text.charAt(k);
-            if (char1 < 128 || (char1 >= 160 && char1 <= 255))
+            if (char1 < 128 || (char1 > 160 && char1 <= 255))
                 continue;
             if (!pdfEncoding.containsKey(char1))
                 return false;
@@ -326,7 +322,7 @@ public class PdfEncodings {
     /** Loads a CJK cmap to the cache with the option of associating
      * sequences to the newline.
      * @param name the CJK cmap name
-     * @param newline the sequences to be replaced bi a newline in the resulting CID. See <CODE>CRLF_CID_NEWLINE</CODE>
+     * @param newline the sequences to be replaced by a newline in the resulting CID. See <CODE>CRLF_CID_NEWLINE</CODE>
      */    
     public static void loadCmap(String name, byte newline[][]) {
         try {
@@ -335,7 +331,7 @@ public class PdfEncodings {
                 planes = (char[][])cmaps.get(name);
             }
             if (planes == null) {
-                planes = readCmap(name, (byte[][])newline);
+                planes = readCmap(name, newline);
                 synchronized (cmaps) {
                     cmaps.put(name, planes);
                 }
@@ -396,7 +392,7 @@ public class PdfEncodings {
         int end = start + length;
         int currentPlane = 0;
         for (int k = start; k < end; ++k) {
-            int one = (int)seq[k] & 0xff;
+            int one = seq[k] & 0xff;
             char plane[] = planes[currentPlane];
             int cid = plane[one];
             if ((cid & 0x8000) == 0) {
@@ -501,7 +497,7 @@ public class PdfEncodings {
         int nextPlane = 0;
         for (int idx = 0; idx < size; ++idx) {
             char plane[] = (char[])planes.get(nextPlane);
-            int one = (int)seqs[idx] & 0xff;
+            int one = seqs[idx] & 0xff;
             char c = plane[one];
             if (c != 0 && (c & 0x8000) == 0)
                 throw new RuntimeException("Inconsistent mapping.");
@@ -513,7 +509,7 @@ public class PdfEncodings {
             nextPlane = c & 0x7fff;
         }
         char plane[] = (char[])planes.get(nextPlane);
-        int one = (int)seqs[size] & 0xff;
+        int one = seqs[size] & 0xff;
         char c = plane[one];
         if ((c & 0x8000) != 0)
             throw new RuntimeException("Inconsistent mapping.");
@@ -525,12 +521,25 @@ public class PdfEncodings {
      * @param enc the conversion class
      */    
     public static void addExtraEncoding(String name, ExtraEncoding enc) {
-        synchronized (extraEncodings) {
-            extraEncodings.put(name.toLowerCase(), enc);
+        synchronized (extraEncodings) { // This serializes concurrent updates
+            HashMap newEncodings = (HashMap)extraEncodings.clone();
+            newEncodings.put(name.toLowerCase(), enc);
+            extraEncodings = newEncodings;  // This swap does not require synchronization with reader
         }
     }
-
+    
     private static class WingdingsConversion implements ExtraEncoding {
+        
+        public byte[] charToByte(char char1, String encoding) {
+            if (char1 == ' ')
+                return new byte[]{(byte)char1};
+            else if (char1 >= '\u2701' && char1 <= '\u27BE') {
+                byte v = table[char1 - 0x2700];
+                if (v != 0)
+                    return new byte[]{v};
+            }
+            return new byte[0];
+        }
         
         public byte[] charToByte(String text, String encoding) {
             char cc[] = text.toCharArray();
@@ -592,8 +601,6 @@ public class PdfEncodings {
             int len = cc.length;
             for (int k = 0; k < len; ++k) {
                 char c = cc[k];
-                if (c < ' ')
-                    continue;
                 if (c < 128)
                     b[ptr++] = (byte)c;
                 else {
@@ -607,6 +614,18 @@ public class PdfEncodings {
             byte b2[] = new byte[ptr];
             System.arraycopy(b, 0, b2, 0, ptr);
             return b2;
+        }
+        
+        public byte[] charToByte(char char1, String encoding) {
+            if (char1 < 128)
+                return new byte[]{(byte)char1};
+            else {
+                byte v = (byte)c2b.get(char1);
+                if (v != 0)
+                    return new byte[]{v};
+                else
+                    return new byte[0];
+            }
         }
         
         public String byteToChar(byte[] b, String encoding) {
@@ -664,7 +683,7 @@ public class PdfEncodings {
             int len = cc.length;
             for (int k = 0; k < len; ++k) {
                 char c = cc[k];
-                byte v = (byte)translation.get((int)c);
+                byte v = (byte)translation.get(c);
                 if (v != 0)
                     b[ptr++] = v;
             }
@@ -673,6 +692,14 @@ public class PdfEncodings {
             byte b2[] = new byte[ptr];
             System.arraycopy(b, 0, b2, 0, ptr);
             return b2;
+        }
+        
+        public byte[] charToByte(char char1, String encoding) {
+            byte v = (byte)translation.get(char1);
+            if (v != 0)
+                return new byte[]{v};
+            else
+                return new byte[0];
         }
         
         public String byteToChar(byte[] b, String encoding) {
@@ -715,12 +742,12 @@ public class PdfEncodings {
 
         static {
             for (int k = 0; k < table1.length; ++k) {
-                int v = (int)table1[k];
+                int v = table1[k];
                 if (v != 0)
                     t1.put(v, k + 32);
             }
             for (int k = 0; k < table2.length; ++k) {
-                int v = (int)table2[k];
+                int v = table2[k];
                 if (v != 0)
                     t2.put(v, k + 32);
             }
@@ -728,6 +755,13 @@ public class PdfEncodings {
     }
     
     private static class SymbolTTConversion implements ExtraEncoding {
+        
+        public byte[] charToByte(char char1, String encoding) {
+            if ((char1 & 0xff00) == 0 || (char1 & 0xff00) == 0xf000)
+                return new byte[]{(byte)char1};
+            else
+                return new byte[0];
+        }
         
         public byte[] charToByte(String text, String encoding) {
             char ch[] = text.toCharArray();

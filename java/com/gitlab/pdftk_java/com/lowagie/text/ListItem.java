@@ -1,6 +1,5 @@
 /*
- * $Id: ListItem.java,v 1.78 2005/05/03 13:03:48 blowagie Exp $
- * $Name:  $
+ * $Id: ListItem.java 4052 2009-08-28 13:54:31Z blowagie $
  *
  * Copyright 1999, 2000, 2001, 2002 by Bruno Lowagie.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,28 +29,14 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (kept MarkupTags from 155)
 
 package com.gitlab.pdftk_java.com.lowagie.text;
 
@@ -110,109 +94,103 @@ import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupParser;
 
 public class ListItem extends Paragraph implements TextElementArray, MarkupAttributes {
     
-    /** A serial version UID */
-    private static final long serialVersionUID = 1970670787169329006L;
-
-    // membervariables
-    
-/** this is the symbol that wil proceed the listitem. */
-    private Chunk symbol;
+    // constants
+	private static final long serialVersionUID = 1970670787169329006L;
+	
+	// member variables
+	
+	/**
+	 * this is the symbol that will precede the listitem.
+	 * @since	5.0	used to be private
+	 */
+    protected Chunk symbol;
     
     // constructors
     
-/**
- * Constructs a <CODE>ListItem</CODE>.
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE>.
+     */
     public ListItem() {
         super();
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain leading.
- *
- * @param	leading		the leading
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain leading.
+     *
+     * @param	leading		the leading
+     */    
     public ListItem(float leading) {
         super(leading);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain <CODE>Chunk</CODE>.
- *
- * @param	chunk		a <CODE>Chunk</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain <CODE>Chunk</CODE>.
+     *
+     * @param	chunk		a <CODE>Chunk</CODE>
+     */
     public ListItem(Chunk chunk) {
         super(chunk);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain <CODE>String</CODE>.
- *
- * @param	string		a <CODE>String</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain <CODE>String</CODE>.
+     *
+     * @param	string		a <CODE>String</CODE>
+     */
     public ListItem(String string) {
         super(string);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain <CODE>String</CODE>
- * and a certain <CODE>Font</CODE>.
- *
- * @param	string		a <CODE>String</CODE>
- * @param	font		a <CODE>String</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain <CODE>String</CODE>
+     * and a certain <CODE>Font</CODE>.
+     *
+     * @param	string		a <CODE>String</CODE>
+     * @param	font		a <CODE>String</CODE>
+     */
     public ListItem(String string, Font font) {
         super(string, font);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain <CODE>Chunk</CODE>
- * and a certain leading.
- *
- * @param	leading		the leading
- * @param	chunk		a <CODE>Chunk</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain <CODE>Chunk</CODE>
+     * and a certain leading.
+     *
+     * @param	leading		the leading
+     * @param	chunk		a <CODE>Chunk</CODE>
+     */
     public ListItem(float leading, Chunk chunk) {
         super(leading, chunk);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain <CODE>String</CODE>
- * and a certain leading.
- *
- * @param	leading		the leading
- * @param	string		a <CODE>String</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain <CODE>String</CODE>
+     * and a certain leading.
+     *
+     * @param	leading		the leading
+     * @param	string		a <CODE>String</CODE>
+     */
     public ListItem(float leading, String string) {
         super(leading, string);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain leading, <CODE>String</CODE>
- * and <CODE>Font</CODE>.
- *
- * @param	leading		the leading
- * @param	string		a <CODE>String</CODE>
- * @param	font		a <CODE>Font</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain leading, <CODE>String</CODE>
+     * and <CODE>Font</CODE>.
+     *
+     * @param	leading		the leading
+     * @param	string		a <CODE>String</CODE>
+     * @param	font		a <CODE>Font</CODE>
+     */
     public ListItem(float leading, String string, Font font) {
         super(leading, string, font);
     }
     
-/**
- * Constructs a <CODE>ListItem</CODE> with a certain <CODE>Phrase</CODE>.
- *
- * @param	phrase		a <CODE>Phrase</CODE>
- */
-    
+    /**
+     * Constructs a <CODE>ListItem</CODE> with a certain <CODE>Phrase</CODE>.
+     *
+     * @param	phrase		a <CODE>Phrase</CODE>
+     */
     public ListItem(Phrase phrase) {
         super(phrase);
     }
@@ -250,40 +228,53 @@ public class ListItem extends Paragraph implements TextElementArray, MarkupAttri
     
     // implementation of the Element-methods
     
-/**
- * Gets the type of the text element.
- *
- * @return	a type
- */
-    
+    /**
+     * Gets the type of the text element.
+     *
+     * @return	a type
+     */
     public int type() {
         return Element.LISTITEM;
     }
     
     // methods
     
-/**
- * Sets the listsymbol.
- *
- * @param	symbol	a <CODE>Chunk</CODE>
- */
-    
+    /**
+     * Sets the listsymbol.
+     *
+     * @param	symbol	a <CODE>Chunk</CODE>
+     */
     public void setListSymbol(Chunk symbol) {
-        this.symbol = symbol;
-        if (this.symbol.font().isStandardFont()) {
-            this.symbol.setFont(font);
-        }
+    	if (this.symbol == null) {
+    		this.symbol = symbol;
+    		if (this.symbol.getFont().isStandardFont()) {
+    			this.symbol.setFont(font);
+    		}
+    	}
+    }
+    
+    /**
+     * Sets the indentation of this paragraph on the left side.
+     *
+     * @param	indentation		the new indentation
+     */
+    public void setIndentationLeft(float indentation, boolean autoindent) {
+    	if (autoindent) {
+    		setIndentationLeft(getListSymbol().getWidthPoint());
+    	}
+    	else {
+    		setIndentationLeft(indentation);
+    	}
     }
     
     // methods to retrieve information
-    
-/**
- * Returns the listsymbol.
- *
- * @return	a <CODE>Chunk</CODE>
- */
-    
-    public Chunk listSymbol() {
+
+	/**
+     * Returns the listsymbol.
+     *
+     * @return	a <CODE>Chunk</CODE>
+     */
+    public Chunk getListSymbol() {
         return symbol;
     }
     

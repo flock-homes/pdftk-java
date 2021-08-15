@@ -1,6 +1,5 @@
 /*
- * $Id: PdfTemplate.java,v 1.36 2003/05/02 09:01:28 blowagie Exp $
- * $Name:  $
+ * $Id: PdfTemplate.java 3929 2009-05-22 13:26:41Z blowagie $
  *
  * Copyright 2001, 2002 Paulo Soares
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,28 +29,14 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 import java.io.IOException;
@@ -108,6 +92,31 @@ public class PdfTemplate extends PdfContentByte {
     }
     
     /**
+     * Creates a new template.
+     * <P>
+     * Creates a new template that is nothing more than a form XObject. This template can be included
+     * in this template or in another template. Templates are only written
+     * to the output when the document is closed permitting things like showing text in the first page
+     * that is only defined in the last page.
+     *
+     * @param writer the PdfWriter to use
+     * @param width the bounding box width
+     * @param height the bounding box height
+     * @return the created template
+     */
+    public static PdfTemplate createTemplate(PdfWriter writer, float width, float height) {
+        return createTemplate(writer, width, height, null);
+    }
+    
+    static PdfTemplate createTemplate(PdfWriter writer, float width, float height, PdfName forcedName) {
+        PdfTemplate template = new PdfTemplate(writer);
+        template.setWidth(width);
+        template.setHeight(height);
+        writer.addDirectTemplateSimple(template, forcedName);
+        return template;
+    }
+
+    /**
      * Sets the bounding width of this template.
      *
      * @param width the bounding width
@@ -119,7 +128,7 @@ public class PdfTemplate extends PdfContentByte {
     }
     
     /**
-     * Sets the bounding heigth of this template.
+     * Sets the bounding height of this template.
      *
      * @param height the bounding height
      */
@@ -135,17 +144,17 @@ public class PdfTemplate extends PdfContentByte {
      * @return width the bounding width
      */
     public float getWidth() {
-        return bBox.width();
+        return bBox.getWidth();
     }
     
     /**
-     * Gets the bounding heigth of this template.
+     * Gets the bounding height of this template.
      *
-     * @return heigth the bounding height
+     * @return height the bounding height
      */
     
     public float getHeight() {
-        return bBox.height();
+        return bBox.getHeight();
     }
     
     public Rectangle getBoundingBox() {
@@ -192,7 +201,11 @@ public class PdfTemplate extends PdfContentByte {
      * @return the indirect reference to this template
      */
     
-    PdfIndirectReference getIndirectReference() {
+    public PdfIndirectReference getIndirectReference() {
+    	// uncomment the null check as soon as we're sure all examples still work
+    	if (thisReference == null /* && writer != null */) {
+    		thisReference = writer.getPdfIndirectReference();
+    	}
         return thisReference;
     }
         
@@ -217,11 +230,12 @@ public class PdfTemplate extends PdfContentByte {
     /**
      * Gets the stream representing this template.
      *
+     * @param	compressionLevel	the compressionLevel
      * @return the stream representing this template
+     * @since	2.1.3	(replacing the method without param compressionLevel)
      */
-    
-    PdfStream getFormXObject() throws IOException {
-        return new PdfFormXObject(this);
+    PdfStream getFormXObject(int compressionLevel) throws IOException {
+        return new PdfFormXObject(this, compressionLevel);
     }
         
     /**

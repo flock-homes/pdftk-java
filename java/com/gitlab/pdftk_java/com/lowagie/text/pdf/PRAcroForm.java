@@ -1,9 +1,7 @@
 /*
- * $Id: PRAcroForm.java,v 1.11 2003/05/02 09:01:12 blowagie Exp $
- * $Name:  $
+ * $Id: PRAcroForm.java 3735 2009-02-26 01:44:03Z xlv $
  *
  * Copyright 2001, 2002 by Paulo Soares.
- *
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -18,49 +16,34 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * This class captures an AcroForm on input. Basically, it extends Dictionary
@@ -128,9 +111,11 @@ public class PRAcroForm extends PdfDictionary {
     }
     /**
      * Read, and comprehend the acroform
-     * @param root the docment root
+     * @param root the document root
      */
     public void readAcroForm(PdfDictionary root) {
+        if (root == null)
+            return;
         hashMap = root.hashMap;
         pushAttrib(root);
         PdfArray fieldlist = (PdfArray)PdfReader.getPdfObjectRelease(root.get(PdfName.FIELDS));
@@ -144,7 +129,7 @@ public class PRAcroForm extends PdfDictionary {
      * @param title the pathname of the field, up to this point or null
      */
     protected void iterateFields(PdfArray fieldlist, PRIndirectReference fieldDict, String title) {
-        for (Iterator it = fieldlist.getArrayList().iterator(); it.hasNext();) {
+        for (Iterator it = fieldlist.listIterator(); it.hasNext();) {
             // refobj might be a PdfNull in the wild.
             // https://gitlab.com/pdftk-java/pdftk/-/issues/108
             PdfObject refobj = (PdfObject)it.next();
@@ -164,7 +149,7 @@ public class PRAcroForm extends PdfDictionary {
                 else myTitle = title + '.' + tField.toString();
             }
             
-            PdfArray kids = (PdfArray)PdfReader.getPdfObject(dict.get(PdfName.KIDS));
+            PdfArray kids = dict.getAsArray(PdfName.KIDS);
             if (kids != null) {
                 pushAttrib(dict);
                 iterateFields(kids, myFieldDict, myTitle);
@@ -211,7 +196,7 @@ public class PRAcroForm extends PdfDictionary {
      */
     protected void pushAttrib(PdfDictionary dict) {
         PdfDictionary dic = null;
-        if (stack.size() != 0) {
+        if (!stack.isEmpty()) {
             dic = (PdfDictionary)stack.get(stack.size() - 1);
         }
         dic = mergeAttrib(dic, dict);

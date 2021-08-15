@@ -1,9 +1,7 @@
 /*
- * $Id: BaseFont.java,v 1.67 2005/07/26 17:32:39 psoares33 Exp $
- * $Name:  $
+ * $Id: BaseFont.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
- * Copyright 2000, 2001, 2002 by Paulo Soares.
- *
+ * Copyright 2000-2006 by Paulo Soares.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,50 +14,39 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (minor)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
-import java.io.*;
-import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
-import java.util.HashMap;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.StringTokenizer;
+
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 
 /**
  * Base class for the several font types supported
@@ -148,8 +135,39 @@ public abstract class BaseFont {
     /** java.awt.Font property */
     public static final int AWT_LEADING = 11;
     /** java.awt.Font property */
-    public static final int AWT_MAXADVANCE = 12;
-    
+    public static final int AWT_MAXADVANCE = 12;    
+    /**
+     * The underline position. Usually a negative value.
+     */
+    public static final int UNDERLINE_POSITION = 13;
+    /**
+     * The underline thickness.
+     */
+    public static final int UNDERLINE_THICKNESS = 14;
+    /**
+     * The strikethrough position.
+     */
+    public static final int STRIKETHROUGH_POSITION = 15;
+    /**
+     * The strikethrough thickness.
+     */
+    public static final int STRIKETHROUGH_THICKNESS = 16;
+    /**
+     * The recommended vertical size for subscripts for this font.
+     */
+    public static final int SUBSCRIPT_SIZE = 17;
+    /**
+     * The recommended vertical offset from the baseline for subscripts for this font. Usually a negative value.
+     */
+    public static final int SUBSCRIPT_OFFSET = 18;
+    /**
+     * The recommended vertical size for superscripts for this font.
+     */
+    public static final int SUPERSCRIPT_SIZE = 19;
+    /**
+     * The recommended vertical offset from the baseline for superscripts for this font.
+     */
+    public static final int SUPERSCRIPT_OFFSET = 20;
     /** The font is Type 1.
      */    
     public static final int FONT_TYPE_T1 = 0;
@@ -190,7 +208,11 @@ public abstract class BaseFont {
     /** A possible encoding. */    
     public static final String MACROMAN = "MacRoman";
     
-    
+    public static final int[] CHAR_RANGE_LATIN = {0, 0x17f, 0x2000, 0x206f, 0x20a0, 0x20cf, 0xfb00, 0xfb06};
+    public static final int[] CHAR_RANGE_ARABIC = {0, 0x7f, 0x0600, 0x067f, 0x20a0, 0x20cf, 0xfb50, 0xfbff, 0xfe70, 0xfeff};
+    public static final int[] CHAR_RANGE_HEBREW = {0, 0x7f, 0x0590, 0x05ff, 0x20a0, 0x20cf, 0xfb1d, 0xfb4f};
+    public static final int[] CHAR_RANGE_CYRILLIC = {0, 0x7f, 0x0400, 0x052f, 0x2000, 0x206f, 0x20a0, 0x20cf};
+
 /** if the font has to be embedded */
     public static final boolean EMBEDDED = true;
     
@@ -206,6 +228,7 @@ public abstract class BaseFont {
     /** The fake CID code that represents a newline. */    
     public static final char CID_NEWLINE = '\u7fff';
     
+    protected ArrayList subsetRanges;
     /** The font type.
      */    
     int fontType;
@@ -227,8 +250,14 @@ public abstract class BaseFont {
 /** true if the font is to be embedded in the PDF */
     protected boolean embedded;
     
+    /**
+     * The compression level for the font stream.
+     * @since	2.1.3
+     */
+    protected int compressionLevel = PdfStream.DEFAULT_COMPRESSION;
+    
 /**
- * true if the font must use it's built in encoding. In that case the
+ * true if the font must use its built in encoding. In that case the
  * <CODE>encoding</CODE> is only used to map a char to the position inside
  * the font, not to the expected char name.
  */
@@ -257,6 +286,12 @@ public abstract class BaseFont {
     
     protected boolean fastWinansi = false;
     
+    /**
+     * Custom encodings use this map to key the Unicode character
+     * to the single byte code.
+     */
+    protected IntHashtable specialMap;
+    
     static {
         BuiltinFonts14.put(COURIER, PdfName.COURIER);
         BuiltinFonts14.put(COURIER_BOLD, PdfName.COURIER_BOLD);
@@ -283,16 +318,18 @@ public abstract class BaseFont {
          * a PdfStream.
          * @param contents the content of the stream
          * @param lengths an array of int that describes the several lengths of each part of the font
+         * @param compressionLevel	the compression level of the Stream
          * @throws DocumentException error in the stream compression
+         * @since	2.1.3 (replaces the constructor without param compressionLevel)
          */
-        public StreamFont(byte contents[], int lengths[]) throws DocumentException {
+        public StreamFont(byte contents[], int lengths[], int compressionLevel) throws DocumentException {
             try {
                 bytes = contents;
                 put(PdfName.LENGTH, new PdfNumber(bytes.length));
                 for (int k = 0; k < lengths.length; ++k) {
                     put(new PdfName("Length" + (k + 1)), new PdfNumber(lengths[k]));
                 }
-                flateCompress();
+                flateCompress(compressionLevel);
             }
             catch (Exception e) {
                 throw new DocumentException(e);
@@ -303,15 +340,17 @@ public abstract class BaseFont {
          * Generates the PDF stream for a font.
          * @param contents the content of a stream
          * @param subType the subtype of the font.
-         * @throws DocumentException
+		 * @param compressionLevel	the compression level of the Stream
+         * @throws DocumentException error in the stream compression
+         * @since	2.1.3 (replaces the constructor without param compressionLevel)
          */
-        public StreamFont(byte contents[], String subType) throws DocumentException {
+        public StreamFont(byte contents[], String subType, int compressionLevel) throws DocumentException {
             try {
                 bytes = contents;
                 put(PdfName.LENGTH, new PdfNumber(bytes.length));
                 if (subType != null)
                     put(PdfName.SUBTYPE, new PdfName(subType));
-                flateCompress();
+                flateCompress(compressionLevel);
             }
             catch (Exception e) {
                 throw new DocumentException(e);
@@ -325,8 +364,21 @@ public abstract class BaseFont {
     protected BaseFont() {
     }
     
-    /** Creates a new font. This font can be one of the 14 built in types,
-     * a Type1 font referred by an AFM file, a TrueType font (simple or collection) or a CJK font from the
+    /**
+     * Creates a new font. This will always be the default Helvetica font (not embedded).
+     * This method is introduced because Helvetica is used in many examples.
+     * @return	a BaseFont object (Helvetica, Winansi, not embedded)
+     * @throws	IOException			This shouldn't occur ever
+     * @throws	DocumentException	This shouldn't occur ever
+     * @since	2.1.1 
+     */
+    public static BaseFont createFont() throws DocumentException, IOException {
+    	return createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+    }
+    
+    /**
+     * Creates a new font. This font can be one of the 14 built in types,
+     * a Type1 font referred to by an AFM or PFM file, a TrueType font (simple or collection) or a CJK font from the
      * Adobe Asian Font Pack. TrueType fonts and CJK fonts can have an optional style modifier
      * appended to the name. These modifiers are: Bold, Italic and BoldItalic. An
      * example would be "STSong-Light,Bold". Note that this modifiers do not work if
@@ -336,11 +388,36 @@ public abstract class BaseFont {
      * The fonts are cached and if they already exist they are extracted from the cache,
      * not parsed again.
      * <P>
+     * Besides the common encodings described by name, custom encodings 
+     * can also be made. These encodings will only work for the single byte fonts
+     * Type1 and TrueType. The encoding string starts with a '#'
+     * followed by "simple" or "full". If "simple" there is a decimal for the first character position and then a list
+     * of hex values representing the Unicode codes that compose that encoding.<br>
+     * The "simple" encoding is recommended for TrueType fonts
+     * as the "full" encoding risks not matching the character with the right glyph
+     * if not done with care.<br>
+     * The "full" encoding is specially aimed at Type1 fonts where the glyphs have to be
+     * described by non standard names like the Tex math fonts. Each group of three elements
+     * compose a code position: the one byte code order in decimal or as 'x' (x cannot be the space), the name and the Unicode character
+     * used to access the glyph. The space must be assigned to character position 32 otherwise
+     * text justification will not work.
+     * <P>
+     * Example for a "simple" encoding that includes the Unicode
+     * character space, A, B and ecyrillic:
+     * <PRE>
+     * "# simple 32 0020 0041 0042 0454"
+     * </PRE>
+     * <P>
+     * Example for a "full" encoding for a Type1 Tex font:
+     * <PRE>
+     * "# full 'A' nottriangeqlleft 0041 'B' dividemultiply 0042 32 space 0020"
+     * </PRE>
+     * <P>
      * This method calls:<br>
      * <PRE>
      * createFont(name, encoding, embedded, true, null, null);
      * </PRE>
-     * @param name the name of the font or it's location on file
+     * @param name the name of the font or its location on file
      * @param encoding the encoding to be applied to this font
      * @param embedded true if the font is to be embedded in the PDF
      * @return returns a new font. This font may come from the cache
@@ -348,11 +425,65 @@ public abstract class BaseFont {
      * @throws IOException the font file could not be read
      */
     public static BaseFont createFont(String name, String encoding, boolean embedded) throws DocumentException, IOException {
-        return createFont(name, encoding, embedded, true, null, null);
+        return createFont(name, encoding, embedded, true, null, null, false);
+    }
+    
+    /**
+     * Creates a new font. This font can be one of the 14 built in types,
+     * a Type1 font referred to by an AFM or PFM file, a TrueType font (simple or collection) or a CJK font from the
+     * Adobe Asian Font Pack. TrueType fonts and CJK fonts can have an optional style modifier
+     * appended to the name. These modifiers are: Bold, Italic and BoldItalic. An
+     * example would be "STSong-Light,Bold". Note that this modifiers do not work if
+     * the font is embedded. Fonts in TrueType collections are addressed by index such as "msgothic.ttc,1".
+     * This would get the second font (indexes start at 0), in this case "MS PGothic".
+     * <P>
+     * The fonts are cached and if they already exist they are extracted from the cache,
+     * not parsed again.
+     * <P>
+     * Besides the common encodings described by name, custom encodings 
+     * can also be made. These encodings will only work for the single byte fonts
+     * Type1 and TrueType. The encoding string starts with a '#'
+     * followed by "simple" or "full". If "simple" there is a decimal for the first character position and then a list
+     * of hex values representing the Unicode codes that compose that encoding.<br>
+     * The "simple" encoding is recommended for TrueType fonts
+     * as the "full" encoding risks not matching the character with the right glyph
+     * if not done with care.<br>
+     * The "full" encoding is specially aimed at Type1 fonts where the glyphs have to be
+     * described by non standard names like the Tex math fonts. Each group of three elements
+     * compose a code position: the one byte code order in decimal or as 'x' (x cannot be the space), the name and the Unicode character
+     * used to access the glyph. The space must be assigned to character position 32 otherwise
+     * text justification will not work.
+     * <P>
+     * Example for a "simple" encoding that includes the Unicode
+     * character space, A, B and ecyrillic:
+     * <PRE>
+     * "# simple 32 0020 0041 0042 0454"
+     * </PRE>
+     * <P>
+     * Example for a "full" encoding for a Type1 Tex font:
+     * <PRE>
+     * "# full 'A' nottriangeqlleft 0041 'B' dividemultiply 0042 32 space 0020"
+     * </PRE>
+     * <P>
+     * This method calls:<br>
+     * <PRE>
+     * createFont(name, encoding, embedded, true, null, null);
+     * </PRE>
+     * @param name the name of the font or its location on file
+     * @param encoding the encoding to be applied to this font
+     * @param embedded true if the font is to be embedded in the PDF
+     * @param	forceRead	in some cases (TrueTypeFont, Type1Font), the full font file will be read and kept in memory if forceRead is true
+     * @return returns a new font. This font may come from the cache
+     * @throws DocumentException the font is invalid
+     * @throws IOException the font file could not be read
+     * @since	2.1.5
+     */
+    public static BaseFont createFont(String name, String encoding, boolean embedded, boolean forceRead) throws DocumentException, IOException {
+        return createFont(name, encoding, embedded, true, null, null, forceRead);
     }
     
     /** Creates a new font. This font can be one of the 14 built in types,
-     * a Type1 font referred by an AFM file, a TrueType font (simple or collection) or a CJK font from the
+     * a Type1 font referred to by an AFM or PFM file, a TrueType font (simple or collection) or a CJK font from the
      * Adobe Asian Font Pack. TrueType fonts and CJK fonts can have an optional style modifier
      * appended to the name. These modifiers are: Bold, Italic and BoldItalic. An
      * example would be "STSong-Light,Bold". Note that this modifiers do not work if
@@ -361,9 +492,34 @@ public abstract class BaseFont {
      * <P>
      * The fonts may or may not be cached depending on the flag <CODE>cached</CODE>.
      * If the <CODE>byte</CODE> arrays are present the font will be
-     * read from them instead of the name. The name is still required to identify
+     * read from them instead of the name. A name is still required to identify
      * the font type.
-     * @param name the name of the font or it's location on file
+     * <P>
+     * Besides the common encodings described by name, custom encodings 
+     * can also be made. These encodings will only work for the single byte fonts
+     * Type1 and TrueType. The encoding string starts with a '#'
+     * followed by "simple" or "full". If "simple" there is a decimal for the first character position and then a list
+     * of hex values representing the Unicode codes that compose that encoding.<br>
+     * The "simple" encoding is recommended for TrueType fonts
+     * as the "full" encoding risks not matching the character with the right glyph
+     * if not done with care.<br>
+     * The "full" encoding is specially aimed at Type1 fonts where the glyphs have to be
+     * described by non standard names like the Tex math fonts. Each group of three elements
+     * compose a code position: the one byte code order in decimal or as 'x' (x cannot be the space), the name and the Unicode character
+     * used to access the glyph. The space must be assigned to character position 32 otherwise
+     * text justification will not work.
+     * <P>
+     * Example for a "simple" encoding that includes the Unicode
+     * character space, A, B and ecyrillic:
+     * <PRE>
+     * "# simple 32 0020 0041 0042 0454"
+     * </PRE>
+     * <P>
+     * Example for a "full" encoding for a Type1 Tex font:
+     * <PRE>
+     * "# full 'A' nottriangeqlleft 0041 'B' dividemultiply 0042 32 space 0020"
+     * </PRE>
+     * @param name the name of the font or its location on file
      * @param encoding the encoding to be applied to this font
      * @param embedded true if the font is to be embedded in the PDF
      * @param cached true if the font comes from the cache or is added to
@@ -374,9 +530,125 @@ public abstract class BaseFont {
      * is true, otherwise it will always be created new
      * @throws DocumentException the font is invalid
      * @throws IOException the font file could not be read
+     * @since	iText 0.80
      */
     public static BaseFont createFont(String name, String encoding, boolean embedded, boolean cached, byte ttfAfm[], byte pfb[]) throws DocumentException, IOException {
-        String nameBase = getBaseName(name);
+        return createFont(name, encoding, embedded, cached, ttfAfm, pfb, false);
+    }
+    
+    /** Creates a new font. This font can be one of the 14 built in types,
+     * a Type1 font referred to by an AFM or PFM file, a TrueType font (simple or collection) or a CJK font from the
+     * Adobe Asian Font Pack. TrueType fonts and CJK fonts can have an optional style modifier
+     * appended to the name. These modifiers are: Bold, Italic and BoldItalic. An
+     * example would be "STSong-Light,Bold". Note that this modifiers do not work if
+     * the font is embedded. Fonts in TrueType collections are addressed by index such as "msgothic.ttc,1".
+     * This would get the second font (indexes start at 0), in this case "MS PGothic".
+     * <P>
+     * The fonts may or may not be cached depending on the flag <CODE>cached</CODE>.
+     * If the <CODE>byte</CODE> arrays are present the font will be
+     * read from them instead of the name. A name is still required to identify
+     * the font type.
+     * <P>
+     * Besides the common encodings described by name, custom encodings 
+     * can also be made. These encodings will only work for the single byte fonts
+     * Type1 and TrueType. The encoding string starts with a '#'
+     * followed by "simple" or "full". If "simple" there is a decimal for the first character position and then a list
+     * of hex values representing the Unicode codes that compose that encoding.<br>
+     * The "simple" encoding is recommended for TrueType fonts
+     * as the "full" encoding risks not matching the character with the right glyph
+     * if not done with care.<br>
+     * The "full" encoding is specially aimed at Type1 fonts where the glyphs have to be
+     * described by non standard names like the Tex math fonts. Each group of three elements
+     * compose a code position: the one byte code order in decimal or as 'x' (x cannot be the space), the name and the Unicode character
+     * used to access the glyph. The space must be assigned to character position 32 otherwise
+     * text justification will not work.
+     * <P>
+     * Example for a "simple" encoding that includes the Unicode
+     * character space, A, B and ecyrillic:
+     * <PRE>
+     * "# simple 32 0020 0041 0042 0454"
+     * </PRE>
+     * <P>
+     * Example for a "full" encoding for a Type1 Tex font:
+     * <PRE>
+     * "# full 'A' nottriangeqlleft 0041 'B' dividemultiply 0042 32 space 0020"
+     * </PRE>
+     * @param name the name of the font or its location on file
+     * @param encoding the encoding to be applied to this font
+     * @param embedded true if the font is to be embedded in the PDF
+     * @param cached true if the font comes from the cache or is added to
+     * the cache if new, false if the font is always created new
+     * @param ttfAfm the true type font or the afm in a byte array
+     * @param pfb the pfb in a byte array
+     * @param noThrow if true will not throw an exception if the font is not recognized and will return null, if false will throw
+     * an exception if the font is not recognized. Note that even if true an exception may be thrown in some circumstances.
+     * This parameter is useful for FontFactory that may have to check many invalid font names before finding the right one
+     * @return returns a new font. This font may come from the cache but only if cached
+     * is true, otherwise it will always be created new
+     * @throws DocumentException the font is invalid
+     * @throws IOException the font file could not be read
+     * @since	2.0.3
+     */
+    public static BaseFont createFont(String name, String encoding, boolean embedded, boolean cached, byte ttfAfm[], byte pfb[], boolean noThrow) throws DocumentException, IOException {
+        return createFont(name, encoding, embedded, cached, ttfAfm, pfb, false, false);
+    }
+    
+    /** Creates a new font. This font can be one of the 14 built in types,
+     * a Type1 font referred to by an AFM or PFM file, a TrueType font (simple or collection) or a CJK font from the
+     * Adobe Asian Font Pack. TrueType fonts and CJK fonts can have an optional style modifier
+     * appended to the name. These modifiers are: Bold, Italic and BoldItalic. An
+     * example would be "STSong-Light,Bold". Note that this modifiers do not work if
+     * the font is embedded. Fonts in TrueType collections are addressed by index such as "msgothic.ttc,1".
+     * This would get the second font (indexes start at 0), in this case "MS PGothic".
+     * <P>
+     * The fonts may or may not be cached depending on the flag <CODE>cached</CODE>.
+     * If the <CODE>byte</CODE> arrays are present the font will be
+     * read from them instead of the name. A name is still required to identify
+     * the font type.
+     * <P>
+     * Besides the common encodings described by name, custom encodings 
+     * can also be made. These encodings will only work for the single byte fonts
+     * Type1 and TrueType. The encoding string starts with a '#'
+     * followed by "simple" or "full". If "simple" there is a decimal for the first character position and then a list
+     * of hex values representing the Unicode codes that compose that encoding.<br>
+     * The "simple" encoding is recommended for TrueType fonts
+     * as the "full" encoding risks not matching the character with the right glyph
+     * if not done with care.<br>
+     * The "full" encoding is specially aimed at Type1 fonts where the glyphs have to be
+     * described by non standard names like the Tex math fonts. Each group of three elements
+     * compose a code position: the one byte code order in decimal or as 'x' (x cannot be the space), the name and the Unicode character
+     * used to access the glyph. The space must be assigned to character position 32 otherwise
+     * text justification will not work.
+     * <P>
+     * Example for a "simple" encoding that includes the Unicode
+     * character space, A, B and ecyrillic:
+     * <PRE>
+     * "# simple 32 0020 0041 0042 0454"
+     * </PRE>
+     * <P>
+     * Example for a "full" encoding for a Type1 Tex font:
+     * <PRE>
+     * "# full 'A' nottriangeqlleft 0041 'B' dividemultiply 0042 32 space 0020"
+     * </PRE>
+     * @param name the name of the font or its location on file
+     * @param encoding the encoding to be applied to this font
+     * @param embedded true if the font is to be embedded in the PDF
+     * @param cached true if the font comes from the cache or is added to
+     * the cache if new, false if the font is always created new
+     * @param ttfAfm the true type font or the afm in a byte array
+     * @param pfb the pfb in a byte array
+     * @param noThrow if true will not throw an exception if the font is not recognized and will return null, if false will throw
+     * an exception if the font is not recognized. Note that even if true an exception may be thrown in some circumstances.
+     * This parameter is useful for FontFactory that may have to check many invalid font names before finding the right one
+     * @param	forceRead	in some cases (TrueTypeFont, Type1Font), the full font file will be read and kept in memory if forceRead is true
+     * @return returns a new font. This font may come from the cache but only if cached
+     * is true, otherwise it will always be created new
+     * @throws DocumentException the font is invalid
+     * @throws IOException the font file could not be read
+     * @since	2.1.5
+     */
+    public static BaseFont createFont(String name, String encoding, boolean embedded, boolean cached, byte ttfAfm[], byte pfb[], boolean noThrow, boolean forceRead) throws DocumentException, IOException {
+    	String nameBase = getBaseName(name);
         encoding = normalizeEncoding(encoding);
         boolean isBuiltinFonts14 = BuiltinFonts14.containsKey(name);
         boolean isCJKFont = isBuiltinFonts14 ? false : CJKFont.isCJKFont(nameBase, encoding);
@@ -395,21 +667,23 @@ public abstract class BaseFont {
                 return fontFound;
         }
         if (isBuiltinFonts14 || name.toLowerCase().endsWith(".afm") || name.toLowerCase().endsWith(".pfm")) {
-            fontBuilt = new Type1Font(name, encoding, embedded, ttfAfm, pfb);
+            fontBuilt = new Type1Font(name, encoding, embedded, ttfAfm, pfb, forceRead);
             fontBuilt.fastWinansi = encoding.equals(CP1252);
         }
         else if (nameBase.toLowerCase().endsWith(".ttf") || nameBase.toLowerCase().endsWith(".otf") || nameBase.toLowerCase().indexOf(".ttc,") > 0) {
             if (encoding.equals(IDENTITY_H) || encoding.equals(IDENTITY_V))
-                fontBuilt = new TrueTypeFontUnicode(name, encoding, embedded, ttfAfm);
+                fontBuilt = new TrueTypeFontUnicode(name, encoding, embedded, ttfAfm, forceRead);
             else {
-                fontBuilt = new TrueTypeFont(name, encoding, embedded, ttfAfm);
+                fontBuilt = new TrueTypeFont(name, encoding, embedded, ttfAfm, false, forceRead);
                 fontBuilt.fastWinansi = encoding.equals(CP1252);
             }
         }
         else if (isCJKFont)
             fontBuilt = new CJKFont(name, encoding, embedded);
+        else if (noThrow)
+            return null;
         else
-            throw new DocumentException("Font '" + name + "' with '" + encoding + "' is not recognized.");
+            throw new DocumentException("Font " + name + " with " + encoding + " is not recognized.");
         if (cached) {
             synchronized (fontCache) {
                 fontFound = (BaseFont)fontCache.get(key);
@@ -466,7 +740,52 @@ public abstract class BaseFont {
      * Creates the <CODE>widths</CODE> and the <CODE>differences</CODE> arrays
      */
     protected void createEncoding() {
-        if (fontSpecific) {
+        if (encoding.startsWith("#")) {
+            specialMap = new IntHashtable();
+            StringTokenizer tok = new StringTokenizer(encoding.substring(1), " ,\t\n\r\f");
+            if (tok.nextToken().equals("full")) {
+                while (tok.hasMoreTokens()) {
+                    String order = tok.nextToken();
+                    String name = tok.nextToken();
+                    char uni = (char)Integer.parseInt(tok.nextToken(), 16);
+                    int orderK;
+                    if (order.startsWith("'"))
+                        orderK = order.charAt(1);
+                    else
+                        orderK = Integer.parseInt(order);
+                    orderK %= 256;
+                    specialMap.put(uni, orderK);
+                    differences[orderK] = name;
+                    unicodeDifferences[orderK] = uni;
+                    widths[orderK] = getRawWidth(uni, name);
+                    charBBoxes[orderK] = getRawCharBBox(uni, name);
+                }
+            }
+            else {
+                int k = 0;
+                if (tok.hasMoreTokens())
+                    k = Integer.parseInt(tok.nextToken());
+                while (tok.hasMoreTokens() && k < 256) {
+                    String hex = tok.nextToken();
+                    int uni = Integer.parseInt(hex, 16) % 0x10000;
+                    String name = GlyphList.unicodeToName(uni);
+                    if (name != null) {
+                        specialMap.put(uni, k);
+                        differences[k] = name;
+                        unicodeDifferences[k] = (char)uni;
+                        widths[k] = getRawWidth(uni, name);
+                        charBBoxes[k] = getRawCharBBox(uni, name);
+                        ++k;
+                    }
+                }
+            }
+            for (int k = 0; k < 256; ++k) {
+                if (differences[k] == null) {
+                    differences[k] = notdef;
+                }
+            }
+        }
+        else if (fontSpecific) {
             for (int k = 0; k < 256; ++k) {
                 widths[k] = getRawWidth(k, null);
                 charBBoxes[k] = getRawCharBBox(k, null);
@@ -512,7 +831,7 @@ public abstract class BaseFont {
      * @param char2 the second char
      * @return the kerning to be applied in normalized 1000 units
      */
-    public abstract int getKerning(char char1, char char2);
+    public abstract int getKerning(int char1, int char2);
 
     /**
      * Sets the kerning between two Unicode chars.
@@ -521,25 +840,32 @@ public abstract class BaseFont {
      * @param kern the kerning to apply in normalized 1000 units
      * @return <code>true</code> if the kerning was applied, <code>false</code> otherwise
      */
-    public abstract boolean setKerning(char char1, char char2, int kern);
+    public abstract boolean setKerning(int char1, int char2, int kern);
     
     /**
      * Gets the width of a <CODE>char</CODE> in normalized 1000 units.
      * @param char1 the unicode <CODE>char</CODE> to get the width of
      * @return the width in normalized 1000 units
      */
-    public int getWidth(char char1) {
+    public int getWidth(int char1) {
         if (fastWinansi) {
             if (char1 < 128 || (char1 >= 160 && char1 <= 255))
                 return widths[char1];
-            return widths[PdfEncodings.winansi.get(char1)];
+            else
+                return widths[PdfEncodings.winansi.get(char1)];
         }
-        return getWidth(new String(new char[]{char1}));
+        else {
+            int total = 0;
+            byte mbytes[] = convertToBytes((char)char1);
+            for (int k = 0; k < mbytes.length; ++k)
+                total += widths[0xff & mbytes[k]];
+            return total;
+        }
     }
     
     /**
      * Gets the width of a <CODE>String</CODE> in normalized 1000 units.
-     * @param text the <CODE>String</CODE> to get the witdth of
+     * @param text the <CODE>String</CODE> to get the width of
      * @return the width in normalized 1000 units
      */
     public int getWidth(String text) {
@@ -567,7 +893,7 @@ public abstract class BaseFont {
  * Gets the descent of a <CODE>String</CODE> in normalized 1000 units. The descent will always be
  * less than or equal to zero even if all the characters have an higher descent.
  * @param text the <CODE>String</CODE> to get the descent of
- * @return the dexcent in normalized 1000 units
+ * @return the descent in normalized 1000 units
  */
     public int getDescent(String text) {
         int min = 0;
@@ -602,11 +928,11 @@ public abstract class BaseFont {
  * less than or equal to zero even if all the characters have an higher descent.
  * @param text the <CODE>String</CODE> to get the descent of
  * @param fontSize the size of the font
- * @return the dexcent in points
+ * @return the descent in points
  */
     public float getDescentPoint(String text, float fontSize)
     {
-        return 0.001f * getDescent(text) * fontSize;
+        return getDescent(text) * 0.001f * fontSize;
     }
     
 /**
@@ -618,19 +944,19 @@ public abstract class BaseFont {
  */
     public float getAscentPoint(String text, float fontSize)
     {
-        return 0.001f * getAscent(text) * fontSize;
+        return getAscent(text) * 0.001f * fontSize;
     }
 // ia>    
     
     /**
      * Gets the width of a <CODE>String</CODE> in points taking kerning
      * into account.
-     * @param text the <CODE>String</CODE> to get the witdth of
+     * @param text the <CODE>String</CODE> to get the width of
      * @param fontSize the font size
      * @return the width in points
      */
     public float getWidthPointKerned(String text, float fontSize) {
-        float size = 0.001f * getWidth(text) * fontSize;
+        float size = getWidth(text) * 0.001f * fontSize;
         if (!hasKernPairs())
             return size;
         int len = text.length() - 1;
@@ -644,21 +970,21 @@ public abstract class BaseFont {
     
     /**
      * Gets the width of a <CODE>String</CODE> in points.
-     * @param text the <CODE>String</CODE> to get the witdth of
+     * @param text the <CODE>String</CODE> to get the width of
      * @param fontSize the font size
      * @return the width in points
      */
     public float getWidthPoint(String text, float fontSize) {
-        return 0.001f * getWidth(text) * fontSize;
+        return getWidth(text) * 0.001f * fontSize;
     }
     
     /**
      * Gets the width of a <CODE>char</CODE> in points.
-     * @param char1 the <CODE>char</CODE> to get the witdth of
+     * @param char1 the <CODE>char</CODE> to get the width of
      * @param fontSize the font size
      * @return the width in points
      */
-    public float getWidthPoint(char char1, float fontSize) {
+    public float getWidthPoint(int char1, float fontSize) {
         return getWidth(char1) * 0.001f * fontSize;
     }
     
@@ -671,7 +997,42 @@ public abstract class BaseFont {
     byte[] convertToBytes(String text) {
         if (directTextToByte)
             return PdfEncodings.convertToBytes(text, null);
+        if (specialMap != null) {
+            byte[] b = new byte[text.length()];
+            int ptr = 0;
+            int length = text.length();
+            for (int k = 0; k < length; ++k) {
+                char c = text.charAt(k);
+                if (specialMap.containsKey(c))
+                    b[ptr++] = (byte)specialMap.get(c);
+            }
+            if (ptr < length) {
+                byte[] b2 = new byte[ptr];
+                System.arraycopy(b, 0, b2, 0, ptr);
+                return b2;
+            }
+            else
+                return b;
+        }
         return PdfEncodings.convertToBytes(text, encoding);
+    }
+    
+    /**
+     * Converts a <CODE>char</CODE> to a </CODE>byte</CODE> array according
+     * to the font's encoding.
+     * @param char1 the <CODE>char</CODE> to be converted
+     * @return an array of <CODE>byte</CODE> representing the conversion according to the font's encoding
+     */
+    byte[] convertToBytes(int char1) {
+        if (directTextToByte)
+            return PdfEncodings.convertToBytes((char)char1, null);
+        if (specialMap != null) {
+            if (specialMap.containsKey(char1))
+                return new byte[]{(byte)specialMap.get(char1)};
+            else
+                return new byte[0];
+        }
+        return PdfEncodings.convertToBytes((char)char1, encoding);
     }
     
     /** Outputs to the writer the font dictionaries and streams.
@@ -682,6 +1043,15 @@ public abstract class BaseFont {
      * @throws DocumentException error in generating the object
      */
     abstract void writeFont(PdfWriter writer, PdfIndirectReference ref, Object params[]) throws DocumentException, IOException;
+    
+    /**
+     * Returns a PdfStream object with the full font program (if possible).
+     * This method will return null for some types of fonts (CJKFont, Type3Font)
+     * or if there is no font program available (standard Type 1 fonts).
+     * @return	a PdfStream with the font program
+     * @since	2.1.3
+     */
+    abstract PdfStream getFullFontStream() throws IOException, DocumentException;
     
     /** Gets the encoding used to convert <CODE>String</CODE> into <CODE>byte[]</CODE>.
      * @return the encoding name
@@ -763,6 +1133,17 @@ public abstract class BaseFont {
      */
     public abstract String[][] getFullFontName();
     
+    /** Gets all the entries of the names-table. If it is a True Type font
+     * each array element will have {Name ID, Platform ID, Platform Encoding ID,
+     * Language ID, font name}. The interpretation of this values can be
+     * found in the Open Type specification, chapter 2, in the 'name' table.<br>
+     * For the other fonts the array has a single element with {"4", "", "", "",
+     * font name}.
+     * @return the full name of the font
+     * @since 2.0.8
+     */
+    public abstract String[][] getAllNameEntries(); 
+
     /** Gets the full name of the font. If it is a True Type font
      * each array element will have {Platform ID, Platform Encoding ID,
      * Language ID, font name}. The interpretation of this values can be
@@ -780,7 +1161,7 @@ public abstract class BaseFont {
         String nameBase = getBaseName(name);
         BaseFont fontBuilt = null;
         if (nameBase.toLowerCase().endsWith(".ttf") || nameBase.toLowerCase().endsWith(".otf") || nameBase.toLowerCase().indexOf(".ttc,") > 0)
-            fontBuilt = new TrueTypeFont(name, CP1252, false, ttfAfm, true);
+            fontBuilt = new TrueTypeFont(name, CP1252, false, ttfAfm, true, false);
         else
             fontBuilt = createFont(name, encoding, false, false, ttfAfm, null);
         return fontBuilt.getFullFontName();
@@ -798,10 +1179,29 @@ public abstract class BaseFont {
         String nameBase = getBaseName(name);
         BaseFont fontBuilt = null;
         if (nameBase.toLowerCase().endsWith(".ttf") || nameBase.toLowerCase().endsWith(".otf") || nameBase.toLowerCase().indexOf(".ttc,") > 0)
-            fontBuilt = new TrueTypeFont(name, CP1252, false, ttfAfm, true);
+            fontBuilt = new TrueTypeFont(name, CP1252, false, ttfAfm, true, false);
         else
             fontBuilt = createFont(name, encoding, false, false, ttfAfm, null);
         return new Object[]{fontBuilt.getPostscriptFontName(), fontBuilt.getFamilyFontName(), fontBuilt.getFullFontName()};
+    }
+    
+    /** Gets all the entries of the namestable from the font. Only the required tables are read.
+     * @param name the name of the font
+     * @param encoding the encoding of the font
+     * @param ttfAfm the true type font or the afm in a byte array
+     * @throws DocumentException on error
+     * @throws IOException on error
+     * @return an array of Object[] built with {getPostscriptFontName(), getFamilyFontName(), getFullFontName()}
+     * @since 2.0.8
+     */
+    public static String[][] getAllNameEntries(String name, String encoding, byte ttfAfm[]) throws DocumentException, IOException {
+        String nameBase = getBaseName(name);
+        BaseFont fontBuilt = null;
+        if (nameBase.toLowerCase().endsWith(".ttf") || nameBase.toLowerCase().endsWith(".otf") || nameBase.toLowerCase().indexOf(".ttc,") > 0)
+            fontBuilt = new TrueTypeFont(name, CP1252, false, ttfAfm, true, false);
+        else
+            fontBuilt = createFont(name, encoding, false, false, ttfAfm, null);
+        return fontBuilt.getAllNameEntries();
     }
     
     /** Gets the family name of the font. If it is a True Type font
@@ -907,8 +1307,10 @@ public abstract class BaseFont {
     }
     
     /** Indicates if all the glyphs and widths for that particular
-     * encoding should be included in the document. Set to <CODE>false</CODE>
-     * to include all.
+     * encoding should be included in the document. When set to <CODE>true</CODE>
+     * only the glyphs used will be included in the font. When set to <CODE>false</CODE>
+     * and {@link #addSubsetRange(int[])} was not called the full font will be included
+     * otherwise just the characters ranges will be included.
      * @param subset new value of property subset
      */
     public void setSubset(boolean subset) {
@@ -941,14 +1343,9 @@ public abstract class BaseFont {
         }
         // Try to use Context Class Loader to load the properties file.
         try {
-            java.lang.reflect.Method getCCL =
-                Thread.class.getMethod("getContextClassLoader", new Class[0]);
-            if (getCCL != null) {
-                ClassLoader contextClassLoader =
-                    (ClassLoader)getCCL.invoke(Thread.currentThread(),
-                                               new Object[0]);
-                if (contextClassLoader != null)
-                    is = contextClassLoader.getResourceAsStream(key);
+            ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if (contextClassLoader != null) {
+                is = contextClassLoader.getResourceAsStream(key);
             }
         } catch (Throwable e) {}
 
@@ -967,7 +1364,7 @@ public abstract class BaseFont {
      * @param c the CID code
      * @return the Unicode equivalent
      */    
-    public char getUnicodeEquivalent(char c) {
+    public int getUnicodeEquivalent(int c) {
         return c;
     }
     
@@ -976,7 +1373,7 @@ public abstract class BaseFont {
      * @param c the Unicode
      * @return the CID equivalent
      */    
-    public char getCidCode(char c) {
+    public int getCidCode(int c) {
         return c;
     }
 
@@ -991,8 +1388,8 @@ public abstract class BaseFont {
      * @return <CODE>true</CODE> if the character has a glyph,
      * <CODE>false</CODE> otherwise
      */    
-    public boolean charExists(char c) {
-        byte b[] = convertToBytes(new String(new char[]{c}));
+    public boolean charExists(int c) {
+        byte b[] = convertToBytes(c);
         return b.length > 0;
     }
     
@@ -1003,8 +1400,8 @@ public abstract class BaseFont {
      * @return <CODE>true</CODE> if the advance was set,
      * <CODE>false</CODE> otherwise
      */    
-    public boolean setCharAdvance(char c, int advance) {
-        byte b[] = convertToBytes(new String(new char[]{c}));
+    public boolean setCharAdvance(int c, int advance) {
+        byte b[] = convertToBytes(c);
         if (b.length == 0)
             return false;
         widths[0xff & b[0]] = advance;
@@ -1013,13 +1410,13 @@ public abstract class BaseFont {
     
     private static void addFont(PRIndirectReference fontRef, IntHashtable hits, ArrayList fonts) {
         PdfObject obj = PdfReader.getPdfObject(fontRef);
-        if (!obj.isDictionary())
+        if (obj == null || !obj.isDictionary())
             return;
         PdfDictionary font = (PdfDictionary)obj;
-        PdfName subtype = (PdfName)PdfReader.getPdfObject(font.get(PdfName.SUBTYPE));
+        PdfName subtype = font.getAsName(PdfName.SUBTYPE);
         if (!PdfName.TYPE1.equals(subtype) && !PdfName.TRUETYPE.equals(subtype))
             return;
-        PdfName name = (PdfName)PdfReader.getPdfObject(font.get(PdfName.BASEFONT));
+        PdfName name = font.getAsName(PdfName.BASEFONT);
         fonts.add(new Object[]{PdfName.decodeName(name.toString()), fontRef});
         hits.put(fontRef.getNumber(), 1);
     }
@@ -1028,10 +1425,10 @@ public abstract class BaseFont {
         ++level;
         if (level > 50) // in case we have an endless loop
             return;
-        PdfDictionary resources = (PdfDictionary)PdfReader.getPdfObject(page.get(PdfName.RESOURCES));
+        PdfDictionary resources = page.getAsDict(PdfName.RESOURCES);
         if (resources == null)
             return;
-        PdfDictionary font = (PdfDictionary)PdfReader.getPdfObject(resources.get(PdfName.FONT));
+        PdfDictionary font = resources.getAsDict(PdfName.FONT);
         if (font != null) {
             for (Iterator it = font.getKeys().iterator(); it.hasNext();) {
                 PdfObject ft = font.get((PdfName)it.next());        
@@ -1043,10 +1440,10 @@ public abstract class BaseFont {
                 addFont((PRIndirectReference)ft, hits, fonts);
             }
         }
-        PdfDictionary xobj = (PdfDictionary)PdfReader.getPdfObject(resources.get(PdfName.XOBJECT));
+        PdfDictionary xobj = resources.getAsDict(PdfName.XOBJECT);
         if (xobj != null) {
             for (Iterator it = xobj.getKeys().iterator(); it.hasNext();) {
-                recourseFonts((PdfDictionary)PdfReader.getPdfObject(xobj.get((PdfName)it.next())), hits, fonts, level);
+                recourseFonts(xobj.getAsDict((PdfName)it.next()), hits, fonts, level);
             }
         }
     }
@@ -1091,8 +1488,8 @@ public abstract class BaseFont {
      * @return an array of four floats with the bounding box in the format [llx,lly,urx,ury] or
      * <code>null</code>
      */    
-    public int[] getCharBBox(char c) {
-        byte b[] = convertToBytes(new String(new char[]{c}));
+    public int[] getCharBBox(int c) {
+        byte b[] = convertToBytes(c);
         if (b.length == 0)
             return null;
         else
@@ -1121,4 +1518,37 @@ public abstract class BaseFont {
         for (char c = '\u06ea'; c <= '\u06ed'; ++c)
             setCharAdvance(c, 0);
     }
+    
+    /**
+     * Adds a character range when subsetting. The range is an <CODE>int</CODE> array
+     * where the first element is the start range inclusive and the second element is the
+     * end range inclusive. Several ranges are allowed in the same array.
+     * @param range the character range
+     */
+    public void addSubsetRange(int[] range) {
+        if (subsetRanges == null)
+            subsetRanges = new ArrayList();
+        subsetRanges.add(range);
+    }
+    
+	/**
+	 * Returns the compression level used for the font streams.
+	 * @return the compression level (0 = best speed, 9 = best compression, -1 is default)
+	 * @since 2.1.3
+	 */
+	public int getCompressionLevel() {
+		return compressionLevel;
+	}
+
+	/**
+	 * Sets the compression level to be used for the font streams.
+	 * @param compressionLevel a value between 0 (best speed) and 9 (best compression)
+	 * @since 2.1.3
+	 */
+	public void setCompressionLevel(int compressionLevel) {
+		if (compressionLevel < PdfStream.NO_COMPRESSION || compressionLevel > PdfStream.BEST_COMPRESSION)
+			this.compressionLevel = PdfStream.DEFAULT_COMPRESSION;
+		else
+			this.compressionLevel = compressionLevel;
+	}
 }

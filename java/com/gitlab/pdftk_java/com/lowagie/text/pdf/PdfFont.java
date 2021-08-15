@@ -1,6 +1,5 @@
 /*
- * $Id: PdfFont.java,v 1.30 2002/07/09 11:28:23 blowagie Exp $
- * $Name:  $
+ * $Id: PdfFont.java 3373 2008-05-12 16:21:24Z xlv $
  *
  * Copyright 1999, 2000, 2001, 2002 Bruno Lowagie
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,33 +29,19 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed Image [because of license issues?])
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-// import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
+// import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
 
 /**
  * <CODE>PdfFont</CODE> is the Pdf Font object.
@@ -140,7 +124,7 @@ class PdfFont implements Comparable {
         if (image == null)
             return size;
         else {
-            return image.scaledHeight();
+            return image.getScaledHeight();
         }
 	*/
     }
@@ -162,13 +146,13 @@ class PdfFont implements Comparable {
      * @return		a width in Text Space
      */
     
-    float width(char character) {
+    float width(int character) {
 	return font.getWidthPoint(character, size) * hScale;
 	/* ssteward: dropped in 1.44
         if (image == null)
             return font.getWidthPoint(character, size) * hScale;
         else
-            return image.scaledWidth();
+            return image.getScaledWidth();
 	*/
     }
     
@@ -178,7 +162,7 @@ class PdfFont implements Comparable {
         if (image == null)
             return font.getWidthPoint(s, size) * hScale;
         else
-            return image.scaledWidth();
+            return image.getScaledWidth();
 	*/
     }
     

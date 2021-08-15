@@ -546,11 +546,14 @@ public class Phrase extends ArrayList implements TextElementArray, MarkupAttribu
  * @return	the linespacing
  */
     
-    public float leading() {
+    public float getLeading() {
         if (Float.isNaN(leading)) {
             return font.leading(1.5f);
         }
         return leading;
+    }
+    public float leading() {
+        return getLeading();
     }
     
 /**

@@ -1,6 +1,5 @@
 /*
- * $Id: Element.java,v 1.66 2005/05/04 14:41:15 blowagie Exp $
- * $Name:  $
+ * $Id: Element.java 3672 2009-02-01 15:32:09Z blowagie $
  *
  * Copyright 1999, 2000, 2001, 2002 by Bruno Lowagie.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,23 +29,6 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
@@ -173,16 +154,33 @@ public interface Element {
 	public static final int JPEG = 32;
 
 	/** This is a possible type of <CODE>Element</CODE>. */
+	public static final int JPEG2000 = 33;
+
+	/** This is a possible type of <CODE>Element</CODE>. */
 	public static final int IMGRAW = 34;
 
 	/** This is a possible type of <CODE>Element</CODE>. */
 	public static final int IMGTEMPLATE = 35;
+
+	/**
+	 * This is a possible type of <CODE>Element</CODE>.
+	 * @since	2.1.5
+	 */
+	public static final int JBIG2 = 36;
 
 	/** This is a possible type of <CODE>Element</CODE>. */
 	public static final int GRAPHIC = 39;
 
 	/** This is a possible type of <CODE>Element</CODE>. */
 	public static final int MULTI_COLUMN_TEXT = 40;
+	
+	/** This is a possible type of <CODE>Element</CODE>. */
+	public static final int MARKED = 50;
+
+	/** This is a possible type of <CODE>Element</CODE>.
+	 * @since 2.1.2
+	 */
+	public static final int YMARK = 55;
 
 	// static membervariables (alignment)
 

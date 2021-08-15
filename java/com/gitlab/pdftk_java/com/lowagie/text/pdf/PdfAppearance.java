@@ -1,7 +1,13 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4 -*- */
 /*
  * Copyright 2002 Paulo Soares
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -14,47 +20,33 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
-import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import java.util.HashMap;
+
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 /**
  * Implements the appearance stream to be used with form fields..
@@ -71,13 +63,13 @@ public class PdfAppearance extends PdfTemplate {
         stdFieldFontNames.put("Helvetica-BoldOblique", new PdfName("HeBO"));
         stdFieldFontNames.put("Helvetica-Bold", new PdfName("HeBo"));
         stdFieldFontNames.put("Helvetica-Oblique", new PdfName("HeOb"));
-        stdFieldFontNames.put("Helvetica", new PdfName("Helv"));
+        stdFieldFontNames.put("Helvetica", PdfName.HELV);
         stdFieldFontNames.put("Symbol", new PdfName("Symb"));
         stdFieldFontNames.put("Times-BoldItalic", new PdfName("TiBI"));
         stdFieldFontNames.put("Times-Bold", new PdfName("TiBo"));
         stdFieldFontNames.put("Times-Italic", new PdfName("TiIt"));
         stdFieldFontNames.put("Times-Roman", new PdfName("TiRo"));
-        stdFieldFontNames.put("ZapfDingbats", new PdfName("ZaDb"));
+        stdFieldFontNames.put("ZapfDingbats", PdfName.ZADB);
         stdFieldFontNames.put("HYSMyeongJo-Medium", new PdfName("HySm"));
         stdFieldFontNames.put("HYGoThic-Medium", new PdfName("HyGo"));
         stdFieldFontNames.put("HeiseiKakuGo-W5", new PdfName("KaGo"));
@@ -116,6 +108,26 @@ public class PdfAppearance extends PdfTemplate {
     }
     
     /**
+     * Creates a new appearance to be used with form fields.
+     *
+     * @param writer the PdfWriter to use
+     * @param width the bounding box width
+     * @param height the bounding box height
+     * @return the appearance created
+     */
+    public static PdfAppearance createAppearance(PdfWriter writer, float width, float height) {
+        return createAppearance(writer, width, height, null);
+    }
+    
+    static PdfAppearance createAppearance(PdfWriter writer, float width, float height, PdfName forcedName) {
+        PdfAppearance template = new PdfAppearance(writer);
+        template.setWidth(width);
+        template.setHeight(height);
+        writer.addDirectTemplateSimple(template, forcedName);
+        return template;
+    }
+
+    /**
      * Set the font and the size for the subsequent text writing.
      *
      * @param bf the font
@@ -131,8 +143,12 @@ public class PdfAppearance extends PdfTemplate {
             state.fontDetails = writer.addSimple(bf);
         PdfName psn = (PdfName)stdFieldFontNames.get(bf.getPostscriptFontName());
         if (psn == null) {
-            psn = new PdfName(bf.getPostscriptFontName());
-            bf.setSubset(false);
+            if (bf.isSubset() && bf.getFontType() == BaseFont.FONT_TYPE_TTUNI)
+                psn = state.fontDetails.getFontName();
+            else {
+                psn = new PdfName(bf.getPostscriptFontName());
+                state.fontDetails.setSubset(false);
+            }
         }
         PageResources prs = getPageResources();
 //        PdfName name = state.fontDetails.getFontName();

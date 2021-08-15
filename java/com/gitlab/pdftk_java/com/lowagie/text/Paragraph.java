@@ -409,6 +409,9 @@ public class Paragraph extends Phrase implements TextElementArray, MarkupAttribu
  * @return	alignment
  */
     
+    public int getAlignment() {
+        return alignment;
+    }
     public int alignment() {
         return alignment;
     }
@@ -419,6 +422,9 @@ public class Paragraph extends Phrase implements TextElementArray, MarkupAttribu
  * @return	the indentation
  */
     
+    public float getIndentationLeft() {
+        return indentationLeft;
+    }
     public float indentationLeft() {
         return indentationLeft;
     }
@@ -429,6 +435,9 @@ public class Paragraph extends Phrase implements TextElementArray, MarkupAttribu
  * @return	the indentation
  */
     
+    public float getIndentationRight() {
+        return indentationRight;
+    }
     public float indentationRight() {
         return indentationRight;
     }
@@ -439,6 +448,9 @@ public class Paragraph extends Phrase implements TextElementArray, MarkupAttribu
  * @return	the spacing
  */
     
+    public float getSpacingBefore() {
+        return spacingBefore;
+    }
     public float spacingBefore() {
         return spacingBefore;
     }
@@ -449,6 +461,9 @@ public class Paragraph extends Phrase implements TextElementArray, MarkupAttribu
  * @return	the spacing
  */
     
+    public float getSpacingAfter() {
+        return spacingAfter;
+    }
     public float spacingAfter() {
         return spacingAfter;
     }

@@ -1,9 +1,7 @@
 /*
  * $Id: GrayColor.java 3427 2008-05-24 18:32:31Z xlv $
- * $Name:  $
  *
  * Copyright 2001, 2002 by Paulo Soares.
- *
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,7 +14,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,23 +28,6 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
@@ -68,7 +48,7 @@ public class GrayColor extends ExtendedColor {
     private static final long serialVersionUID = -6571835680819282746L;
 
 	private float gray;
-
+    
     public static final GrayColor GRAYBLACK = new GrayColor(0f);
     public static final GrayColor GRAYWHITE = new GrayColor(1f);
 
@@ -80,7 +60,7 @@ public class GrayColor extends ExtendedColor {
         super(TYPE_GRAY, floatGray, floatGray, floatGray);
         gray = normalize(floatGray);
     }
-
+    
     public float getGray() {
         return gray;
     }
@@ -88,9 +68,9 @@ public class GrayColor extends ExtendedColor {
     public boolean equals(Object obj) {
         return obj instanceof GrayColor && ((GrayColor)obj).gray == this.gray;
     }
-
+    
     public int hashCode() {
         return Float.floatToIntBits(gray);
     }
-
+    
 }

@@ -1,9 +1,7 @@
 /*
- * $Id: PdfFormXObject.java,v 1.58 2005/07/16 16:49:22 blowagie Exp $
- * $Name:  $
+ * $Id: PdfFormXObject.java 3903 2009-04-24 10:03:48Z blowagie $
  *
- * Copyright 1999, 2000, 2001, 2002 Bruno Lowagie
- *
+ * Copyright 2001, 2002 Bruno Lowagie
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,43 +14,28 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -73,18 +56,15 @@ public class PdfFormXObject extends PdfStream {
 /** This is the 1 - matrix. */
     public static final PdfLiteral MATRIX = new PdfLiteral("[1 0 0 1 0 0]");
     
-    // membervariables
-    
-    
-    // constructor
-    
 /**
  * Constructs a <CODE>PdfFormXObject</CODE>-object.
  *
- * @param		template		the template
+ * @param	template			the template
+ * @param	compressionLevel	the compression level for the stream
+ * @since	2.1.3 (Replacing the existing constructor with param compressionLevel)
  */
     
-    PdfFormXObject(PdfTemplate template) // throws BadPdfFormatException
+    PdfFormXObject(PdfTemplate template, int compressionLevel) // throws BadPdfFormatException
     {
         super();
         put(PdfName.TYPE, PdfName.XOBJECT);
@@ -103,7 +83,7 @@ public class PdfFormXObject extends PdfStream {
             put(PdfName.MATRIX, matrix);
         bytes = template.toPdf(null);
         put(PdfName.LENGTH, new PdfNumber(bytes.length));
-        flateCompress();
+        flateCompress(compressionLevel);
     }
     
 }

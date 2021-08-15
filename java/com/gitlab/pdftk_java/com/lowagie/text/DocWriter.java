@@ -54,6 +54,9 @@
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (kept MarkupAttributes from 155)
+
 package com.gitlab.pdftk_java.com.lowagie.text;
 
 import java.io.BufferedOutputStream;
@@ -119,9 +122,7 @@ public abstract class DocWriter implements DocListener {
     protected boolean open = false;
 
 /** Do we have to pause all writing actions? */
-    // ssteward: changed from "pause" to "m_pause" to
-    // remove gcj complaints over ambiguity with pause()
-    protected boolean m_pause = false;
+    protected boolean pause = false;
     
 /** Closes the stream on document close */
     protected boolean closeStream = true;
@@ -148,7 +149,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Signals that an <CODE>Element</CODE> was added to the <CODE>Document</CODE>.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class.
  * 
  * @param element A high level object to add
@@ -180,28 +181,6 @@ public abstract class DocWriter implements DocListener {
         return true;
     }
 
-/**
- * Sets the <CODE>Watermark</CODE>.
- * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
- * derived from this abstract class if they actually support the use of
- * a <CODE>Watermark</CODE>.
- * 
- * @param watermark A watermark object
- * @return  <CODE>false</CODE> (because watermarks aren't supported by default).
- */
-/* ssteward: dropped in 1.44
-    public boolean add(Watermark watermark) {
-        return false;
-    }
-*/
-/**
- * Removes the <CODE>Watermark</CODE> (if there is one).
- */
-/* ssteward: dropped in 1.44
-    public void removeWatermark() {
-    }
-*/
 /**
  * Sets the margins.
  * <P>
@@ -237,7 +216,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Changes the header of this document.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class if they actually support the use of
  * headers.
  *
@@ -251,7 +230,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Resets the header of this document.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class if they actually support the use of
  * headers.
  */
@@ -262,7 +241,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Changes the footer of this document.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class if they actually support the use of
  * footers.
  *
@@ -287,7 +266,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Sets the page number to 0.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class if they actually support the use of
  * pagenumbers.
  */
@@ -298,7 +277,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Sets the page number.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class if they actually support the use of
  * pagenumbers.
  *
@@ -349,8 +328,17 @@ public abstract class DocWriter implements DocListener {
  */
 
     public void pause() {
-	// ssteward
-        m_pause = true;
+        pause = true;
+    }
+    
+    /**
+     * Checks if writing is paused.
+     *
+     * @return		<CODE>true</CODE> if writing temporarily has to be paused, <CODE>false</CODE> otherwise.
+     */
+    
+    public boolean isPaused() {
+        return pause;
     }
 
 /**
@@ -358,8 +346,7 @@ public abstract class DocWriter implements DocListener {
  */
 
     public void resume() {
-	// ssteward
-        m_pause = false;
+        pause = false;
     }
 
 /**
@@ -489,7 +476,7 @@ public abstract class DocWriter implements DocListener {
     }
 
     /** Checks if the stream is to be closed on document close
-     * @return true if the stream is closed on documnt close
+     * @return true if the stream is closed on document close
      *
      */
     public boolean isCloseStream() {
@@ -504,17 +491,18 @@ public abstract class DocWriter implements DocListener {
         this.closeStream = closeStream;
     }
     
-    
-	/**
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.DocListener#clearTextWrap()
-	 */
-	public void clearTextWrap() throws DocumentException {
-		// do nothing
-	}
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.DocListener#setMarginMirroring(boolean)
+     * @see com.lowagie.text.DocListener#setMarginMirroring(boolean)
      */
     public boolean setMarginMirroring(boolean MarginMirroring) {
+        return false;
+    }
+    
+    /**
+     * @see com.lowagie.text.DocListener#setMarginMirroring(boolean)
+     * @since	2.1.6
+     */
+    public boolean setMarginMirroringTopBottom(boolean MarginMirroring) {
         return false;
     }
     

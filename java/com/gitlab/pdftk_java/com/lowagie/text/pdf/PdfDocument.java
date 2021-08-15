@@ -2087,8 +2087,7 @@ class PdfDocument extends Document implements DocListener {
      * @return the displacement that was caused
      * @throws DocumentException on error
      */
-    private float flushLines() throws DocumentException {
-        
+    protected float flushLines() throws DocumentException {
         // checks if the ArrayList with the lines is not null
         if (lines == null) {
             return 0;
@@ -2108,13 +2107,13 @@ class PdfDocument extends Document implements DocListener {
             //end add by Jin-Hsia Yang
             
         }
-        
+
         // checks if the ArrayList with the lines is empty
-        if (lines.size() == 0) {
+        if (lines.isEmpty()) {
             return 0;
         }
-        
-        // initialisation of some parameters
+
+        // initialization of some parameters
         Object currentValues[] = new Object[2];
         PdfFont currentFont = null;
         float displacement = 0;
@@ -2124,7 +2123,7 @@ class PdfDocument extends Document implements DocListener {
         currentValues[1] = lastBaseFactor;
         // looping over all the lines
         for (Iterator i = lines.iterator(); i.hasNext(); ) {
-            
+
             // this is a line in the loop
             l = (PdfLine) i.next();
             
@@ -2138,41 +2137,14 @@ class PdfDocument extends Document implements DocListener {
             
             // is the line preceeded by a symbol?
             if (l.listSymbol() != null) {
-                chunk = l.listSymbol();
-                text.moveText(- l.listIndent(), 0);
-                if (chunk.font().compareTo(currentFont) != 0) {
-                    currentFont = chunk.font();
-                    text.setFontAndSize(currentFont.getFont(), currentFont.size());
-                }
-                if (chunk.color() != null) {
-                    Color color = chunk.color();
-                    text.setColorFill(color);
-                    text.showText(chunk.toString());
-                    text.resetRGBColorFill();
-                }
-		/* ssteward: dropped in 1.44
-                else if (chunk.isImage()) {
-                    Image image = chunk.getImage();
-                    float matrix[] = image.matrix();
-                    float xMarker = text.getXTLM();
-                    float yMarker = text.getYTLM();
-                    matrix[Image.CX] = xMarker + chunk.getImageOffsetX() - matrix[Image.CX];
-                    matrix[Image.CY] = yMarker + chunk.getImageOffsetY() - matrix[Image.CY];
-                    graphics.addImage(image, matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
-                }
-		*/
-                else {
-                    text.showText(chunk.toString());
-                }
-                text.moveText(l.listIndent(), 0);
+                ColumnText.showTextAligned(graphics, Element.ALIGN_LEFT, new Phrase(l.listSymbol()), text.getXTLM() - l.listIndent(), text.getYTLM(), 0);
             }
-            
+
             currentValues[0] = currentFont;
-            
+
             writeLineToContent(l, text, graphics, currentValues, writer.getSpaceCharRatio());
-            
+
             currentFont = (PdfFont)currentValues[0];
-            
             displacement += l.height();
             if (indentLeft() - listIndentLeft != l.indentLeft()) {
                 text.moveText(indentLeft() - l.indentLeft() - listIndentLeft, 0);

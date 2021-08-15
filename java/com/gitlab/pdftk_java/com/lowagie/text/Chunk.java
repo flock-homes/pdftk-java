@@ -64,6 +64,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Set;
 import java.net.URL;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfAction;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfAnnotation;
@@ -71,6 +72,7 @@ import com.gitlab.pdftk_java.com.lowagie.text.pdf.HyphenationEvent;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte;
 import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupTags;
 import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupParser;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.draw.DrawInterface;
 
 /**
  * This is the smallest significant part of text that can be added to a
@@ -166,6 +168,11 @@ public class Chunk implements Element, MarkupAttributes {
 	/** Key for text horizontal scaling. */
 	public static final String HSCALE = "HSCALE";
 
+	/**
+	 * Key for character spacing.
+	 */
+	public static final String CHAR_SPACING = "CHAR_SPACING";
+
 	// member variables
 
 	/** This is the content of this chunk of text. */
@@ -258,6 +265,67 @@ public class Chunk implements Element, MarkupAttributes {
 				new Float(offsetY), new Boolean(false) });
 	}
     */
+
+	/**
+	 * Key for drawInterface of the Separator.
+	 * @since	2.1.2
+	 */
+	public static final String SEPARATOR = "SEPARATOR";
+	
+	/**
+	 * Creates a separator Chunk.
+     * Note that separator chunks can't be used in combination with tab chunks!
+	 * @param	separator	the drawInterface to use to draw the separator.
+	 * @since	2.1.2
+	 */
+	public Chunk(DrawInterface separator) {
+		this(separator, false);
+	}	
+	
+	/**
+	 * Creates a separator Chunk.
+     * Note that separator chunks can't be used in combination with tab chunks!
+	 * @param	separator	the drawInterface to use to draw the separator.
+	 * @param	vertical	true if this is a vertical separator
+	 * @since	2.1.2
+	 */
+	public Chunk(DrawInterface separator, boolean vertical) {
+		this(OBJECT_REPLACEMENT_CHARACTER, new Font());
+		setAttribute(SEPARATOR, new Object[] {separator, Boolean.valueOf(vertical)});
+	}
+
+	/**
+	 * Key for drawInterface of the tab.
+	 * @since	2.1.2
+	 */
+	public static final String TAB = "TAB";
+	
+	/**
+	 * Creates a tab Chunk.
+     * Note that separator chunks can't be used in combination with tab chunks!
+	 * @param	separator	the drawInterface to use to draw the tab.
+	 * @param	tabPosition	an X coordinate that will be used as start position for the next Chunk.
+	 * @since	2.1.2
+	 */
+	public Chunk(DrawInterface separator, float tabPosition) {
+		this(separator, tabPosition, false);
+	}
+	
+	/**
+	 * Creates a tab Chunk.
+     * Note that separator chunks can't be used in combination with tab chunks!
+	 * @param	separator	the drawInterface to use to draw the tab.
+	 * @param	tabPosition	an X coordinate that will be used as start position for the next Chunk.
+	 * @param	newline		if true, a newline will be added if the tabPosition has already been reached.
+	 * @since	2.1.2
+	 */
+	public Chunk(DrawInterface separator, float tabPosition, boolean newline) {
+		this(OBJECT_REPLACEMENT_CHARACTER, new Font());
+		if (tabPosition < 0) {
+			throw new IllegalArgumentException(MessageLocalization.getComposedMessage("a.tab.position.may.not.be.lower.than.0.yours.is.1", String.valueOf(tabPosition)));
+		}
+		setAttribute(TAB, new Object[] {separator, new Float(tabPosition), Boolean.valueOf(newline), new Float(0)});
+	}
 
 	/**
 	 * Constructs a chunk containing an <CODE>Image</CODE>.
@@ -415,9 +483,11 @@ public class Chunk implements Element, MarkupAttributes {
 	 * 
 	 * @return a <CODE>String</CODE>
 	 */
-
-	public String content() {
+	public String getContent() {
 		return content.toString();
+	}
+	public String content() {
+		return getContent();
 	}
 
 	/**
@@ -427,7 +497,7 @@ public class Chunk implements Element, MarkupAttributes {
 	 */
 
 	public String toString() {
-		return content.toString();
+		return getContent();
 	}
 
 	/**

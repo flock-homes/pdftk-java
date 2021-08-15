@@ -1,9 +1,7 @@
 /*
- * $Id: PdfAcroForm.java,v 1.44 2005/03/30 10:10:58 blowagie Exp $
- * $Name:  $
+ * $Id: PdfAcroForm.java 3912 2009-04-26 08:38:15Z blowagie $
  *
  * Copyright 2002 Bruno Lowagie
- *
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,51 +14,36 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (patched addDocumentField)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
 
-import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 /**
  * Each PDF document can contain maximum 1 AcroForm.
@@ -84,10 +67,15 @@ public class PdfAcroForm extends PdfDictionary {
     private int sigFlags = 0;
 
     /** Creates new PdfAcroForm 
-     * @param writer*/
-    PdfAcroForm(PdfWriter writer) {
+     * @param writer
+     */
+    public PdfAcroForm(PdfWriter writer) {
         super();
         this.writer = writer;
+    }
+    
+    public void setNeedAppearances(boolean value) {
+    	put(PdfName.NEEDAPPEARANCES, new PdfBoolean(value));
     }
 
     /**
@@ -95,7 +83,7 @@ public class PdfAcroForm extends PdfDictionary {
      * @param ft
      */
 
-    void addFieldTemplates(HashMap ft) {
+    public void addFieldTemplates(HashMap ft) {
         fieldTemplates.putAll(ft);
     }
 
@@ -104,10 +92,10 @@ public class PdfAcroForm extends PdfDictionary {
      * @param ref
      */
 
-    void addDocumentField(PdfIndirectReference ref) {
+    public void addDocumentField(PdfIndirectReference ref) {
 	// ssteward; added test to support my code in PdfCopy
 	if( !documentFields.contains(ref) )
-	    documentFields.add(ref);
+            documentFields.add(ref);
     }
 
     /**
@@ -115,23 +103,23 @@ public class PdfAcroForm extends PdfDictionary {
      * @return true if the Acroform is valid
      */
 
-    boolean isValid() {
+    public boolean isValid() {
         if (documentFields.size() == 0) return false;
         put(PdfName.FIELDS, documentFields);
         if (sigFlags != 0)
             put(PdfName.SIGFLAGS, new PdfNumber(sigFlags));
         if (calculationOrder.size() > 0)
             put(PdfName.CO, calculationOrder);
-        if (fieldTemplates.size() == 0) return true;
+        if (fieldTemplates.isEmpty()) return true;
         PdfDictionary dic = new PdfDictionary();
         for (Iterator it = fieldTemplates.keySet().iterator(); it.hasNext();) {
             PdfTemplate template = (PdfTemplate)it.next();
             PdfFormField.mergeResources(dic, (PdfDictionary)template.getResources());
         }
         put(PdfName.DR, dic);
+        put(PdfName.DA, new PdfString("/Helv 0 Tf 0 g "));
         PdfDictionary fonts = (PdfDictionary)dic.get(PdfName.FONT);
         if (fonts != null) {
-            put(PdfName.DA, new PdfString("/Helv 0 Tf 0 g "));
             writer.eliminateFontSubset(fonts);
         }
         return true;
@@ -222,8 +210,7 @@ public class PdfAcroForm extends PdfDictionary {
         PdfAction action = PdfAction.createSubmitForm(url, null, PdfAction.SUBMIT_HTML_FORMAT | PdfAction.SUBMIT_COORDINATES);
         PdfFormField button = new PdfFormField(writer, llx, lly, urx, ury, action);
         setButtonParams(button, PdfFormField.FF_PUSHBUTTON, name, null);
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance pa = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance pa = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         pa.add(appearance);
         button.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, pa);
         addFormField(button);
@@ -255,8 +242,7 @@ public class PdfAcroForm extends PdfDictionary {
      * @param ury
      */
     public void drawButton(PdfFormField button, String caption, BaseFont font, float fontSize, float llx, float lly, float urx, float ury) {
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance pa = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance pa = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         pa.drawButton(0f, 0f, urx - llx, ury - lly, caption, font, fontSize);
         button.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, pa);
     }
@@ -360,8 +346,7 @@ public class PdfAcroForm extends PdfDictionary {
      * @param ury
      */
     public void drawSingleLineOfText(PdfFormField field, String text, BaseFont font, float fontSize, float llx, float lly, float urx, float ury) {
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance tp = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tp = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         PdfAppearance tp2 = (PdfAppearance)tp.getDuplicate();
         tp2.setFontAndSize(font, fontSize);
         tp2.resetRGBColorFill();
@@ -394,8 +379,7 @@ public class PdfAcroForm extends PdfDictionary {
      * @param ury
      */
     public void drawMultiLineOfText(PdfFormField field, String text, BaseFont font, float fontSize, float llx, float lly, float urx, float ury) {
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance tp = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tp = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         PdfAppearance tp2 = (PdfAppearance)tp.getDuplicate();
         tp2.setFontAndSize(font, fontSize);
         tp2.resetRGBColorFill();
@@ -483,8 +467,7 @@ public class PdfAcroForm extends PdfDictionary {
             throw new ExceptionConverter(e);
         }
         float size = (ury - lly);
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance tpOn = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tpOn = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         PdfAppearance tp2 = (PdfAppearance)tpOn.getDuplicate();
         tp2.setFontAndSize(font, size);
         tp2.resetRGBColorFill();
@@ -498,7 +481,7 @@ public class PdfAcroForm extends PdfDictionary {
         tpOn.endText();
         tpOn.restoreState();
         field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, value, tpOn);
-        PdfAppearance tpOff = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tpOff = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         tpOff.drawTextField(0f, 0f, urx - llx, ury - lly);
         field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, "Off", tpOff);
     }
@@ -556,11 +539,10 @@ public class PdfAcroForm extends PdfDictionary {
      * @param ury
      */
     public void drawRadioAppearences(PdfFormField field, String value, float llx, float lly, float urx, float ury) {
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance tpOn = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tpOn = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         tpOn.drawRadioField(0f, 0f, urx - llx, ury - lly, true);
         field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, value, tpOn);
-        PdfAppearance tpOff = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tpOff = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         tpOff.drawRadioField(0f, 0f, urx - llx, ury - lly, false);
         field.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, "Off", tpOff);
     }
@@ -582,7 +564,7 @@ public class PdfAcroForm extends PdfDictionary {
         setChoiceParams(choice, name, defaultValue, llx, lly, urx, ury);
         StringBuffer text = new StringBuffer();
         for (int i = 0; i < options.length; i++) {
-            text.append(options[i]).append("\n");
+            text.append(options[i]).append('\n');
         }
         drawMultiLineOfText(choice, text.toString(), font, fontSize, llx, lly, urx, ury);
         addFormField(choice);
@@ -606,7 +588,7 @@ public class PdfAcroForm extends PdfDictionary {
         setChoiceParams(choice, name, defaultValue, llx, lly, urx, ury);
         StringBuffer text = new StringBuffer();
         for (int i = 0; i < options.length; i++) {
-            text.append(options[i][1]).append("\n");
+            text.append(options[i][1]).append('\n');
         }
         drawMultiLineOfText(choice, text.toString(), font, fontSize, llx, lly, urx, ury);
         addFormField(choice);
@@ -733,8 +715,7 @@ public class PdfAcroForm extends PdfDictionary {
      */
     public void drawSignatureAppearences(PdfFormField field, 
                     float llx, float lly, float urx, float ury) {
-        PdfContentByte cb = writer.getDirectContent();
-        PdfAppearance tp = cb.createAppearance(urx - llx, ury - lly);
+        PdfAppearance tp = PdfAppearance.createAppearance(writer, urx - llx, ury - lly);
         tp.setGrayFill(1.0f);
         tp.rectangle(0, 0, urx - llx, ury - lly);
         tp.fill();

@@ -1,6 +1,5 @@
 /*
- * $Id: Document.java,v 1.100 2005/07/17 14:45:30 blowagie Exp $
- * $Name:  $
+ * $Id: Document.java 4106 2009-11-27 12:59:39Z blowagie $
  *
  * Copyright 1999, 2000, 2001, 2002 by Bruno Lowagie.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,36 +29,21 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed HeaderFooter [because of license issues?], removed ChapterAutoNumber [to ease migration])
+
 package com.gitlab.pdftk_java.com.lowagie.text;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
-
 import java.util.Date;
+import java.util.Iterator;
 
 /**
  * A generic Document class.
@@ -78,29 +61,27 @@ import java.util.Date;
  * opened.
  * <LI>When you change the header/footer on a certain page, this will be
  * effective starting on the next page.
- * <LI>Ater closing the document, every listener (as well as its <CODE>
+ * <LI>After closing the document, every listener (as well as its <CODE>
  * OutputStream</CODE>) is closed too.
  * </OL>
  * Example: <BLOCKQUOTE>
  *
  * <PRE>// creation of the document with a certain size and certain margins
  * <STRONG>Document document = new Document(PageSize.A4, 50, 50, 50, 50);
- * </STRONG> try { // creation of the different writers HtmlWriter.getInstance(
- * <STRONG>document </STRONG>, System.out); PdfWriter.getInstance(
- * <STRONG>document </STRONG>, new FileOutputStream("text.pdf"));
+ * </STRONG> try { 
+ *   // creation of the different writers 
+ *   HtmlWriter.getInstance(<STRONG>document </STRONG>, System.out);
+ *   PdfWriter.getInstance(<STRONG>document </STRONG>, new FileOutputStream("text.pdf"));
  *    // we add some meta information to the document
  * <STRONG>document.addAuthor("Bruno Lowagie"); </STRONG>
  * <STRONG>document.addSubject("This is the result of a Test."); </STRONG>
- *  // we define a header and a footer HeaderFooter header = new
- * HeaderFooter(new Phrase("This is a header."), false); HeaderFooter footer =
- * new HeaderFooter(new Phrase("This is page "), new Phrase("."));
- *    footer.setAlignment(Element.ALIGN_CENTER);
- * <STRONG>document.setHeader(header); </STRONG>
- * <STRONG>document.setFooter(footer); </STRONG>// we open the document for
- * writing <STRONG>document.open(); </STRONG> <STRONG>document.add(new
- * Paragraph("Hello world")); </STRONG>} catch(DocumentException de) {
- * System.err.println(de.getMessage()); } <STRONG>document.close(); </STRONG>
- * </CODE>
+ *   // we open the document for writing
+ *   <STRONG>document.open(); </STRONG>
+ *   <STRONG>document.add(new Paragraph("Hello world"));</STRONG>
+ *  } catch(DocumentException de) {
+ *   System.err.println(de.getMessage());
+ *  }
+ *  <STRONG>document.close();</STRONG>
  * </PRE>
  * 
  * </BLOCKQUOTE>
@@ -109,7 +90,16 @@ import java.util.Date;
 public class Document implements DocListener {
     
     // membervariables
-    
+    /**
+     * This constant may only be changed by Paulo Soares and/or Bruno Lowagie.
+     * @since	2.1.6
+     */
+	private static final String ITEXT = "iText";
+    /**
+     * This constant may only be changed by Paulo Soares and/or Bruno Lowagie.
+     * @since	2.1.6
+     */
+	private static final String RELEASE = "4.2.0";
 	/** This constant may only be changed by Paulo Soares and/or Bruno Lowagie. */
 	private static final String ITEXT_VERSION = "itext-paulo-155 (itextpdf.sf.net - lowagie.com)";
     
@@ -118,6 +108,15 @@ public class Document implements DocListener {
 	 * purposes.
 	 */
     public static boolean compress = true; 
+    
+	/**
+	 * When true the file access is not done through a memory mapped file. Use it if the file
+     * is too big to be mapped in your address space.
+	 */
+    public static boolean plainRandomAccess = false; 
+ 
+    /** Scales the WMF font size. The default value is 0.86. */
+    public static float wmfFontCorrection = 0.86f;
     
 	/** The DocListener. */
     private ArrayList listeners = new ArrayList();
@@ -133,9 +132,6 @@ public class Document implements DocListener {
 	/** The size of the page. */
     protected Rectangle pageSize;
     
-	/** The watermark on the pages. */
-    // protected Watermark watermark = null; ssteward: dropped in 1.44
-    
 	/** margin in x direction starting from the left */
     protected float marginLeft = 0;
     
@@ -148,7 +144,14 @@ public class Document implements DocListener {
 	/** margin in y direction starting from the bottom */
     protected float marginBottom = 0;
     
+    /** mirroring of the left/right margins */
     protected boolean marginMirroring = false;
+    
+    /**
+     * mirroring of the top/bottom margins
+     * @since	2.1.6
+     */
+    protected boolean marginMirroringTopBottom = false;
     
 	/** Content of JavaScript onLoad function */
     protected String javaScript_onLoad = null;
@@ -286,6 +289,11 @@ public class Document implements DocListener {
             listener = (DocListener) iterator.next();
             success |= listener.add(element);
         }
+		if (element instanceof LargeElement) {
+			LargeElement e = (LargeElement)element;
+			if (!e.isComplete())
+				e.flushContent();
+		}
         return success;
     }
     
@@ -330,40 +338,6 @@ public class Document implements DocListener {
     }
     
 	/**
- * Sets the <CODE>Watermark</CODE>.
- *
-	 * @param watermark
-	 *            the watermark to add
-	 * @return <CODE>true</CODE> if the element was added, <CODE>false
-	 *         </CODE> if not.
- */
-    /* ssteward: dropped in 1.44
-    public boolean add(Watermark watermark) {
-        this.watermark = watermark;
-        DocListener listener;
-		for (Iterator iterator = listeners.iterator(); iterator.hasNext();) {
-            listener = (DocListener) iterator.next();
-            listener.add(watermark);
-        }
-        return true;
-    }
-    */
-    
-	/**
- * Removes the <CODE>Watermark</CODE>.
- */
-    /* ssteward: dropped in 1.44
-    public void removeWatermark() {
-        this.watermark = null;
-        DocListener listener;
-		for (Iterator iterator = listeners.iterator(); iterator.hasNext();) {
-            listener = (DocListener) iterator.next();
-            listener.removeWatermark();
-        }
-    }
-    */
-    
-	/**
  * Sets the margins.
  *
 	 * @param marginLeft
@@ -397,8 +371,6 @@ public class Document implements DocListener {
  *
 	 * @return <CODE>true</CODE> if the page was added, <CODE>false</CODE>
 	 *         if not.
-	 * @throws DocumentException
-	 *             when a document isn't open yet, or has been closed
  */
     
     public boolean newPage() throws DocumentException {
@@ -641,7 +613,7 @@ public class Document implements DocListener {
     
     public boolean addProducer() {
         try {
-            return add(new Meta(Element.PRODUCER, "iText by lowagie.com"));
+            return add(new Meta(Element.PRODUCER, getVersion()));
 		} catch (DocumentException de) {
             throw new ExceptionConverter(de);
         }
@@ -713,7 +685,7 @@ public class Document implements DocListener {
  */
     
     public float left() {
-        return pageSize.left(marginLeft);
+        return pageSize.getLeft(marginLeft);
     }
     
 	/**
@@ -723,7 +695,7 @@ public class Document implements DocListener {
  */
     
     public float right() {
-        return pageSize.right(marginRight);
+        return pageSize.getRight(marginRight);
     }
     
 	/**
@@ -733,7 +705,7 @@ public class Document implements DocListener {
  */
     
     public float top() {
-        return pageSize.top(marginTop);
+        return pageSize.getTop(marginTop);
     }
     
 	/**
@@ -743,7 +715,7 @@ public class Document implements DocListener {
  */
     
     public float bottom() {
-        return pageSize.bottom(marginBottom);
+        return pageSize.getBottom(marginBottom);
     }
     
 	/**
@@ -755,7 +727,7 @@ public class Document implements DocListener {
  */
     
     public float left(float margin) {
-        return pageSize.left(marginLeft + margin);
+        return pageSize.getLeft(marginLeft + margin);
     }
     
 	/**
@@ -767,7 +739,7 @@ public class Document implements DocListener {
  */
     
     public float right(float margin) {
-        return pageSize.right(marginRight + margin);
+        return pageSize.getRight(marginRight + margin);
     }
     
 	/**
@@ -779,7 +751,7 @@ public class Document implements DocListener {
  */
     
     public float top(float margin) {
-        return pageSize.top(marginTop + margin);
+        return pageSize.getTop(marginTop + margin);
     }
     
 	/**
@@ -791,7 +763,7 @@ public class Document implements DocListener {
  */
     
     public float bottom(float margin) {
-        return pageSize.bottom(marginBottom + margin);
+        return pageSize.getBottom(marginBottom + margin);
     }
     
 	/**
@@ -811,6 +783,26 @@ public class Document implements DocListener {
      */    
     public boolean isOpen() {
         return open;
+    }
+    
+	/**
+	 * Gets the product name.
+	 * This method may only be changed by Paulo Soares and/or Bruno Lowagie.
+     * @return the product name
+     * @since	2.1.6
+     */    
+    public static final String getProduct() {
+        return ITEXT;
+    }
+    
+	/**
+	 * Gets the release number.
+	 * This method may only be changed by Paulo Soares and/or Bruno Lowagie.
+     * @return the product name
+     * @since	2.1.6
+     */    
+    public static final String getRelease() {
+        return RELEASE;
     }
     
 	/**
@@ -884,22 +876,9 @@ public class Document implements DocListener {
     public String getHtmlStyleClass() {
         return this.htmlStyleClass;
     }
-
-	/**
- 	 * @see com.gitlab.pdftk_java.com.lowagie.text.DocListener#clearTextWrap()
-     */
-	public void clearTextWrap() throws DocumentException {
-		if (open && !close) {
-			DocListener listener;
-			for (Iterator iterator = listeners.iterator(); iterator.hasNext();) {
-				listener = (DocListener) iterator.next();
-				listener.clearTextWrap();
-			}
-		}
-	}
     
     /**
-     * Set the margin mirroring. It will mirror margins for odd/even pages.
+     * Set the margin mirroring. It will mirror right/left margins for odd/even pages.
      * <p>
      * Note: it will not work with {@link Table}.
 	 * 
@@ -913,6 +892,26 @@ public class Document implements DocListener {
 		for (Iterator iterator = listeners.iterator(); iterator.hasNext();) {
             listener = (DocListener) iterator.next();
             listener.setMarginMirroring(marginMirroring);
+        }
+        return true;
+    }
+    
+    /**
+     * Set the margin mirroring. It will mirror top/bottom margins for odd/even pages.
+     * <p>
+     * Note: it will not work with {@link Table}.
+	 * 
+	 * @param marginMirroringTopBottom
+	 *            <CODE>true</CODE> to mirror the margins
+     * @return always <CODE>true</CODE>
+     * @since	2.1.6
+     */    
+    public boolean setMarginMirroringTopBottom(boolean marginMirroringTopBottom) {
+        this.marginMirroringTopBottom = marginMirroringTopBottom;
+        DocListener listener;
+		for (Iterator iterator = listeners.iterator(); iterator.hasNext();) {
+            listener = (DocListener) iterator.next();
+            listener.setMarginMirroringTopBottom(marginMirroringTopBottom);
         }
         return true;
     }

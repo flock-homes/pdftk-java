@@ -1,7 +1,6 @@
 /*
  * Copyright 2002 by Paulo Soares.
  *
- *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
  * The Initial Developer of the Original Code is Bruno Lowagie. Portions created by
@@ -13,48 +12,34 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
-import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 /** Implements form fields.
  *
@@ -237,7 +222,7 @@ public class PdfFormField extends PdfAnnotation {
         kids.add(field);
     }
     
-    ArrayList getKids() {
+    public ArrayList getKids() {
         return kids;
     }
     
@@ -296,7 +281,7 @@ public class PdfFormField extends PdfAnnotation {
         PdfName target = null;
         for (int k = 0; k < mergeTarget.length; ++k) {
             target = mergeTarget[k];
-            PdfDictionary pdfDict = (PdfDictionary)PdfReader.getPdfObject(source.get(target));
+            PdfDictionary pdfDict = source.getAsDict(target);
             if ((dic = pdfDict) != null) {
                 if ((res = (PdfDictionary)PdfReader.getPdfObject(result.get(target), result)) == null) {
                     res = new PdfDictionary();
@@ -313,7 +298,7 @@ public class PdfFormField extends PdfAnnotation {
         mergeResources(result, source, null);
     }
 
-    void setUsed() {
+    public void setUsed() {
         used = true;
         if (parent != null)
             put(PdfName.PARENT, parent.getIndirectReference());

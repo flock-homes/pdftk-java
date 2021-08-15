@@ -610,6 +610,9 @@ public class Font implements Comparable {
 	 * @return a size
 	 */
 
+	public int getStyle() {
+		return style;
+	}
 	public int style() {
 		return style;
 	}

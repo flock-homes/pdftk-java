@@ -2,14 +2,56 @@
 
 Changes are listed in individual file headers.
 
+* com/lowagie/text/DocListener.java
+* com/lowagie/text/DocWriter.java
+* com/lowagie/text/Document.java
+* com/lowagie/text/LargeElement.java
+* com/lowagie/text/List.java
+* com/lowagie/text/ListItem.java
+* com/lowagie/text/Rectangle.java
+* com/lowagie/text/Utilities.java
+
+* com/lowagie/text/error_messages/MessageLocalization.java
+
+* com/lowagie/text/factories/RomanAlphabetFactory.java
+
 * com/lowagie/text/pdf/AcroFields.java
 * com/lowagie/text/pdf/BaseField.java
+* com/lowagie/text/pdf/BaseFont.java
+* com/lowagie/text/pdf/BidiLine.java
+* com/lowagie/text/pdf/ColumnText.java
+* com/lowagie/text/pdf/CJKFont.java
+* com/lowagie/text/pdf/DefaultSplitCharacter.java
+* com/lowagie/text/pdf/DocumentFont.java
+* com/lowagie/text/pdf/ExtraEncoding.java
 * com/lowagie/text/pdf/FdfReader.java
+* com/lowagie/text/pdf/FontDetails.java
 * com/lowagie/text/pdf/FontSelector.java
 * com/lowagie/text/pdf/GrayColor.java
+* com/lowagie/text/pdf/MappedRandomAccessFile.java
+* com/lowagie/text/pdf/PRAcroForm.java
+* com/lowagie/text/pdf/PdfAcroForm.java
+* com/lowagie/text/pdf/PdfAppearance.java
+* com/lowagie/text/pdf/PdfChunk.java
+* com/lowagie/text/pdf/PdfContentParser.java
+* com/lowagie/text/pdf/PdfEncodings.java
+* com/lowagie/text/pdf/PdfFont.java
+* com/lowagie/text/pdf/PdfFormField.java
+* com/lowagie/text/pdf/PdfFormXObject.java
+* com/lowagie/text/pdf/PdfLine.java
+* com/lowagie/text/pdf/PdfTemplate.java
+* com/lowagie/text/pdf/RandomAccessFileOrArray.java
 * com/lowagie/text/pdf/TextField.java
+* com/lowagie/text/pdf/TrueTypeFont.java
+* com/lowagie/text/pdf/TrueTypeFontSubSet.java
+* com/lowagie/text/pdf/TrueTypeFontUnicode.java
+* com/lowagie/text/pdf/Type1Font.java
 * com/lowagie/text/pdf/XfdfReader.java
-* com/lowagie/text/Utilities.java
+
+* com/lowagie/text/pdf/draw/DottedLineSeparator.java
+* com/lowagie/text/pdf/draw/DrawInterface.java
+* com/lowagie/text/pdf/draw/LineSeparator.java
+* com/lowagie/text/pdf/draw/VerticalPositionMark.java
 
 ## Based on itext-2.1.7
 
@@ -82,14 +124,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/Chunk.java
   * Cosmetic type casts
   * Commented out methods
-* com/lowagie/text/DocListener.java
-  * Commented out methods
-* com/lowagie/text/DocWriter.java
-  * Commented out methods
-  * Commented out unused(?) member 'document'
-  * Cosmetic rename
-* com/lowagie/text/Document.java
-  * Commented out methods
 * com/lowagie/text/DocumentException.java
 * com/lowagie/text/Element.java
 * com/lowagie/text/ElementListener.java
@@ -100,8 +134,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/FontFactory.java
   * Cosmetic type casts
 * com/lowagie/text/Header.java
-* com/lowagie/text/List.java
-* com/lowagie/text/ListItem.java
 * com/lowagie/text/MarkupAttributes.java
 * com/lowagie/text/Meta.java
 * com/lowagie/text/PageSize.java
@@ -110,7 +142,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/Phrase.java
   * Commented out code
   * Cosmetic type casts
-* com/lowagie/text/Rectangle.java
 * com/lowagie/text/SpecialSymbol.java
 * com/lowagie/text/SplitCharacter.java
 * com/lowagie/text/StringCompare.java
@@ -124,10 +155,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/ArabicLigaturizer.java
 * com/lowagie/text/pdf/AsianFontMapper.java
 * com/lowagie/text/pdf/BadPdfFormatException.java
-* com/lowagie/text/pdf/BaseFont.java
-  * Cosmetic type casts
-* com/lowagie/text/pdf/BidiLine.java
-  * Commented out code
 * com/lowagie/text/pdf/BidiOrder.java
   * Cosmetic unused variable removed
 * com/lowagie/text/pdf/ByteBuffer.java
@@ -135,38 +162,26 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
   * Commented out code
 * com/lowagie/text/pdf/CFFFontSubset.java
   * Commented out code
-* com/lowagie/text/pdf/CJKFont.java
 * com/lowagie/text/pdf/CMYKColor.java
 * com/lowagie/text/pdf/ColorDetails.java
-* com/lowagie/text/pdf/ColumnText.java
-  * Commented out code
 * com/lowagie/text/pdf/DefaultFontMapper.java
-* com/lowagie/text/pdf/DocumentFont.java
 * com/lowagie/text/pdf/EnumerateTTC.java
 * com/lowagie/text/pdf/ExtendedColor.java
-* com/lowagie/text/pdf/ExtraEncoding.java
 * com/lowagie/text/pdf/FdfWriter.java
   * **Multiple changes**
-* com/lowagie/text/pdf/FontDetails.java
 * com/lowagie/text/pdf/FontMapper.java
 * com/lowagie/text/pdf/GlyphList.java
 * com/lowagie/text/pdf/HyphenationEvent.java
 * com/lowagie/text/pdf/OutputStreamCounter.java
-* com/lowagie/text/pdf/PRAcroForm.java
 * com/lowagie/text/pdf/PRIndirectReference.java
 * com/lowagie/text/pdf/PageResources.java
 * com/lowagie/text/pdf/PatternColor.java
-* com/lowagie/text/pdf/PdfAcroForm.java
-  * Added code
 * com/lowagie/text/pdf/PdfAction.java
 * com/lowagie/text/pdf/PdfAnnotation.java
   * Modified code
-* com/lowagie/text/pdf/PdfAppearance.java
 * com/lowagie/text/pdf/PdfBoolean.java
 * com/lowagie/text/pdf/PdfBorderArray.java
 * com/lowagie/text/pdf/PdfBorderDictionary.java
-* com/lowagie/text/pdf/PdfChunk.java
-  * Commented out methods
 * com/lowagie/text/pdf/PdfColor.java
 * com/lowagie/text/pdf/PdfContentByte.java
   * Cosmetic type casts
@@ -183,18 +198,11 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfDocument.java
   * **Multiple changes**
   * Unmarked changes in `getAcroForm`.
-* com/lowagie/text/pdf/PdfEncodings.java
-  * Added class instance for Windows nonsense.
-  * Changes in `convertToString`.
 * com/lowagie/text/pdf/PdfEncryptionStream.java
 * com/lowagie/text/pdf/PdfException.java
 * com/lowagie/text/pdf/PdfFileSpecification.java
   * Changes in `PdfFileSpecification` and `fileEmbedded`.
   * Commented out methods
-* com/lowagie/text/pdf/PdfFont.java
-  * Commented out code
-* com/lowagie/text/pdf/PdfFormField.java
-* com/lowagie/text/pdf/PdfFormXObject.java
 * com/lowagie/text/pdf/PdfFunction.java
   * Cosmetic rename
 * com/lowagie/text/pdf/PdfGState.java
@@ -204,8 +212,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
   * Multiple changes
 * com/lowagie/text/pdf/PdfIndirectReference.java
 * com/lowagie/text/pdf/PdfLayerMembership.java
-* com/lowagie/text/pdf/PdfLine.java
-  * Commented out code
 * com/lowagie/text/pdf/PdfLister.java
 * com/lowagie/text/pdf/PdfLiteral.java
 * com/lowagie/text/pdf/PdfMediaClipData.java
@@ -255,7 +261,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
   * Multiple changes
 * com/lowagie/text/pdf/PdfStructureElement.java
 * com/lowagie/text/pdf/PdfStructureTreeRoot.java
-* com/lowagie/text/pdf/PdfTemplate.java
 * com/lowagie/text/pdf/PdfTextArray.java
 * com/lowagie/text/pdf/PdfTransition.java
 * com/lowagie/text/pdf/PdfTransparencyGroup.java
@@ -268,9 +273,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/Pfm2afm.java
   * Unmarked changes `private` -> `protected` 
   * Commented out code
-* com/lowagie/text/pdf/RandomAccessFileOrArray.java
-  * **Multiple changes**
-    * Marked as `//`?
 * com/lowagie/text/pdf/SequenceList.java
 * com/lowagie/text/pdf/ShadingColor.java
 * com/lowagie/text/pdf/SimpleBookmark.java
@@ -280,12 +282,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/SimpleXMLParser.java
 * com/lowagie/text/pdf/SpotColor.java
 * com/lowagie/text/pdf/StampContent.java
-* com/lowagie/text/pdf/TrueTypeFont.java
-  * Commented out code
-* com/lowagie/text/pdf/TrueTypeFontSubSet.java
-* com/lowagie/text/pdf/TrueTypeFontUnicode.java
-* com/lowagie/text/pdf/Type1Font.java
-  * Cosmetic type casts
 * com/lowagie/text/pdf/VerticalText.java
 
 * com/lowagie/text/pdf/codec/postscript/paparser.jj

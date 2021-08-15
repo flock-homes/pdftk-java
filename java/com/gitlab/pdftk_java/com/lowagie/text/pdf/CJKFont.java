@@ -1,6 +1,5 @@
 /*
- * $Id: CJKFont.java,v 1.29 2002/07/09 11:28:22 blowagie Exp $
- * $Name:  $
+ * $Id: CJKFont.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
  * Copyright 2000, 2001, 2002 by Paulo Soares.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,38 +29,27 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
-import java.io.*;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Hashtable;
-import java.util.StringTokenizer;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
+
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 
 /**
  * Creates a CJK font compatible with the fonts in the Adobe Asian font Pack.
@@ -127,14 +114,13 @@ class CJKFont extends BaseFont {
      * @param enc the encoding of the font
      * @param emb always <CODE>false</CODE>. CJK font and not embedded
      * @throws DocumentException on error
-     * @throws IOException on error
      */
-    CJKFont(String fontName, String enc, boolean emb) throws DocumentException, IOException {
+    CJKFont(String fontName, String enc, boolean emb) throws DocumentException {
         loadProperties();
         fontType = FONT_TYPE_CJK;
         String nameBase = getBaseName(fontName);
         if (!isCJKFont(nameBase, enc))
-            throw new DocumentException("Font '" + fontName + "' with '" + enc + "' encoding is not a CJK font.");
+            throw new DocumentException(MessageLocalization.getComposedMessage("font.1.with.2.encoding.is.not.a.cjk.font", fontName, enc));
         if (nameBase.length() < fontName.length()) {
             style = fontName.substring(nameBase.length());
             fontName = nameBase;
@@ -151,7 +137,7 @@ class CJKFont extends BaseFont {
             if (c == null) {
                 c = readCMap(s);
                 if (c == null)
-                    throw new DocumentException("The cmap " + s + " does not exist as a resource.");
+                    throw new DocumentException(MessageLocalization.getComposedMessage("the.cmap.1.does.not.exist.as.a.resource", s));
                 c[CID_NEWLINE] = '\n';
                 allCMaps.put(s, c);
             }
@@ -162,7 +148,7 @@ class CJKFont extends BaseFont {
             if (c == null) {
                 String s = cjkEncodings.getProperty(enc);
                 if (s == null)
-                    throw new DocumentException("The resource cjkencodings.properties does not contain the encoding " + enc);
+                    throw new DocumentException(MessageLocalization.getComposedMessage("the.resource.cjkencodings.properties.does.not.contain.the.encoding.1", enc));
                 StringTokenizer tk = new StringTokenizer(s);
                 String nt = tk.nextToken();
                 c = (char[])allCMaps.get(nt);
@@ -203,6 +189,26 @@ class CJKFont extends BaseFont {
         return (encodings != null && (enc.equals("Identity-H") || enc.equals("Identity-V") || encodings.indexOf("_" + enc + "_") >= 0));
     }
         
+    /**
+     * Gets the width of a <CODE>char</CODE> in normalized 1000 units.
+     * @param char1 the unicode <CODE>char</CODE> to get the width of
+     * @return the width in normalized 1000 units
+     */
+    public int getWidth(int char1) {
+        int c = char1;
+        if (!cidDirect)
+            c = translationMap[c];
+        int v;
+        if (vertical)
+            v = vMetrics.get(c);
+        else
+            v = hMetrics.get(c);
+        if (v > 0)
+            return v;
+        else
+            return 1000;
+    }
+    
     public int getWidth(String text) {
         int total = 0;
         for (int k = 0; k < text.length(); ++k) {
@@ -226,7 +232,7 @@ class CJKFont extends BaseFont {
         return 0;
     }
   
-    public int getKerning(char char1, char char2) {
+    public int getKerning(int char1, int char2) {
         return 0;
     }
 
@@ -256,7 +262,7 @@ class CJKFont extends BaseFont {
         if (w != null)
             dic.put(PdfName.W, new PdfLiteral(w));
         if (vertical) {
-            w = convertToVCIDMetrics(keys, vMetrics, hMetrics);;
+            w = convertToVCIDMetrics(keys, vMetrics, hMetrics);
             if (w != null)
                 dic.put(PdfName.W2, new PdfLiteral(w));
         }
@@ -300,6 +306,16 @@ class CJKFont extends BaseFont {
         }
         pobj = getFontBaseType(ind_font);
         writer.addToBody(pobj, ref);
+    }
+
+    /**
+     * You can't get the FontStream of a CJK font (CJK fonts are never embedded),
+     * so this method always returns null.
+   	 * @return	null
+     * @since	2.1.3
+     */
+    public PdfStream getFullFontStream() {
+    	return null;
     }
     
     private float getDescNumber(String name) {
@@ -366,6 +382,18 @@ class CJKFont extends BaseFont {
         return new String[][]{{"", "", "", fontName}};
     }
     
+    /** Gets all the entries of the names-table. If it is a True Type font
+     * each array element will have {Name ID, Platform ID, Platform Encoding ID,
+     * Language ID, font name}. The interpretation of this values can be
+     * found in the Open Type specification, chapter 2, in the 'name' table.<br>
+     * For the other fonts the array has a single element with {"4", "", "", "",
+     * font name}.
+     * @return the full name of the font
+     */
+    public String[][] getAllNameEntries() {
+        return new String[][]{{"4", "", "", "", fontName}};
+    }
+    
     /** Gets the family name of the font. If it is a True Type font
      * each array element will have {Platform ID, Platform Encoding ID,
      * Language ID, font name}. The interpretation of this values can be
@@ -385,6 +413,7 @@ class CJKFont extends BaseFont {
             char c[] = new char[0x10000];
             for (int k = 0; k < 0x10000; ++k)
                 c[k] = (char)((is.read() << 8) + is.read());
+            is.close();
             return c;
         }
         catch (Exception e) {
@@ -569,13 +598,13 @@ class CJKFont extends BaseFont {
         return null;
     }
 
-    public char getUnicodeEquivalent(char c) {
+    public int getUnicodeEquivalent(int c) {
         if (cidDirect)
             return translationMap[c];
         return c;
     }
     
-    public char getCidCode(char c) {
+    public int getCidCode(int c) {
         if (cidDirect)
             return c;
         return translationMap[c];
@@ -594,7 +623,7 @@ class CJKFont extends BaseFont {
      * @return <CODE>true</CODE> if the character has a glyph,
      * <CODE>false</CODE> otherwise
      */
-    public boolean charExists(char c) {
+    public boolean charExists(int c) {
         return translationMap[c] != 0;
     }
     
@@ -605,7 +634,7 @@ class CJKFont extends BaseFont {
      * @return <CODE>true</CODE> if the advance was set,
      * <CODE>false</CODE> otherwise. Will always return <CODE>false</CODE>
      */
-    public boolean setCharAdvance(char c, int advance) {
+    public boolean setCharAdvance(int c, int advance) {
         return false;
     }
     
@@ -618,11 +647,11 @@ class CJKFont extends BaseFont {
         fontName = name;
     }   
     
-    public boolean setKerning(char char1, char char2, int kern) {
+    public boolean setKerning(int char1, int char2, int kern) {
         return false;
     }
     
-    public int[] getCharBBox(char c) {
+    public int[] getCharBBox(int c) {
         return null;
     }
     

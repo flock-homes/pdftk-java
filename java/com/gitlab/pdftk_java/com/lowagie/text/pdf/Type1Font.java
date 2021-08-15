@@ -1,9 +1,7 @@
 /*
- * $Id: Type1Font.java,v 1.64 2005/07/16 16:49:25 blowagie Exp $
- * $Name:  $
+ * $Id: Type1Font.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
- * Copyright 2001, 2002 Paulo Soares
- *
+ * Copyright 2001-2006 Paulo Soares
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,51 +14,40 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (minor)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+
+import com.gitlab.pdftk_java.com.lowagie.text.Document;
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.fonts.FontsResourceAnchor;
-import java.io.*;
 
 /** Reads a Type1 font
  *
@@ -160,7 +147,7 @@ class Type1Font extends BaseFont
 /** Types of records in a PFB file. ASCII is 1 and BINARY is 2.
  *  They have to appear in the PFB file in this sequence.
  */
-    private static final int pfbTypes[] = {1, 2, 1};
+    private static final int PFB_TYPES[] = {1, 2, 1};
     
     /** Creates a new Type1 font.
      * @param ttfAfm the AFM file if the input is made with a <CODE>byte</CODE> array
@@ -170,9 +157,10 @@ class Type1Font extends BaseFont
      * @param emb true if the font is to be embedded in the PDF
      * @throws DocumentException the AFM file is invalid
      * @throws IOException the AFM file could not be read
+     * @since	2.1.5
      */
-    Type1Font(String afmFile, String enc, boolean emb, byte ttfAfm[], byte pfb[]) throws DocumentException, IOException
-    {
+    Type1Font(String afmFile, String enc, boolean emb, byte ttfAfm[], byte pfb[], boolean forceRead)
+    	throws DocumentException, IOException {
         if (emb && ttfAfm != null && pfb == null)
             throw new DocumentException("Two byte arrays are needed if the Type1 font is embedded.");
         if (emb && ttfAfm != null)
@@ -192,7 +180,7 @@ class Type1Font extends BaseFont
                     resourceAnchor = new FontsResourceAnchor();
                 is = getResourceStream(RESOURCE_PATH + afmFile + ".afm", resourceAnchor.getClass().getClassLoader());
                 if (is == null) {
-                    String msg = afmFile + " not found as resource. (The *.afm files must exist as resources in the package com.gitlab.pdftk_java.com.lowagie.text.pdf.fonts)";
+                    String msg = afmFile + " not found as resource.";
                     System.err.println(msg);
                     throw new DocumentException(msg);
                 }
@@ -233,7 +221,7 @@ class Type1Font extends BaseFont
         else if (afmFile.toLowerCase().endsWith(".afm")) {
             try {
                 if (ttfAfm == null)
-                    rf = new RandomAccessFileOrArray(afmFile);
+                    rf = new RandomAccessFileOrArray(afmFile, forceRead, Document.plainRandomAccess);
                 else
                     rf = new RandomAccessFileOrArray(ttfAfm);
                 process(rf);
@@ -253,7 +241,7 @@ class Type1Font extends BaseFont
             try {
                 ByteArrayOutputStream ba = new ByteArrayOutputStream();
                 if (ttfAfm == null)
-                    rf = new RandomAccessFileOrArray(afmFile);
+                    rf = new RandomAccessFileOrArray(afmFile, forceRead, Document.plainRandomAccess);
                 else
                     rf = new RandomAccessFileOrArray(ttfAfm);
                 Pfm2afm.convert(rf, ba);
@@ -274,20 +262,14 @@ class Type1Font extends BaseFont
         }
         else
             throw new DocumentException(afmFile + " is not an AFM or PFM font file.");
-        try {
-            EncodingScheme = EncodingScheme.trim();
-            if (EncodingScheme.equals("AdobeStandardEncoding") || EncodingScheme.equals("StandardEncoding")) {
-                fontSpecific = false;
-            }
+
+        EncodingScheme = EncodingScheme.trim();
+        if (EncodingScheme.equals("AdobeStandardEncoding") || EncodingScheme.equals("StandardEncoding")) {
+            fontSpecific = false;
+        }
+        if (!encoding.startsWith("#"))
             PdfEncodings.convertToBytes(" ", enc); // check if the encoding exists
-            createEncoding();
-        }
-        catch (RuntimeException re) {
-            throw re;
-        }
-        catch (Exception e) {
-            throw new DocumentException(e);
-        }
+        createEncoding();
     }
     
 /** Gets the width from the font according to the <CODE>name</CODE> or,
@@ -319,7 +301,7 @@ class Type1Font extends BaseFont
  * @param char2 the second char
  * @return the kerning to be applied
  */
-    public int getKerning(char char1, char char2)
+    public int getKerning(int char1, int char2)
     {
         String first = GlyphList.unicodeToName(char1);
         if (first == null)
@@ -349,7 +331,7 @@ class Type1Font extends BaseFont
         boolean isMetrics = false;
         while ((line = rf.readLine()) != null)
         {
-            StringTokenizer tok = new StringTokenizer(line);
+            StringTokenizer tok = new StringTokenizer(line, " ,\n\r\t\f");
             if (!tok.hasMoreTokens())
                 continue;
             String ident = tok.nextToken();
@@ -362,36 +344,36 @@ class Type1Font extends BaseFont
             else if (ident.equals("Weight"))
                 Weight = tok.nextToken("\u00ff").substring(1);
             else if (ident.equals("ItalicAngle"))
-                ItalicAngle = Float.valueOf(tok.nextToken()).floatValue();
+                ItalicAngle = Float.parseFloat(tok.nextToken());
             else if (ident.equals("IsFixedPitch"))
                 IsFixedPitch = tok.nextToken().equals("true");
             else if (ident.equals("CharacterSet"))
-                this.CharacterSet = tok.nextToken("\u00ff").substring(1);
+                CharacterSet = tok.nextToken("\u00ff").substring(1);
             else if (ident.equals("FontBBox"))
             {
-                llx = (int)Float.valueOf(tok.nextToken()).floatValue();
-                lly = (int)Float.valueOf(tok.nextToken()).floatValue();
-                urx = (int)Float.valueOf(tok.nextToken()).floatValue();
-                ury = (int)Float.valueOf(tok.nextToken()).floatValue();
+                llx = (int)Float.parseFloat(tok.nextToken());
+                lly = (int)Float.parseFloat(tok.nextToken());
+                urx = (int)Float.parseFloat(tok.nextToken());
+                ury = (int)Float.parseFloat(tok.nextToken());
             }
             else if (ident.equals("UnderlinePosition"))
-                UnderlinePosition = (int)Float.valueOf(tok.nextToken()).floatValue();
+                UnderlinePosition = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("UnderlineThickness"))
-                UnderlineThickness = (int)Float.valueOf(tok.nextToken()).floatValue();
+                UnderlineThickness = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("EncodingScheme"))
                 EncodingScheme = tok.nextToken("\u00ff").substring(1);
             else if (ident.equals("CapHeight"))
-                CapHeight = (int)Float.valueOf(tok.nextToken()).floatValue();
+                CapHeight = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("XHeight"))
-                XHeight = (int)Float.valueOf(tok.nextToken()).floatValue();
+                XHeight = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("Ascender"))
-                Ascender = (int)Float.valueOf(tok.nextToken()).floatValue();
+                Ascender = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("Descender"))
-                Descender = (int)Float.valueOf(tok.nextToken()).floatValue();
+                Descender = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("StdHW"))
-                StdHW = (int)Float.valueOf(tok.nextToken()).floatValue();
+                StdHW = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("StdVW"))
-                StdVW = (int)Float.valueOf(tok.nextToken()).floatValue();
+                StdVW = (int)Float.parseFloat(tok.nextToken());
             else if (ident.equals("StartCharMetrics"))
             {
                 isMetrics = true;
@@ -426,7 +408,7 @@ class Type1Font extends BaseFont
                 if (ident.equals("C"))
                     C = Integer.valueOf(tokc.nextToken());
                 else if (ident.equals("WX"))
-                    WX = new Integer(Float.valueOf(tokc.nextToken()).intValue());
+                    WX = new Integer((int)Float.parseFloat(tokc.nextToken()));
                 else if (ident.equals("N"))
                     N = tokc.nextToken();
                 else if (ident.equals("B")) {
@@ -443,6 +425,11 @@ class Type1Font extends BaseFont
         }
         if (isMetrics)
             throw new DocumentException("Missing EndCharMetrics in " + fileName);
+        if (!CharMetrics.containsKey("nonbreakingspace")) {
+            Object[] space = (Object[])CharMetrics.get("space");
+            if (space != null)
+                CharMetrics.put("nonbreakingspace", space);
+        }
         while ((line = rf.readLine()) != null)
         {
             StringTokenizer tok = new StringTokenizer(line);
@@ -469,7 +456,7 @@ class Type1Font extends BaseFont
             {
                 String first = tok.nextToken();
                 String second = tok.nextToken();
-                Integer width = new Integer(Float.valueOf(tok.nextToken()).intValue());
+                Integer width = new Integer((int)Float.parseFloat(tok.nextToken()));
                 Object relates[] = (Object[])KernPairs.get(first);
                 if (relates == null)
                     KernPairs.put(first, new Object[]{second, width});
@@ -499,8 +486,9 @@ class Type1Font extends BaseFont
  * otherwise the font is read and output in a PdfStream object.
  * @return the PdfStream containing the font or <CODE>null</CODE>
  * @throws DocumentException if there is an error reading the font
+ * @since 2.1.3
  */
-    private PdfStream getFontStream() throws DocumentException
+    public PdfStream getFullFontStream() throws DocumentException
     {
         if (builtinFont || !embedded)
             return null;
@@ -508,7 +496,7 @@ class Type1Font extends BaseFont
         try {
             String filePfb = fileName.substring(0, fileName.length() - 3) + "pfb";
             if (pfb == null)
-                rf = new RandomAccessFileOrArray(filePfb);
+                rf = new RandomAccessFileOrArray(filePfb, true, Document.plainRandomAccess);
             else
                 rf = new RandomAccessFileOrArray(pfb);
             int fileLength = rf.length();
@@ -518,7 +506,7 @@ class Type1Font extends BaseFont
             for (int k = 0; k < 3; ++k) {
                 if (rf.read() != 0x80)
                     throw new DocumentException("Start marker missing in " + filePfb);
-                if (rf.read() != pfbTypes[k])
+                if (rf.read() != PFB_TYPES[k])
                     throw new DocumentException("Incorrect segment type in " + filePfb);
                 int size = rf.read();
                 size += rf.read() << 8;
@@ -533,7 +521,7 @@ class Type1Font extends BaseFont
                     size -= got;
                 }
             }
-            return new StreamFont(st, lengths);
+            return new StreamFont(st, lengths, compressionLevel);
         }
         catch (Exception e) {
             throw new DocumentException(e);
@@ -597,7 +585,7 @@ class Type1Font extends BaseFont
         dic.put(PdfName.SUBTYPE, PdfName.TYPE1);
         dic.put(PdfName.BASEFONT, new PdfName(FontName));
         boolean stdEncoding = encoding.equals("Cp1252") || encoding.equals("MacRoman");
-        if (!fontSpecific) {
+        if (!fontSpecific || specialMap != null) {
             for (int k = firstChar; k <= lastChar; ++k) {
                 if (!differences[k].equals(notdef)) {
                     firstChar = k;
@@ -625,7 +613,7 @@ class Type1Font extends BaseFont
                 dic.put(PdfName.ENCODING, enc);
             }
         }
-        if (forceWidthsOutput || !(builtinFont && (fontSpecific || stdEncoding))) {
+        if (specialMap != null || forceWidthsOutput || !(builtinFont && (fontSpecific || stdEncoding))) {
             dic.put(PdfName.FIRSTCHAR, new PdfNumber(firstChar));
             dic.put(PdfName.LASTCHAR, new PdfNumber(lastChar));
             PdfArray wd = new PdfArray();
@@ -653,7 +641,8 @@ class Type1Font extends BaseFont
         int firstChar = ((Integer)params[0]).intValue();
         int lastChar = ((Integer)params[1]).intValue();
         byte shortTag[] = (byte[])params[2];
-        if (!subset) {
+        boolean subsetp = ((Boolean)params[3]).booleanValue() && subset;
+        if (!subsetp) {
             firstChar = 0;
             lastChar = shortTag.length - 1;
             for (int k = 0; k < shortTag.length; ++k)
@@ -662,7 +651,7 @@ class Type1Font extends BaseFont
         PdfIndirectReference ind_font = null;
         PdfObject pobj = null;
         PdfIndirectObject obj = null;
-        pobj = getFontStream();
+        pobj = getFullFontStream();
         if (pobj != null){
             obj = writer.addToBody(pobj);
             ind_font = obj.getIndirectReference();
@@ -708,6 +697,10 @@ class Type1Font extends BaseFont
                 return 0;
             case AWT_MAXADVANCE:
                 return (urx - llx) * fontSize / 1000;
+            case UNDERLINE_POSITION:
+                return UnderlinePosition * fontSize / 1000;
+            case UNDERLINE_THICKNESS:
+                return UnderlineThickness * fontSize / 1000;
         }
         return 0;
     }
@@ -731,6 +724,18 @@ class Type1Font extends BaseFont
         return new String[][]{{"", "", "", FullName}};
     }
     
+    /** Gets all the entries of the names-table. If it is a True Type font
+     * each array element will have {Name ID, Platform ID, Platform Encoding ID,
+     * Language ID, font name}. The interpretation of this values can be
+     * found in the Open Type specification, chapter 2, in the 'name' table.<br>
+     * For the other fonts the array has a single element with {"4", "", "", "",
+     * font name}.
+     * @return the full name of the font
+     */
+    public String[][] getAllNameEntries() {
+        return new String[][]{{"4", "", "", "", FullName}};
+    }
+    
     /** Gets the family name of the font. If it is a True Type font
      * each array element will have {Platform ID, Platform Encoding ID,
      * Language ID, font name}. The interpretation of this values can be
@@ -747,7 +752,7 @@ class Type1Font extends BaseFont
      * @return <CODE>true</CODE> if the font has any kerning pairs
      */    
     public boolean hasKernPairs() {
-        return KernPairs.size() > 0;
+        return !KernPairs.isEmpty();
     }
     
     /**
@@ -766,7 +771,7 @@ class Type1Font extends BaseFont
      * @param kern the kerning to apply in normalized 1000 units
      * @return <code>true</code> if the kerning was applied, <code>false</code> otherwise
      */
-    public boolean setKerning(char char1, char char2, int kern) {
+    public boolean setKerning(int char1, int char2, int kern) {
         String first = GlyphList.unicodeToName(char1);
         if (first == null)
             return false;
@@ -808,20 +813,5 @@ class Type1Font extends BaseFont
             return ((int[])(metrics[3]));
         return null;
     }
- 
-    public String getCharacterSet() {
-	return CharacterSet;
-    }
-    public int getUnderlinePosition() {
-	return UnderlinePosition;
-    }
-    public int getUnderlineThickness() {
-	return UnderlineThickness;
-    }
-    public int getXHeight() {
-	return XHeight;
-    }
-    public int getStdHW() {
-	return StdHW;
-    }
+    
 }

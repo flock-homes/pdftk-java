@@ -1,6 +1,5 @@
 /*
- * $Id: RandomAccessFileOrArray.java,v 1.48 2005/09/11 08:38:18 blowagie Exp $
- * $Name:  $
+ * $Id: RandomAccessFileOrArray.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
  * Copyright 2001, 2002 Paulo Soares
  *
@@ -18,7 +17,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -33,41 +31,29 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (no idea why)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import java.io.DataInputStream;
+import com.gitlab.pdftk_java.com.lowagie.text.Document;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.EOFException;
-import java.io.RandomAccessFile;
-import java.io.File;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.RandomAccessFile;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 /** An implementation of a RandomAccessFile for input only
  * that accepts a file or a byte array as data source.
  *
@@ -78,41 +64,37 @@ public class RandomAccessFileOrArray implements DataInput {
     ////
     // uses either rf or arrayIn, but not both
 
+    MappedRandomAccessFile rf = null;
+    RandomAccessFile trf = null; // may be null even if filename is set
+    boolean plainRandomAccess;
     String filename = null; // set only if we expect to use rf (not arrayIn)
-    RandomAccessFile rf = null; // may be null even if filename is set
-
     byte arrayIn[] = null; // set only if we aren't using filename/rf
     int arrayInPtr = 0;
-
     private byte back = 0;
     private boolean isBack = false;
     
+    /** Holds value of property startOffset. */
     private int startOffset = 0;
 
-    ////
-    //
-
-    //
     public RandomAccessFileOrArray(String filename) throws IOException {
-    	this(filename, false);
+    	this(filename, false, Document.plainRandomAccess);
     }
     
-    //
-    public RandomAccessFileOrArray(String filename, boolean forceRead) throws IOException {
+    public RandomAccessFileOrArray(String filename, boolean forceRead, boolean plainRandomAccess) throws IOException {
+        this.plainRandomAccess = plainRandomAccess;
 	if (filename == null)
 	    throw new IllegalArgumentException
 		("null filename passed into RandomAccessFileOrArray()");
 
         File file = new File(filename);
-
         if (!file.canRead()) {
-            if (filename.startsWith("file:/") || filename.startsWith("http://") || 
-		filename.startsWith("https://") || filename.startsWith("jar:"))
-		{
+            if (filename.startsWith("file:/") || filename.startsWith("http://") 
+                    || filename.startsWith("https://") || filename.startsWith("jar:") || filename.startsWith("wsjar:")) {
 		    // copied from RandomAccessFileOrArray(URL):
 		    InputStream is = new URL(filename).openStream();
 		    try {
-			this.inputStreamToArray(is);
+                    this.arrayIn = InputStreamToArray(is);
+                    return;
 		    }
 		    finally {
 			try { is.close(); } catch (IOException ioe) {}
@@ -123,7 +105,8 @@ public class RandomAccessFileOrArray implements DataInput {
                 if (is == null)
                     throw new IOException(filename + " not found as file or resource.");
                 try {
-                    this.inputStreamToArray(is);
+                    this.arrayIn = InputStreamToArray(is);
+                    return;
                 }
                 finally {
                     try { is.close(); } catch (IOException ioe) {}
@@ -131,22 +114,21 @@ public class RandomAccessFileOrArray implements DataInput {
             }
         }
         else if (forceRead) {
-            InputStream is = null;
+            InputStream s = null;
             try {
-                is = new FileInputStream(file);
-                this.inputStreamToArray(is);
+                s = new FileInputStream(file);
+                this.arrayIn = InputStreamToArray(s);
             }
             finally {
-                try { if (is != null) { is.close(); } } catch (Exception e) {}
+                try {if (s != null) {s.close();}}catch(Exception e){}
             }
+        	return;
         }
-	else {
-	    rf = new RandomAccessFile(file, "r");
-	    if (rf == null)
-		throw new IOException("Unable to open: " + filename);
-
-	    this.filename = filename; // set only if we're using rf
-	}
+        this.filename = filename; // set only if we're using rf
+        if (plainRandomAccess)
+            trf = new RandomAccessFile(filename, "r");
+        else
+            rf = new MappedRandomAccessFile(filename, "r");
     }
 
     public RandomAccessFileOrArray(URL url) throws IOException {
@@ -156,7 +138,7 @@ public class RandomAccessFileOrArray implements DataInput {
 
         InputStream is = url.openStream();
         try {
-            this.inputStreamToArray(is);
+            this.arrayIn = InputStreamToArray(is);
         }
         finally {
             try { is.close(); } catch (IOException ioe) {}
@@ -164,44 +146,31 @@ public class RandomAccessFileOrArray implements DataInput {
     }
 
     public RandomAccessFileOrArray(InputStream is) throws IOException {
-        this.inputStreamToArray(is);
+        this.arrayIn = InputStreamToArray(is);
     }
     
+    public static byte[] InputStreamToArray(InputStream is) throws IOException {
+        byte b[] = new byte[8192];
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        while (true) {
+            int read = is.read(b);
+            if (read < 1)
+                break;
+            out.write(b, 0, read);
+        }
+        out.close();
+        return out.toByteArray();
+    }
+
     public RandomAccessFileOrArray(byte arrayIn[]) {
         this.arrayIn = arrayIn;
     }
 
-    // copy constructor
-    public RandomAccessFileOrArray(RandomAccessFileOrArray file) throws IOException {
-	if (file == null)
-	    throw new IllegalArgumentException
-		("null file passed into RandomAccessFileOrArray() copy constructor");
-
-	if( file.filename != null ) {
-	    this.filename = file.filename;
-	    this.rf = null;
-	}
-	else if( file.arrayIn != null ) {
-	    this.arrayIn = file.arrayIn;
-	    this.arrayInPtr = 0;
-	}
-
-	this.startOffset = file.startOffset;
-    }
-
-    ////
-    //
-
-    //
-    private void inputStreamToArray(InputStream is) throws IOException {
-        byte bb[] = new byte[8192];
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-	int len = 0;
-        while ( 1< (len = is.read(bb)) ) {
-            out.write(bb, 0, len);
-        }
-	this.arrayIn = out.toByteArray(); // allocates a new byte array
-	this.arrayInPtr = 0;
+    public RandomAccessFileOrArray(RandomAccessFileOrArray file) {
+        filename = file.filename;
+        arrayIn = file.arrayIn;
+        startOffset = file.startOffset;
+        plainRandomAccess = file.plainRandomAccess;
     }
 
     // added pushBack isBack test since we hold only one byte
@@ -234,57 +203,54 @@ public class RandomAccessFileOrArray implements DataInput {
     
     // reads one byte
     public int read() throws IOException {
-	int retVal = -1;
         if (isBack) {
-            retVal = getBack();
+            int retVal = getBack();
 	    clearBack();
+            return retVal;
         }
-        else if (rf != null) {
-	    retVal = rf.read();
-	}
-        else if (arrayIn != null &&
-		 0<= arrayInPtr && arrayInPtr< arrayIn.length) {
-	    retVal = arrayIn[arrayInPtr++] & 0xff;
-	}
-	return retVal;
+        if (arrayIn == null)
+            return plainRandomAccess ? trf.read() : rf.read();
+        else {
+            if (arrayInPtr >= arrayIn.length)
+                return -1;
+            return arrayIn[arrayInPtr++] & 0xff;
+        }
     }
 
     // bb: buffer to read into
     // off: index of b where to begin
     // len: max number of bytes to copy
     // return: number of bytes read, or -1 on end
-    public int read( byte[] bb, int off, int len ) throws IOException {
-	if( bb== null )
-	    throw new IllegalArgumentException("read() argument bb is null.");
+    public int read(byte[] b, int off, int len) throws IOException {
+	if( b== null )
+	    throw new IllegalArgumentException("read() argument b is null.");
 
-        if( len== 0 || bb.length== 0 )
-            return 0; // nothing read; test before (bb.length<= off)
+        if( len== 0 || b.length== 0 )
+            return 0; // nothing read; test before (b.length<= off)
 
-	if( len< 0 || off< 0 || bb.length<= off || bb.length< off+ len )
+	if( len< 0 || off< 0 || b.length<= off || b.length< off+ len )
 	    throw new IllegalArgumentException
 		("read() arguments are out of bounds: len: "+ len+
-		 " off: "+ off+ " bb.length: "+ bb.length);
+		 " off: "+ off+ " b.length: "+ b.length);
 
 	int retVal= -1; // default: end of data
 
 	// test for pushed-back byte
-        if( isBack ) { // prepend byte; reset later
-	    bb[ off++ ]= back;
+        if(isBack) { // prepend byte; reset later
+	    b[off++]= back;
 	    --len;
         }
-
-        if( rf!= null ) { // use rf
-	    retVal= rf.read( bb, off, len ); // could return -1
+        if (arrayIn == null) {
+            retVal = (plainRandomAccess ? trf.read(b, off, len) : rf.read(b, off, len)); // could return -1
         }
-
-        else if( arrayIn!= null ) { // use array
+        else {
 	    if( 0<= arrayInPtr && arrayInPtr< arrayIn.length ) {
 
 		if( arrayIn.length< arrayInPtr+ len )
 		    len= arrayIn.length- arrayInPtr; // take only what's left
 
 		if( 0< len ) {
-		    System.arraycopy( arrayIn, arrayInPtr, bb, off, len );
+		    System.arraycopy( arrayIn, arrayInPtr, b, off, len );
 		    arrayInPtr+= len;
 		    retVal= len;
 		}
@@ -293,8 +259,8 @@ public class RandomAccessFileOrArray implements DataInput {
 	    // else end of array data
         }
 
-	if( isBack )
-	    if( retVal== -1 )
+	if(isBack)
+	    if(retVal== -1)
 		retVal= 1;
 	    else
 		retVal+= 1;
@@ -303,117 +269,33 @@ public class RandomAccessFileOrArray implements DataInput {
 	return retVal;
     }
     
-    //
     public int read(byte b[]) throws IOException {
         return read(b, 0, b.length);
     }
 
-    //
-    public void readFully( byte bb[], int off, int len ) throws IOException {
-        int bytesRead= 0;
-	int nn= 0;
-        while( bytesRead< len ) { // len may be 0
-            nn= this.read( bb, off+ bytesRead, len- bytesRead );
-            if( nn< 0 )
+    public void readFully(byte b[]) throws IOException {
+        readFully(b, 0, b.length);
+    }
+    
+    public void readFully(byte b[], int off, int len) throws IOException {
+        int n = 0;
+        do {
+            int count = read(b, off + n, len - n);
+            if (count < 0)
                 throw new EOFException();
-            bytesRead+= nn;
-        }
-    }
-    public void readFully( byte bb[] ) throws IOException {
-        readFully( bb, 0, bb.length );
+            n += count;
+        } while (n < len);
     }
 
-    // calls clearBack()
-    public void reOpen() throws IOException {
-        if (filename != null && rf == null) {
-            rf = new RandomAccessFile(filename, "r");
-	    if (rf == null) {
-		throw new IOException("Unable to reOpen: " + filename);
-	    }
-	}
-	this.seek(0); // calls clearBack()
-    }
-    
-    // might call clearBack()
-    protected void insureOpen() throws IOException {
-        if (filename != null && rf == null) {
-            reOpen();
-        }
+    public long skip(long n) throws IOException {
+        return skipBytes((int)n);
     }
 
-    //
-    public boolean isOpen() {
-        return (filename == null || rf != null);
-    }
-
-    //
-    public void close() throws IOException {
-        if (rf != null) {
-            rf.close();
-            rf = null;
-        }
-	// preserves this.filename and this.arrayIn
-
-	clearBack();
-    }
-    
-    //
-    public int length() throws IOException {
-        if (filename != null) {
-            insureOpen();
-            return (int)rf.length() - startOffset;
-        }
-        else if (arrayIn != null) {
-            return arrayIn.length - startOffset;
-	}
-	return 0;
-    }
-    
-    //
-    public int getFilePointer() throws IOException {
-	insureOpen(); // might call clearBack(), so call first
-        int nn = isBack ? 1 : 0;
-        if (filename != null) {
-            return (int)rf.getFilePointer() - nn - startOffset;
-        }
-        else if (arrayIn != null) {
-            return arrayInPtr - nn - startOffset;
-	}
-	return 0; // no data -- shouldn't happen
-    }
-
-    //
-    public void seek(int pos) throws IOException {
-        pos += startOffset;
-
-	clearBack();
-
-        if (filename != null) {
-	    // not calling insureOpen() b/c it calls reOpen() which calls this.seek(0)
-	    if (rf == null) {
-		rf = new RandomAccessFile(filename, "r");
-		if (rf == null) {
-		    throw new IOException("Unable to open: " + filename + " in seek()");
-		}
-	    }
-            rf.seek(pos);
-        }
-        else if (arrayIn != null) {
-            arrayInPtr = pos;
-	}
-    }
-
-    //
-    public void seek(long pos) throws IOException {
-        seek((int)pos);
-    }
-    
-    //
-    public int skipBytes(int nn) throws IOException {
-        if (nn <= 0) {
+    public int skipBytes(int n) throws IOException {
+        if (n <= 0) {
             return 0;
         }
-	if (nn == 1 && isBack) {
+	if (n == 1 && isBack) {
 	    clearBack();
 	    return 1;
 	}
@@ -421,31 +303,93 @@ public class RandomAccessFileOrArray implements DataInput {
         
         int pos = this.getFilePointer(); // considers isBack and startOffset
         int len = this.length(); // considers startOffset
-        int newpos = pos + nn;
+        int newpos = pos + n;
         if (newpos > len) {
             newpos = len; // seek(len) ensures that next read() returns -1
         }
-        this.seek(newpos); // considers startOffset
+        seek(newpos); // considers startOffset
         
         return newpos - pos;
     }
 
-    //
-    public long skip(long n) throws IOException {
-        return skipBytes((int)n);
+    // calls clearBack()
+    public void reOpen() throws IOException {
+        if (filename != null && rf == null && trf == null) {
+            if (plainRandomAccess)
+                trf = new RandomAccessFile(filename, "r");
+            else
+                rf = new MappedRandomAccessFile(filename, "r");
+	    if (rf == null && trf == null) {
+		throw new IOException("Unable to reOpen: " + filename);
+            }
+        }
+        seek(0);
+    }
+    
+    // might call clearBack()
+    protected void insureOpen() throws IOException {
+        if (filename != null && rf == null && trf == null) {
+            reOpen();
+        }
     }
 
-    //
-    public int getStartOffset() {
-        return this.startOffset;
+    public boolean isOpen() {
+        return (filename == null || rf != null || trf != null);
+    }
+
+    public void close() throws IOException {
+	// preserves this.filename and this.arrayIn
+	clearBack();
+        if (rf != null) {
+            rf.close();
+            rf = null;
+            // it's very expensive to open a memory mapped file and for the usage pattern of this class
+            // in iText it's faster the next re-openings to be done as a plain random access
+            // file
+            plainRandomAccess = true;
+        }
+        else if (trf != null) {
+            trf.close();
+            trf = null;
+        }
+    }
+    
+    public int length() throws IOException {
+        if (arrayIn == null) {
+            insureOpen();
+            return (int)(plainRandomAccess ? trf.length() : rf.length()) - startOffset;
+        }
+        else
+            return arrayIn.length - startOffset;
+    }
+    
+    public void seek(int pos) throws IOException {
+        pos += startOffset;
+	clearBack();
+        if (arrayIn == null) {
+            insureOpen();
+            if (plainRandomAccess)
+                trf.seek(pos);
+            else
+                rf.seek(pos);
+        }
+        else
+            arrayInPtr = pos;
+    }
+
+    public void seek(long pos) throws IOException {
+        seek((int)pos);
+    }
+
+    public int getFilePointer() throws IOException {
+	insureOpen(); // might call clearBack(), so call first
+        int n = isBack ? 1 : 0;
+        if (arrayIn == null) {
+            return (int)(plainRandomAccess ? trf.getFilePointer() : rf.getFilePointer()) - n - startOffset;
+        }
+        else
+            return arrayInPtr - n - startOffset;
     }    
-    public void setStartOffset(int startOffset) throws IOException {
-        this.startOffset = startOffset;
-	this.seek(0);
-    }
-
-    ////
-    //
 
     public boolean readBoolean() throws IOException {
         int ch = this.read();
@@ -719,4 +663,35 @@ public class RandomAccessFileOrArray implements DataInput {
         return DataInputStream.readUTF(this);
     }
     
+    /** Getter for property startOffset.
+     * @return Value of property startOffset.
+     *
+     */
+    public int getStartOffset() {
+        return this.startOffset;
+    }
+    
+    /** Setter for property startOffset.
+     * @param startOffset New value of property startOffset.
+     *
+     */
+    public void setStartOffset(int startOffset) throws IOException {
+        this.startOffset = startOffset;
+	this.seek(0);
+    }
+
+    /**
+     * @since 2.0.8
+     */
+    public java.nio.ByteBuffer getNioByteBuffer() throws IOException {
+    	if (filename != null) {
+    		FileChannel channel;
+            if (plainRandomAccess)
+                channel = trf.getChannel();
+            else
+                channel = rf.getChannel();
+            return channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+    	}
+    	return java.nio.ByteBuffer.wrap(arrayIn);
+    }
 }

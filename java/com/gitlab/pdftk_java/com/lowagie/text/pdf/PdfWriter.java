@@ -780,12 +780,16 @@ public class PdfWriter extends DocWriter {
     protected PdfDictionary defaultColorspace = new PdfDictionary();
     protected float userunit = 0f;
     
-    /** PDF/X value */
+    /** A PDF/X level. */
     public static final int PDFXNONE = 0;
-    /** PDF/X value */
+    /** A PDF/X level. */
     public static final int PDFX1A2001 = 1;
-    /** PDF/X value */
+    /** A PDF/X level. */
     public static final int PDFX32002 = 2;
+    /** PDFA-1A level. */
+    public static final int PDFA1A = 3;
+    /** PDFA-1B level. */
+    public static final int PDFA1B = 4;
 
     private int pdfxConformance = PDFXNONE;
     
@@ -1239,7 +1243,7 @@ public class PdfWriter extends DocWriter {
             if (template != null && template.getIndirectReference() instanceof PRIndirectReference)
                 continue;
             if (template != null && template.getType() == PdfTemplate.TYPE_TEMPLATE) {
-                addToBody(template.getFormXObject(), template.getIndirectReference());
+                addToBody(template.getFormXObject(PdfStream.DEFAULT_COMPRESSION), template.getIndirectReference());
             }
         }
         // add all the dependencies in the imported pages
@@ -1508,18 +1512,6 @@ public class PdfWriter extends DocWriter {
      */
     public float getVerticalPosition(boolean ensureNewLine) {
         return pdf.getVerticalPosition(ensureNewLine);
-    }
-    
-    /**
-     * Checks if writing is paused.
-     *
-     * @return		<CODE>true</CODE> if writing temporarely has to be paused, <CODE>false</CODE> otherwise.
-     */
-    
-    boolean isPaused() {
-	// ssteward: changed from "pause" to "m_pause" to
-	// bring in line with DocWriter
-        return m_pause;
     }
     
     /**
@@ -2790,7 +2782,7 @@ public class PdfWriter extends DocWriter {
         if (template.getIndirectReference() instanceof PRIndirectReference)
             return;
         if (template.getType() == PdfTemplate.TYPE_TEMPLATE) {
-            addToBody(template.getFormXObject(), template.getIndirectReference());
+            addToBody(template.getFormXObject(PdfStream.DEFAULT_COMPRESSION), template.getIndirectReference());
             objs[1] = null;
         }
     }

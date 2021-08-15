@@ -1,6 +1,5 @@
 /*
- * $Id: TrueTypeFontUnicode.java,v 1.3 2003/11/17 12:53:06 stoledo Exp $
- * $Name:  $
+ * $Id: TrueTypeFontUnicode.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
  * Copyright 2001, 2002 Paulo Soares
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,28 +29,14 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (minor)
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -62,6 +46,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+import com.gitlab.pdftk_java.com.lowagie.text.Utilities;
+
 /** Represents a True Type font with Unicode encoding. All the character
  * in the font can be used directly by using the encoding Identity-H or
  * Identity-V. This is the only way to represent some character sets such
@@ -70,11 +56,13 @@ import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
  */
 class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     
-    /** <CODE>true</CODE> if the encoding is vertical.
+    /**
+     * <CODE>true</CODE> if the encoding is vertical.
      */    
     boolean vertical = false;
 
-    /** Creates a new TrueType font addressed by Unicode characters. The font
+    /**
+     * Creates a new TrueType font addressed by Unicode characters. The font
      * will always be embedded.
      * @param ttFile the location of the font on file. The file must end in '.ttf'.
      * The modifiers after the name are ignored.
@@ -84,7 +72,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
      * @throws DocumentException the font is invalid
      * @throws IOException the font file could not be read
      */
-    TrueTypeFontUnicode(String ttFile, String enc, boolean emb, byte ttfAfm[]) throws DocumentException, IOException {
+    TrueTypeFontUnicode(String ttFile, String enc, boolean emb, byte ttfAfm[], boolean forceRead) throws DocumentException, IOException {
         String nameBase = getBaseName(ttFile);
         String ttcName = getTTCName(nameBase);
         if (nameBase.length() < ttFile.length()) {
@@ -98,7 +86,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
             ttcIndex = nameBase.substring(ttcName.length() + 1);
         fontType = FONT_TYPE_TTUNI;
         if ((fileName.toLowerCase().endsWith(".ttf") || fileName.toLowerCase().endsWith(".otf") || fileName.toLowerCase().endsWith(".ttc")) && ((enc.equals(IDENTITY_H) || enc.equals(IDENTITY_V)) && emb)) {
-            process(ttfAfm);
+            process(ttfAfm, forceRead);
             if (os_2.fsType == 2)
                 throw new DocumentException(fileName + style + " cannot be embedded due to licensing restrictions.");
             // Sivan
@@ -120,12 +108,30 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     }
     
 /**
+     * Gets the width of a <CODE>char</CODE> in normalized 1000 units.
+     * @param char1 the unicode <CODE>char</CODE> to get the width of
+     * @return the width in normalized 1000 units
+     */
+    public int getWidth(int char1) {
+        if (vertical)
+            return 1000;
+        if (fontSpecific) {
+            if ((char1 & 0xff00) == 0 || (char1 & 0xff00) == 0xf000)
+                return getRawWidth(char1 & 0xff, null);
+            else
+                return 0;
+        }
+        else {
+            return getRawWidth(char1, encoding);
+        }
+    }
+    
+    /**
  * Gets the width of a <CODE>String</CODE> in normalized 1000 units.
- * @param text the <CODE>String</CODE> to get the witdth of
+     * @param text the <CODE>String</CODE> to get the width of
  * @return the width in normalized 1000 units
  */
-    public int getWidth(String text)
-    {
+    public int getWidth(String text) {
         if (vertical)
             return text.length() * 1000;
         int total = 0;
@@ -140,8 +146,14 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         }
         else {
             int len = text.length();
-            for (int k = 0; k < len; ++k)
+            for (int k = 0; k < len; ++k) {
+                if (Utilities.isSurrogatePair(text, k)) {
+                    total += getRawWidth(Utilities.convertToUtf32(text, k), encoding);
+                    ++k;
+                }
+                else
                 total += getRawWidth(text.charAt(k), encoding);
+            }
         }
         return total;
     }
@@ -149,10 +161,9 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     /** Creates a ToUnicode CMap to allow copy and paste from Acrobat.
      * @param metrics metrics[0] contains the glyph index and metrics[2]
      * contains the Unicode code
-     * @throws DocumentException on error
      * @return the stream representing this CMap or <CODE>null</CODE>
      */    
-    private PdfStream getToUnicode(Object metrics[]) throws DocumentException {
+    private PdfStream getToUnicode(Object metrics[]) {
         if (metrics.length == 0)
             return null;
         StringBuffer buf = new StringBuffer(
@@ -160,14 +171,14 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         "12 dict begin\n" +
         "begincmap\n" +
         "/CIDSystemInfo\n" +
-        "<< /Registry (Adobe)\n" +
-        "/Ordering (UCS)\n" +
+        "<< /Registry (TTX+0)\n" +
+        "/Ordering (T42UV)\n" +
         "/Supplement 0\n" +
         ">> def\n" +
-        "/CMapName /Adobe-Identity-UCS def\n" +
+        "/CMapName /TTX+0 def\n" +
         "/CMapType 2 def\n" +
         "1 begincodespacerange\n" +
-        toHex(((int[])metrics[0])[0]) + toHex(((int[])metrics[metrics.length - 1])[0]) + "\n" +
+        "<0000><FFFF>\n" +
         "endcodespacerange\n");
         int size = 0;
         for (int k = 0; k < metrics.length; ++k) {
@@ -181,7 +192,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
             --size;
             int metric[] = (int[])metrics[k];
             String fromTo = toHex(metric[0]);
-            buf.append(fromTo).append(fromTo).append(toHex(metric[2])).append("\n");
+            buf.append(fromTo).append(fromTo).append(toHex(metric[2])).append('\n');
         }
         buf.append(
         "endbfrange\n" +
@@ -190,8 +201,13 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         "end end\n");
         String s = buf.toString();
         PdfStream stream = new PdfStream(PdfEncodings.convertToBytes(s, null));
-        stream.flateCompress();
+        stream.flateCompress(compressionLevel);
         return stream;
+    }
+    
+    private static String toHex4(int n) {
+        String s = "0000" + Integer.toHexString(n);
+        return s.substring(s.length() - 4);
     }
     
     /** Gets an hex string in the format "&lt;HHHH&gt;".
@@ -199,8 +215,12 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
      * @return the hex string
      */    
     static String toHex(int n) {
-        String s = Integer.toHexString(n);
-        return "<0000".substring(0, 5 - s.length()) + s + ">";
+        if (n < 0x10000)
+            return "<" + toHex4(n) + ">";
+        n -= 0x10000;
+        int high = (n / 0x400) + 0xd800;
+        int low = (n % 0x400) + 0xdc00;
+        return "[<" + toHex4(high) + toHex4(low) + ">]";
     }
     
     /** Generates the CIDFontTyte2 dictionary.
@@ -239,14 +259,14 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
                     continue;
                 int m = metric[0];
                 if (m == lastNumber + 1) {
-                    buf.append(" ").append(metric[1]);
+                    buf.append(' ').append(metric[1]);
                 }
                 else {
                     if (!firstTime) {
-                        buf.append("]");
+                        buf.append(']');
                     }
                     firstTime = false;
-                    buf.append(m).append("[").append(metric[1]);
+                    buf.append(m).append('[').append(metric[1]);
                 }
                 lastNumber = m;
             }
@@ -285,7 +305,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     /** The method used to sort the metrics array.
      * @param o1 the first element
      * @param o2 the second element
-     * @return the comparisation
+     * @return the comparison
      */    
     public int compare(Object o1, Object o2) {
         int m1 = ((int[])o1)[0];
@@ -296,6 +316,8 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
             return 0;
         return 1;
     }
+    
+    private static final byte[] rotbits = {(byte)0x80,(byte)0x40,(byte)0x20,(byte)0x10,(byte)0x08,(byte)0x04,(byte)0x02,(byte)0x01};
 
     /** Outputs to the writer the font dictionaries and streams.
      * @param writer the writer for this document
@@ -306,76 +328,58 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
      */
     void writeFont(PdfWriter writer, PdfIndirectReference ref, Object params[]) throws DocumentException, IOException {
         HashMap longTag = (HashMap)params[0];
+        addRangeUni(longTag, true, subset);
         Object metrics[] = longTag.values().toArray();
         Arrays.sort(metrics, this);
         PdfIndirectReference ind_font = null;
         PdfObject pobj = null;
         PdfIndirectObject obj = null;
+        PdfIndirectReference cidset = null;
+        if (writer.getPDFXConformance() == PdfWriter.PDFA1A || writer.getPDFXConformance() == PdfWriter.PDFA1B) {
+            PdfStream stream;
+            if (metrics.length == 0) {
+                stream = new PdfStream(new byte[]{(byte)0x80});
+				}
+            else {
+                int top = ((int[])metrics[metrics.length - 1])[0];
+                byte[] bt = new byte[top / 8 + 1];
+                for (int k = 0; k < metrics.length; ++k) {
+                    int v = ((int[])metrics[k])[0];
+                    bt[v / 8] |= rotbits[v % 8];
+			}
+                stream = new PdfStream(bt);
+                stream.flateCompress(compressionLevel);
+			}
+            cidset = writer.addToBody(stream).getIndirectReference();
+        }
         // sivan: cff
         if (cff) {
-			RandomAccessFileOrArray rf2 = new RandomAccessFileOrArray(rf);
-			byte b[] = new byte[cffLength];
-			try {
-				rf2.reOpen();
-				rf2.seek(cffOffset);
-				rf2.readFully(b);
-			} finally {
-				try {
-					rf2.close();
-				} catch (Exception e) {
-					// empty on purpose
-				}
-			}
-			/*
-			CFFFont cffFont = new CFFFont(new RandomAccessFileOrArray(b));
-			// test if we can find the font by name and if it's a type1 CFF
-			if (cffFont.exists(fontName) && !cffFont.isCID(fontName)) {
-				byte[] cid = cffFont.getCID( (cffFont.getNames())[0] );
-				if (cid != null) b=cid;
-			}
-			
-			*/
-			
+			byte b[] = readCffFont();
+            if (subset || subsetRanges != null) {
 			CFFFontSubset cff = new CFFFontSubset(new RandomAccessFileOrArray(b),longTag);
-			b = cff.Process( (cff.getNames())[0] );
-			
-			// if the font is already CID, or not found by name, or 
-			// getCID returned null, we just use the data in the CFF
-			// table and hope for the best.
-		  
-				
-			// for debugging, force a reparsing
-			/*
-			java.lang.System.err.println("");
-			java.lang.System.err.println("");
-			java.lang.System.err.println("");
-			CFFFont dummy = new CFFFont(java.nio.ByteBuffer.wrap(b));	
-			java.lang.System.err.println("");
-			java.lang.System.err.println("");
-			java.lang.System.err.println("");
-			*/	
-			pobj = new StreamFont(b, "CIDFontType0C");
+                b = cff.Process(cff.getNames()[0]);
+            }
+			pobj = new StreamFont(b, "CIDFontType0C", compressionLevel);
 			obj = writer.addToBody(pobj);
 			ind_font = obj.getIndirectReference();
         } else {
             byte[] b;
             if (subset || directoryOffset != 0) {
-                TrueTypeFontSubSet sb = new TrueTypeFontSubSet(fileName, new RandomAccessFileOrArray(rf), longTag, directoryOffset, false);
+                TrueTypeFontSubSet sb = new TrueTypeFontSubSet(fileName, new RandomAccessFileOrArray(rf), longTag, directoryOffset, false, false);
                 b = sb.process();
             }
             else {
-                RandomAccessFileOrArray r = new RandomAccessFileOrArray(rf);
-                b = new byte[r.length()];
-                r.readFully(b);
+                b = getFullFont();
             }
             int lengths[] = new int[]{b.length};
-            pobj = new StreamFont(b, lengths);
+            pobj = new StreamFont(b, lengths, compressionLevel);
             obj = writer.addToBody(pobj);
             ind_font = obj.getIndirectReference();
         }
-        String subsetPrefix = createSubsetPrefix();
-        //if (cff) subsetPrefix = "";
-        PdfDictionary dic = getFontDescriptor(ind_font, subsetPrefix);
+        String subsetPrefix = "";
+        if (subset)
+            subsetPrefix = createSubsetPrefix();
+        PdfDictionary dic = getFontDescriptor(ind_font, subsetPrefix, cidset);
         obj = writer.addToBody(dic);
         ind_font = obj.getIndirectReference();
 
@@ -394,38 +398,63 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         pobj = getFontBaseType(ind_font, subsetPrefix, toUnicodeRef);
         writer.addToBody(pobj, ref);
     }
+    
+    /**
+     * Returns a PdfStream object with the full font program.
+     * @return	a PdfStream with the font program
+     * @since	2.1.3
+     */
+    public PdfStream getFullFontStream() throws IOException, DocumentException {
+    	if (cff) {
+			return new StreamFont(readCffFont(), "CIDFontType0C", compressionLevel);
+        }
+    	return super.getFullFontStream();
+    }
 
     /** A forbidden operation. Will throw a null pointer exception.
      * @param text the text
      * @return always <CODE>null</CODE>
      */    
-    byte[] convertToBytes(String text)
-    {
+    byte[] convertToBytes(String text) {
         return null;
     }
 
-    /**
-     * Checks if a character exists in this font.
-     * @param c the character to check
-     * @return <CODE>true</CODE> if the character has a glyph,
-     * <CODE>false</CODE> otherwise
+    byte[] convertToBytes(int char1) {
+        return null;
+    }
+
+    /** Gets the glyph index and metrics for a character.
+     * @param c the character
+     * @return an <CODE>int</CODE> array with {glyph index, width}
      */
-    public boolean charExists(char c) {
+    public int[] getMetricsTT(int c) {
+        if (cmapExt != null)
+            return (int[])cmapExt.get(new Integer(c));
         HashMap map = null;
         if (fontSpecific)
             map = cmap10;
         else
             map = cmap31;
         if (map == null)
-            return false;
+            return null;
         if (fontSpecific) {
-            if ((c & 0xff00) == 0 || (c & 0xff00) == 0xf000)
-                return map.get(new Integer(c & 0xff)) != null;
+            if ((c & 0xffffff00) == 0 || (c & 0xffffff00) == 0xf000)
+                return (int[])map.get(new Integer(c & 0xff));
             else
-                return false;
+                return null;
         }
         else
-            return map.get(new Integer(c)) != null;
+            return (int[])map.get(new Integer(c));
+    }
+    
+    /**
+     * Checks if a character exists in this font.
+     * @param c the character to check
+     * @return <CODE>true</CODE> if the character has a glyph,
+     * <CODE>false</CODE> otherwise
+     */
+    public boolean charExists(int c) {
+        return getMetricsTT(c) != null;
     }
     
     /**
@@ -435,49 +464,18 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
      * @return <CODE>true</CODE> if the advance was set,
      * <CODE>false</CODE> otherwise
      */
-    public boolean setCharAdvance(char c, int advance) {
-        HashMap map = null;
-        if (fontSpecific)
-            map = cmap10;
-        else
-            map = cmap31;
-        if (map == null)
-            return false;
-        int m[] = null;
-        if (fontSpecific) {
-            if ((c & 0xff00) == 0 || (c & 0xff00) == 0xf000)
-                m = (int[])map.get(new Integer(c & 0xff));
-            else
-                return false;
-        }
-        else
-            m = (int[])map.get(new Integer(c));
+    public boolean setCharAdvance(int c, int advance) {
+        int[] m = getMetricsTT(c);
         if (m == null)
             return false;
-        else
-            m[1] = advance;
+        m[1] = advance;
         return true;
     }
     
-    public int[] getCharBBox(char c) {
+    public int[] getCharBBox(int c) {
         if (bboxes == null)
             return null;
-        HashMap map = null;
-        if (fontSpecific)
-            map = cmap10;
-        else
-            map = cmap31;
-        if (map == null)
-            return null;
-        int m[] = null;
-        if (fontSpecific) {
-            if ((c & 0xff00) == 0 || (c & 0xff00) == 0xf000)
-                m = (int[])map.get(new Integer(c & 0xff));
-            else
-                return null;
-        }
-        else
-            m = (int[])map.get(new Integer(c));
+        int[] m = getMetricsTT(c);
         if (m == null)
             return null;
         return bboxes[m[0]];

@@ -1,6 +1,5 @@
 /*
- * $Id: TrueTypeFontSubSet.java,v 1.15 2002/07/09 11:28:24 blowagie Exp $
- * $Name:  $
+ * $Id: TrueTypeFontSubSet.java 4066 2009-09-19 12:44:47Z psoares33 $
  *
  * Copyright 2001, 2002 Paulo Soares
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,35 +29,21 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (minor)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import java.io.*;
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 
@@ -73,6 +57,8 @@ class TrueTypeFontSubSet {
         "hhea", "hmtx", "loca", "maxp", "prep"};
     static final String tableNamesCmap[] = {"cmap", "cvt ", "fpgm", "glyf", "head",
         "hhea", "hmtx", "loca", "maxp", "prep"};
+    static final String tableNamesExtra[] = {"OS/2", "cmap", "cvt ", "fpgm", "glyf", "head",
+        "hhea", "hmtx", "loca", "maxp", "name, prep"};
     static final int entrySelectors[] = {0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4};
     static final int TABLE_CHECKSUM = 0;
     static final int TABLE_OFFSET = 1;
@@ -99,6 +85,7 @@ class TrueTypeFontSubSet {
      */
     protected String fileName;
     protected boolean includeCmap;
+    protected boolean includeExtras;
     protected boolean locaShortTable;
     protected int locaTable[];
     protected HashMap glyphsUsed;
@@ -119,11 +106,12 @@ class TrueTypeFontSubSet {
      * @param glyphsUsed the glyphs used
      * @param includeCmap <CODE>true</CODE> if the table cmap is to be included in the generated font
      */
-    TrueTypeFontSubSet(String fileName, RandomAccessFileOrArray rf, HashMap glyphsUsed, int directoryOffset, boolean includeCmap) {
+    TrueTypeFontSubSet(String fileName, RandomAccessFileOrArray rf, HashMap glyphsUsed, int directoryOffset, boolean includeCmap, boolean includeExtras) {
         this.fileName = fileName;
         this.rf = rf;
         this.glyphsUsed = glyphsUsed;
         this.includeCmap = includeCmap;
+        this.includeExtras = includeExtras;
         this.directoryOffset = directoryOffset;
         glyphsInList = new ArrayList(glyphsUsed.keySet());
     }
@@ -154,14 +142,18 @@ class TrueTypeFontSubSet {
         }
     }
     
-    protected void assembleFont() throws IOException, DocumentException {
+    protected void assembleFont() throws IOException {
         int tableLocation[];
         int fullFontSize = 0;
         String tableNames[];
+        if (includeExtras)
+            tableNames = tableNamesExtra;
+        else {
         if (includeCmap)
             tableNames = tableNamesCmap;
         else
             tableNames = tableNamesSimple;
+        }
         int tablesUsed = 2;
         int len = 0;
         for (int k = 0; k < tableNames.length; ++k) {
@@ -416,10 +408,10 @@ class TrueTypeFontSubSet {
         int v3 = 0;
         int ptr = 0;
         for (int k = 0; k < len; ++k) {
-            v3 += (int)b[ptr++] & 0xff;
-            v2 += (int)b[ptr++] & 0xff;
-            v1 += (int)b[ptr++] & 0xff;
-            v0 += (int)b[ptr++] & 0xff;
+            v3 += b[ptr++] & 0xff;
+            v2 += b[ptr++] & 0xff;
+            v1 += b[ptr++] & 0xff;
+            v0 += b[ptr++] & 0xff;
         }
         return v0 + (v1 << 8) + (v2 << 16) + (v3 << 24);
     }
