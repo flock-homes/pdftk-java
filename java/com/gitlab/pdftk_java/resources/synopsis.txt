@@ -10,6 +10,7 @@ SYNOPSIS
             [ flatten ] [ need_appearances ]
             [ compress | uncompress ]
             [ keep_first_id | keep_final_id ] [ drop_xfa ] [ drop_xmp ]
+            [ replacement_font <font name> ]
             [ verbose ] [ dont_ask | do_ask ]
        Where:
             <operation> may be empty, or:

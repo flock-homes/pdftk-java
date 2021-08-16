@@ -1,6 +1,7 @@
 *~
+*#
 *.class
-java/test.java
+java/TAGS
 .classpath
 .project
 .settings/
@@ -9,3 +10,9 @@ java/test.java
 /gradle
 /gradlew
 /bin
+
+# TeX auxiliary files
+test/files/*.aux
+test/files/*.gz
+test/files/*.log
+test/files/*.out

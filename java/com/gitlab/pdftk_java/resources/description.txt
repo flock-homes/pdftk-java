@@ -176,9 +176,9 @@ OPTIONS
           rotate [<page ranges>]
                  Takes a single input PDF and rotates just the specified
                  pages.  All other pages remain unchanged.  The page order
-                 remains unchanged.  Specify the pages to rotate using the same
-                 notation as you would with cat, except you omit the pages
-                 that you aren't rotating:
+                 remains unchanged.  Specify the pages to rotate using the
+                 same notation as you would with cat, except you omit the
+                 pages that you aren't rotating:
 
                  [<begin page number>[-<end page number>[<qualifier>]]][<page
                  rotation>]
@@ -220,7 +220,8 @@ OPTIONS
                  chance to create (and save) new field appearances, then the
                  plain text field data is what you'll see.
 
-                 Also see the flatten and need_appearances options.
+                 Also see the flatten, need_appearances, and replacement_font
+                 options.
 
           background <background PDF filename | - | PROMPT>
                  Applies a PDF watermark to the background of a single input
@@ -267,8 +268,7 @@ OPTIONS
                  as XML numerical entities.  Does not create a new PDF.
 
           dump_data_utf8
-                 Same as dump_data except that the output is encoded as
-                 UTF-8.
+                 Same as dump_data except that the output is encoded as UTF-8.
 
           dump_data_fields
                  Reads a single input PDF file and reports form field statis-
@@ -277,8 +277,8 @@ OPTIONS
                  entities. Does not create a new PDF.
 
           dump_data_fields_utf8
-                 Same as dump_data_fields except that the output is encoded
-                 as UTF-8.
+                 Same as dump_data_fields except that the output is encoded as
+                 UTF-8.
 
           dump_data_annots
                  This operation currently reports only link annotations.
@@ -412,6 +412,14 @@ OPTIONS
               ing a form with non-ASCII text to ensure the best presentation
               in Adobe Reader or Acrobat.  It won't work when combined with
               the flatten option.
+
+       [replacement_font <font name>]
+              Use the specified font to display text in form fields. This
+              option is useful when filling a form with non-ASCII text that is
+              not supported by the fonts included in the input PDF. font name
+              may be either the file name or the family name of a font, but
+              using a file name is more reliable. Currently only TrueType
+              fonts with Unicode text are supported.
 
        [keep_first_id | keep_final_id]
               When combining pages from multiple PDFs, use one of these
