@@ -1,5 +1,6 @@
 variables:
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic"
+  GRADLE_VERSION: "7.1"
 
 .ant-job:
   stage: test
@@ -58,8 +59,6 @@ pages:
     - tags
   stage: deploy
   image: gradle:latest
-  variables:
-    GRADLE_VERSION: "7.1"
   script:
     - *grade-job-script
 
