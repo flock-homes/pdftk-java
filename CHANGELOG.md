@@ -1,3 +1,17 @@
+## [3.3.0] - 2021-08-16
+
+### Added
+ - Support filling multi-valued list fields
+ - Support replacing fonts in form fields
+
+### Changed
+ - Renamed namespace of internal iText library
+ - Partially updated internal iText library code to 4.2.0
+   - NB: might introduce regressions!
+
+### Fixed
+ - Crashes with non-conforming inputs
+
 ## [3.2.3] - 2021-06-16
 
 ### Added
