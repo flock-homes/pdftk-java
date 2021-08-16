@@ -43,8 +43,8 @@ The recommended way to install pdftk-java is through a package
 manager, but if that is not an option there are pre-built binaries
 available:
 
- - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/1353200058/artifacts/raw/build/libs/pdftk-all.jar), including dependencies. Requires a JRE at runtime.
- - :warning: **Experimental** [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/1353200062/artifacts/raw/build/native-image/pdftk) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
+ - [Standalone jar](https://gitlab.com/pdftk-java/pdftk/-/jobs/1507074845/artifacts/raw/build/libs/pdftk-all.jar), including dependencies. Requires a JRE at runtime.
+ - :warning: **Experimental** [Native Image](https://gitlab.com/pdftk-java/pdftk/-/jobs/1507074849/artifacts/raw/build/native-image/pdftk) for x86_64 GNU/Linux systems. Does not require any runtime dependencies.
 
 ## Dependencies
 
@@ -128,6 +128,7 @@ To run:
 ```
 $ java -cp build/jar/pdftk.jar:lib/bcprov.jar:lib/commons-lang3.jar com.gitlab.pdftk_java.pdftk
 ```
+it will probably be convenient to create an alias or launcher script.
 
 ## FAQ
 
@@ -150,13 +151,33 @@ find help is StackExchange, and in particular the
 Linux](https://unix.stackexchange.com/) sites. Issues and feature
 requests can be reported [over here](https://gitlab.com/pdftk-java/pdftk/-/issues).
 
+**Q: I got a ClassCastException / NullPointerException. What can I
+do?**
+
+**A:** These errors were relatively frequent in early versions of
+pdftk-java, please double-check that you are running the latest
+version. If that is indeed the case, an issue report will be very
+welcome.
+
+**Q: I got a ClassNotFoundException / NoClassDefFoundError. What can I
+do?**
+
+**A:** If you installed the package manually, then you probably forgot
+to specify the classpath. See the [running
+instructions](#building-and-running-with-ant).
+
 **Q: I am trying to fill a form with non-ASCII characters but they do
 not show up. How can I fix it?**
 
 **A:** Often the problem with disappearing characters is that the PDF
-does not contain the appropriate fonts. There is some experimental
-code to fix this, see #96 and #84. CJK languages are a different
-story, see #37.
+does not contain the appropriate fonts. As of release 3.3.0 a
+workaround for this issue is to replace the embedded fonts with a
+local font:
+```
+pdftk form.pdf fill_form data.fdf output filled.pdf replacement_font "DejaVu Sans"
+```
+See also issues #84, #96, #97 for more details. CJK languages are a
+different story, see issue #37.
 
 **Q: Is there a GUI?**
 
