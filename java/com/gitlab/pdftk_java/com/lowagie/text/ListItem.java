@@ -36,14 +36,9 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (kept MarkupTags from 155)
+// pdftk-java modified no
 
 package com.gitlab.pdftk_java.com.lowagie.text;
-
-import java.util.Properties;
-
-import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupTags;
-import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupParser;
 
 /**
  * A <CODE>ListItem</CODE> is a <CODE>Paragraph</CODE>
@@ -92,7 +87,7 @@ import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupParser;
  * @see	Paragraph
  */
 
-public class ListItem extends Paragraph implements TextElementArray, MarkupAttributes {
+public class ListItem extends Paragraph {
     
     // constants
 	private static final long serialVersionUID = 1970670787169329006L;
@@ -195,37 +190,6 @@ public class ListItem extends Paragraph implements TextElementArray, MarkupAttri
         super(phrase);
     }
     
-        /**
-         * Returns a <CODE>ListItem</CODE> that has been constructed taking in account
-         * the value of some <VAR>attributes</VAR>.
-         *
-         * @param	attributes		Some attributes
-         */
-    
-    public ListItem(Properties attributes) {
-        super("", FontFactory.getFont(attributes));
-        String value;
-        if ((value = (String)attributes.remove(ElementTags.ITEXT)) != null) {
-            add(new Chunk(value));
-        }
-        if ((value = (String)attributes.remove(ElementTags.LEADING)) != null) {
-            setLeading(Float.valueOf(value + "f").floatValue());
-        }
-        else if ((value = (String)attributes.remove(MarkupTags.CSS_KEY_LINEHEIGHT)) != null) {
-            setLeading(MarkupParser.parseLength(value));
-        }
-        if ((value = (String)attributes.remove(ElementTags.INDENTATIONLEFT)) != null) {
-            setIndentationLeft(Float.valueOf(value + "f").floatValue());
-        }
-        if ((value = (String)attributes.remove(ElementTags.INDENTATIONRIGHT)) != null) {
-            setIndentationRight(Float.valueOf(value + "f").floatValue());
-        }
-        if ((value = (String)attributes.remove(ElementTags.ALIGN)) != null) {
-            setAlignment(value);
-        }
-        if (attributes.size() > 0) setMarkupAttributes(attributes);
-    }
-    
     // implementation of the Element-methods
     
     /**
@@ -277,15 +241,5 @@ public class ListItem extends Paragraph implements TextElementArray, MarkupAttri
     public Chunk getListSymbol() {
         return symbol;
     }
-    
-/**
- * Checks if a given tag corresponds with this object.
- *
- * @param   tag     the given tag
- * @return  true if the tag corresponds
- */
-    
-    public static boolean isTag(String tag) {
-        return ElementTags.LISTITEM.equals(tag);
-    }
+
 }

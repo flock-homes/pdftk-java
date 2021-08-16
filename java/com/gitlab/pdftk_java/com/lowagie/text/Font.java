@@ -1,6 +1,5 @@
 /*
- * $Id: Font.java,v 1.94 2005/10/05 14:16:04 blowagie Exp $
- * $Name:  $
+ * $Id: Font.java 4020 2009-07-10 05:13:14Z xlv $
  *
  * Copyright 1999, 2000, 2001, 2002 by Bruno Lowagie.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,35 +29,21 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text;
 
 import java.awt.Color;
 
+import com.gitlab.pdftk_java.com.lowagie.text.html.Markup;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.BaseFont;
-import com.gitlab.pdftk_java.com.lowagie.text.markup.MarkupTags;
 
 /**
  * Contains all the specifications of a font: fontfamily, size, style and color.
@@ -149,10 +133,10 @@ public class Font implements Comparable {
 	 *            the font that has to be copied
 	 */
 	public Font(Font other) {
-		this.color = other.color;
 		this.family = other.family;
 		this.size = other.size;
 		this.style = other.style;
+		this.color = other.color;
 		this.baseFont = other.baseFont;
 	}
 
@@ -288,7 +272,6 @@ public class Font implements Comparable {
 	 *            the other <CODE>Font</CODE>
 	 * @return a value
 	 */
-
 	public int compareTo(Object object) {
 		if (object == null) {
 			return -1;
@@ -299,13 +282,13 @@ public class Font implements Comparable {
 			if (baseFont != null && !baseFont.equals(font.getBaseFont())) {
 				return -2;
 			}
-			if (this.family != font.family()) {
+			if (this.family != font.getFamily()) {
 				return 1;
 			}
-			if (this.size != font.size()) {
+			if (this.size != font.getSize()) {
 				return 2;
 			}
-			if (this.style != font.style()) {
+			if (this.style != font.getStyle()) {
 				return 3;
 			}
 			if (this.color == null) {
@@ -317,7 +300,7 @@ public class Font implements Comparable {
 			if (font.color == null) {
 				return 4;
 			}
-			if (this.color.equals(font.color())) {
+			if (this.color.equals(font.getColor())) {
 				return 0;
 			}
 			return 4;
@@ -326,46 +309,15 @@ public class Font implements Comparable {
 		}
 	}
 
-	// methods
+	// FAMILY
 
 	/**
-	 * Sets the family using a <CODE>String</CODE> ("Courier", "Helvetica",
-	 * "Times New Roman", "Symbol" or "ZapfDingbats").
+	 * Gets the family of this font.
 	 * 
-	 * @param family
-	 *            A <CODE>String</CODE> representing a certain font-family.
+	 * @return the value of the family
 	 */
-
-	public void setFamily(String family) {
-		this.family = getFamilyIndex(family);
-	}
-
-	/**
-	 * Translates a <CODE>String</CODE> -value of a certain family into the
-	 * index that is used for this family in this class.
-	 * 
-	 * @param family
-	 *            A <CODE>String</CODE> representing a certain font-family
-	 * @return the corresponding index
-	 */
-
-	public static int getFamilyIndex(String family) {
-		if (family.equalsIgnoreCase(FontFactory.COURIER)) {
-			return COURIER;
-		}
-		if (family.equalsIgnoreCase(FontFactory.HELVETICA)) {
-			return HELVETICA;
-		}
-		if (family.equalsIgnoreCase(FontFactory.TIMES_ROMAN)) {
-			return TIMES_ROMAN;
-		}
-		if (family.equalsIgnoreCase(FontFactory.SYMBOL)) {
-			return SYMBOL;
-		}
-		if (family.equalsIgnoreCase(FontFactory.ZAPFDINGBATS)) {
-			return ZAPFDINGBATS;
-		}
-		return UNDEFINED;
+	public int getFamily() {
+		return family;
 	}
 
 	/**
@@ -373,10 +325,9 @@ public class Font implements Comparable {
 	 * 
 	 * @return the familyname
 	 */
-
 	public String getFamilyname() {
 		String tmp = "unknown";
-		switch (family()) {
+		switch (getFamily()) {
 		case Font.COURIER:
 			return FontFactory.COURIER;
 		case Font.HELVETICA:
@@ -407,14 +358,183 @@ public class Font implements Comparable {
 	}
 
 	/**
+	 * Sets the family using a <CODE>String</CODE> ("Courier", "Helvetica",
+	 * "Times New Roman", "Symbol" or "ZapfDingbats").
+	 * 
+	 * @param family
+	 *            A <CODE>String</CODE> representing a certain font-family.
+	 */
+	public void setFamily(String family) {
+		this.family = getFamilyIndex(family);
+	}
+
+	/**
+	 * Translates a <CODE>String</CODE> -value of a certain family into the
+	 * index that is used for this family in this class.
+	 * 
+	 * @param family
+	 *            A <CODE>String</CODE> representing a certain font-family
+	 * @return the corresponding index
+	 */
+	public static int getFamilyIndex(String family) {
+		if (family.equalsIgnoreCase(FontFactory.COURIER)) {
+			return COURIER;
+		}
+		if (family.equalsIgnoreCase(FontFactory.HELVETICA)) {
+			return HELVETICA;
+		}
+		if (family.equalsIgnoreCase(FontFactory.TIMES_ROMAN)) {
+			return TIMES_ROMAN;
+		}
+		if (family.equalsIgnoreCase(FontFactory.SYMBOL)) {
+			return SYMBOL;
+		}
+		if (family.equalsIgnoreCase(FontFactory.ZAPFDINGBATS)) {
+			return ZAPFDINGBATS;
+		}
+		return UNDEFINED;
+	}
+
+	// SIZE
+	
+	/**
+	 * Gets the size of this font.
+	 * 
+	 * @return a size
+	 */
+	public float getSize() {
+		return size;
+	}
+
+	/**
+	 * Gets the size that can be used with the calculated <CODE>BaseFont
+	 * </CODE>.
+	 * 
+	 * @return the size that can be used with the calculated <CODE>BaseFont
+	 *         </CODE>
+	 */
+	public float getCalculatedSize() {
+		float s = this.size;
+		if (s == UNDEFINED) {
+			s = DEFAULTSIZE;
+		}
+		return s;
+	}
+
+	/**
+	 * Gets the leading that can be used with this font.
+	 * 
+	 * @param linespacing
+	 *            a certain linespacing
+	 * @return the height of a line
+	 */
+	public float getCalculatedLeading(float linespacing) {
+		return linespacing * getCalculatedSize();
+	}
+
+	/**
 	 * Sets the size.
 	 * 
 	 * @param size
 	 *            The new size of the font.
 	 */
-
 	public void setSize(float size) {
 		this.size = size;
+	}
+	public float size() {
+		return size;
+	}
+
+	// STYLE
+	
+	/**
+	 * Gets the style of this font.
+	 * 
+	 * @return a size
+	 */
+	public int getStyle() {
+		return style;
+	}
+	public int style() {
+		return style;
+	}
+
+	/**
+	 * Gets the style that can be used with the calculated <CODE>BaseFont
+	 * </CODE>.
+	 * 
+	 * @return the style that can be used with the calculated <CODE>BaseFont
+	 *         </CODE>
+	 */
+	public int getCalculatedStyle() {
+		int style = this.style;
+		if (style == UNDEFINED) {
+			style = NORMAL;
+		}
+		if (baseFont != null)
+			return style;
+		if (family == SYMBOL || family == ZAPFDINGBATS)
+			return style;
+		else
+			return style & (~BOLDITALIC);
+	}
+
+	/**
+	 * checks if this font is Bold.
+	 * 
+	 * @return a <CODE>boolean</CODE>
+	 */
+	public boolean isBold() {
+		if (style == UNDEFINED) {
+			return false;
+		}
+		return (style & BOLD) == BOLD;
+	}
+
+	/**
+	 * checks if this font is italic.
+	 * 
+	 * @return a <CODE>boolean</CODE>
+	 */
+	public boolean isItalic() {
+		if (style == UNDEFINED) {
+			return false;
+		}
+		return (style & ITALIC) == ITALIC;
+	}
+
+	/**
+	 * checks if this font is underlined.
+	 * 
+	 * @return a <CODE>boolean</CODE>
+	 */
+	public boolean isUnderlined() {
+		if (style == UNDEFINED) {
+			return false;
+		}
+		return (style & UNDERLINE) == UNDERLINE;
+	}
+
+	/**
+	 * checks if the style of this font is STRIKETHRU.
+	 * 
+	 * @return a <CODE>boolean</CODE>
+	 */
+	public boolean isStrikethru() {
+		if (style == UNDEFINED) {
+			return false;
+		}
+		return (style & STRIKETHRU) == STRIKETHRU;
+	}
+
+	/**
+	 * Sets the style.
+	 * 
+	 * @param style
+	 *            the style.
+	 */
+	public void setStyle(int style) {
+		this.style = style;
 	}
 
 	/**
@@ -424,24 +544,10 @@ public class Font implements Comparable {
 	 * @param style
 	 *            A <CODE>String</CODE> representing a certain style.
 	 */
-
 	public void setStyle(String style) {
 		if (this.style == UNDEFINED)
 			this.style = NORMAL;
 		this.style |= getStyleValue(style);
-	}
-
-	/**
-	 * Sets the style.
-	 * 
-	 * @param style
-	 *            the style.
-	 */
-
-	public void setStyle(int style) {
-		if (this.style == UNDEFINED)
-			this.style = NORMAL;
-		this.style |= style;
 	}
 
 	/**
@@ -452,28 +558,41 @@ public class Font implements Comparable {
 	 *            A <CODE>String</CODE>
 	 * @return the corresponding value
 	 */
-
 	public static int getStyleValue(String style) {
 		int s = 0;
-		if (style.indexOf(MarkupTags.CSS_VALUE_NORMAL) != -1) {
+		if (style.indexOf(Markup.CSS_VALUE_NORMAL) != -1) {
 			s |= NORMAL;
 		}
-		if (style.indexOf(MarkupTags.CSS_VALUE_BOLD) != -1) {
+		if (style.indexOf(Markup.CSS_VALUE_BOLD) != -1) {
 			s |= BOLD;
 		}
-		if (style.indexOf(MarkupTags.CSS_VALUE_ITALIC) != -1) {
+		if (style.indexOf(Markup.CSS_VALUE_ITALIC) != -1) {
 			s |= ITALIC;
 		}
-		if (style.indexOf(MarkupTags.CSS_VALUE_OBLIQUE) != -1) {
+		if (style.indexOf(Markup.CSS_VALUE_OBLIQUE) != -1) {
 			s |= ITALIC;
 		}
-		if (style.indexOf(MarkupTags.CSS_VALUE_UNDERLINE) != -1) {
+		if (style.indexOf(Markup.CSS_VALUE_UNDERLINE) != -1) {
 			s |= UNDERLINE;
 		}
-		if (style.indexOf(MarkupTags.CSS_VALUE_LINETHROUGH) != -1) {
+		if (style.indexOf(Markup.CSS_VALUE_LINETHROUGH) != -1) {
 			s |= STRIKETHRU;
 		}
 		return s;
+	}
+
+	// COLOR
+	
+	/**
+	 * Gets the color of this font.
+	 * 
+	 * @return a color
+	 */
+	public Color getColor() {
+		return color;
+	}
+	public Color color() {
+		return color;
 	}
 
 	/**
@@ -497,197 +616,17 @@ public class Font implements Comparable {
 	 * @param blue
 	 *            the blue-value of the new color
 	 */
-
 	public void setColor(int red, int green, int blue) {
 		this.color = new Color(red, green, blue);
 	}
 
-	/**
-	 * Gets the leading that can be used with this font.
-	 * 
-	 * @param linespacing
-	 *            a certain linespacing
-	 * @return the height of a line
-	 */
-
-	public float leading(float linespacing) {
-		if (size == UNDEFINED) {
-			return linespacing * DEFAULTSIZE;
-		}
-		return linespacing * size;
-	}
-
-	/**
-	 * Checks if the properties of this font are undefined or null.
-	 * <P>
-	 * If so, the standard should be used.
-	 * 
-	 * @return a <CODE>boolean</CODE>
-	 */
-
-	public boolean isStandardFont() {
-		return (family == UNDEFINED && size == UNDEFINED && style == UNDEFINED
-				&& color == null && baseFont == null);
-	}
-
-	/**
-	 * Replaces the attributes that are equal to <VAR>null </VAR> with the
-	 * attributes of a given font.
-	 * 
-	 * @param font
-	 *            the font of a bigger element class
-	 * @return a <CODE>Font</CODE>
-	 */
-
-	public Font difference(Font font) {
-		// size
-		float dSize = font.size;
-		if (dSize == UNDEFINED) {
-			dSize = this.size;
-		}
-		// style
-		int dStyle = UNDEFINED;
-		int style1 = this.style;
-		int style2 = font.style();
-		if (style1 != UNDEFINED || style2 != UNDEFINED) {
-			if (style1 == UNDEFINED)
-				style1 = 0;
-			if (style2 == UNDEFINED)
-				style2 = 0;
-			dStyle = style1 | style2;
-		}
-		// color
-		Color dColor = font.color;
-		if (dColor == null) {
-			dColor = this.color;
-		}
-		// family
-		if (font.baseFont != null) {
-			return new Font(font.baseFont, dSize, dStyle, dColor);
-		}
-		if (font.family() != UNDEFINED) {
-			return new Font(font.family, dSize, dStyle, dColor);
-		}
-		if (this.baseFont != null) {
-			if (dStyle == style1) {
-				return new Font(this.baseFont, dSize, dStyle, dColor);
-			} else {
-				return FontFactory.getFont(this.getFamilyname(), dSize, dStyle,
-						dColor);
-			}
-		}
-		return new Font(this.family, dSize, dStyle, dColor);
-	}
-
-	// methods to retrieve the membervariables
-
-	/**
-	 * Gets the family of this font.
-	 * 
-	 * @return the value of the family
-	 */
-
-	public int family() {
-		return family;
-	}
-
-	/**
-	 * Gets the size of this font.
-	 * 
-	 * @return a size
-	 */
-
-	public float size() {
-		return size;
-	}
-	public float getSize() {
-		return size;
-	}
-
-	/**
-	 * Gets the style of this font.
-	 * 
-	 * @return a size
-	 */
-
-	public int getStyle() {
-		return style;
-	}
-	public int style() {
-		return style;
-	}
-
-	/**
-	 * checks if this font is Bold.
-	 * 
-	 * @return a <CODE>boolean</CODE>
-	 */
-
-	public boolean isBold() {
-		if (style == UNDEFINED) {
-			return false;
-		}
-		return (style & BOLD) == BOLD;
-	}
-
-	/**
-	 * checks if this font is Bold.
-	 * 
-	 * @return a <CODE>boolean</CODE>
-	 */
-
-	public boolean isItalic() {
-		if (style == UNDEFINED) {
-			return false;
-		}
-		return (style & ITALIC) == ITALIC;
-	}
-
-	/**
-	 * checks if this font is underlined.
-	 * 
-	 * @return a <CODE>boolean</CODE>
-	 */
-
-	public boolean isUnderlined() {
-		if (style == UNDEFINED) {
-			return false;
-		}
-		return (style & UNDERLINE) == UNDERLINE;
-	}
-
-	/**
-	 * checks if the style of this font is STRIKETHRU.
-	 * 
-	 * @return a <CODE>boolean</CODE>
-	 */
-
-	public boolean isStrikethru() {
-		if (style == UNDEFINED) {
-			return false;
-		}
-		return (style & STRIKETHRU) == STRIKETHRU;
-	}
-
-	/**
-	 * Gets the color of this font.
-	 * 
-	 * @return a color
-	 */
-
-	public Color color() {
-		return color;
-	}
-	public Color getColor() {
-		return color;
-	}
+	// BASEFONT
 
 	/**
 	 * Gets the <CODE>BaseFont</CODE> inside this object.
 	 * 
 	 * @return the <CODE>BaseFont</CODE>
 	 */
-
 	public BaseFont getBaseFont() {
 		return baseFont;
 	}
@@ -783,39 +722,69 @@ public class Font implements Comparable {
 		}
 		return cfont;
 	}
+	
+	
+	// Helper methods
 
 	/**
-	 * Gets the style that can be used with the calculated <CODE>BaseFont
-	 * </CODE>.
+	 * Checks if the properties of this font are undefined or null.
+	 * <P>
+	 * If so, the standard should be used.
 	 * 
-	 * @return the style that can be used with the calculated <CODE>BaseFont
-	 *         </CODE>
+	 * @return a <CODE>boolean</CODE>
 	 */
-	public int getCalculatedStyle() {
-		int style = this.style;
-		if (style == UNDEFINED) {
-			style = NORMAL;
-		}
-		if (baseFont != null)
-			return style;
-		if (family == SYMBOL || family == ZAPFDINGBATS)
-			return style;
-		else
-			return style & (~BOLDITALIC);
+	public boolean isStandardFont() {
+		return (family == UNDEFINED && size == UNDEFINED && style == UNDEFINED
+				&& color == null && baseFont == null);
 	}
 
 	/**
-	 * Gets the size that can be used with the calculated <CODE>BaseFont
-	 * </CODE>.
+	 * Replaces the attributes that are equal to <VAR>null</VAR> with the
+	 * attributes of a given font.
 	 * 
-	 * @return the size that can be used with the calculated <CODE>BaseFont
-	 *         </CODE>
+	 * @param font
+	 *            the font of a bigger element class
+	 * @return a <CODE>Font</CODE>
 	 */
-	public float getCalculatedSize() {
-		float s = this.size;
-		if (s == UNDEFINED) {
-			s = DEFAULTSIZE;
+	public Font difference(Font font) {
+		if (font == null) return this;
+		// size
+		float dSize = font.size;
+		if (dSize == UNDEFINED) {
+			dSize = this.size;
 		}
-		return s;
+		// style
+		int dStyle = UNDEFINED;
+		int style1 = this.style;
+		int style2 = font.getStyle();
+		if (style1 != UNDEFINED || style2 != UNDEFINED) {
+			if (style1 == UNDEFINED)
+				style1 = 0;
+			if (style2 == UNDEFINED)
+				style2 = 0;
+			dStyle = style1 | style2;
+		}
+		// color
+		Color dColor = font.color;
+		if (dColor == null) {
+			dColor = this.color;
+		}
+		// family
+		if (font.baseFont != null) {
+			return new Font(font.baseFont, dSize, dStyle, dColor);
+		}
+		if (font.getFamily() != UNDEFINED) {
+			return new Font(font.family, dSize, dStyle, dColor);
+		}
+		if (this.baseFont != null) {
+			if (dStyle == style1) {
+				return new Font(this.baseFont, dSize, dStyle, dColor);
+			} else {
+				return FontFactory.getFont(this.getFamilyname(), dSize, dStyle,
+						dColor);
+			}
+		}
+		return new Font(this.family, dSize, dStyle, dColor);
 	}
+
 }

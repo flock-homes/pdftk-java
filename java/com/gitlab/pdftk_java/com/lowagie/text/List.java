@@ -36,7 +36,7 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (kept MarkupTags from 155, removed TotalLeading [to ease migration])
+// pdftk-java modified yes (removed TotalLeading [to ease migration])
 
 package com.gitlab.pdftk_java.com.lowagie.text;
 
@@ -92,7 +92,7 @@ import com.gitlab.pdftk_java.com.lowagie.text.factories.RomanAlphabetFactory;
  * @see		ListItem
  */
 
-public class List implements TextElementArray, MarkupAttributes {
+public class List implements TextElementArray {
     
     // constants
 	
@@ -147,9 +147,6 @@ public class List implements TextElementArray, MarkupAttributes {
     /** The indentation of the listitems. */
     protected float symbolIndent = 0;
     
-/** Contains extra markupAttributes */
-    protected Properties markupAttributes;
-
     // constructors
 
     /** Constructs a <CODE>List</CODE>. */
@@ -434,6 +431,19 @@ public class List implements TextElementArray, MarkupAttributes {
     	return list.isEmpty();
     }
 
+    /**
+     * Gets the leading of the first listitem.
+     *
+     * @return	a <CODE>leading</CODE>
+     */
+    public float getTotalLeading() {
+        if (list.size() < 1) {
+            return -1;
+        }
+        ListItem item = (ListItem) list.get(0);
+        return item.getTotalLeading();
+    }
+    
     // getters
     
     /**
@@ -574,40 +584,4 @@ public class List implements TextElementArray, MarkupAttributes {
 		this.preSymbol = preSymbol;
 	}
 
-    
-/**
- * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#setMarkupAttribute(java.lang.String, java.lang.String)
- */
-    public void setMarkupAttribute(String name, String value) {
-		if (markupAttributes == null) markupAttributes = new Properties();
-        markupAttributes.put(name, value);
-    }
-    
-/**
- * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#setMarkupAttributes(java.util.Properties)
- */
-    public void setMarkupAttributes(Properties markupAttributes) {
-        this.markupAttributes = markupAttributes;
-    }
-    
-/**
- * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#getMarkupAttribute(java.lang.String)
- */
-    public String getMarkupAttribute(String name) {
-        return (markupAttributes == null) ? null : String.valueOf(markupAttributes.get(name));
-    }
-    
-/**
- * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#getMarkupAttributeNames()
- */
-    public Set getMarkupAttributeNames() {
-        return Chunk.getKeySet(markupAttributes);
-    }
-    
-/**
- * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#getMarkupAttributes()
- */
-    public Properties getMarkupAttributes() {
-        return markupAttributes;
-    }
 }

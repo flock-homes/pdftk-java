@@ -1331,7 +1331,7 @@ class PdfDocument extends Document implements DocListener {
                 
                 // Information (headers)
                 case Element.HEADER:
-                    info.addkey(((Meta)element).name(), ((Meta)element).content());
+                    info.addkey(((Meta)element).getName(), ((Meta)element).content());
                     break;
                 case Element.TITLE:
                     info.addTitle(((Meta)element).content());
@@ -1381,7 +1381,7 @@ class PdfDocument extends Document implements DocListener {
                 }
                 case Element.ANCHOR: {
                     Anchor anchor = (Anchor) element;
-                    String url = anchor.reference();
+                    String url = anchor.getReference();
                     leading = anchor.leading();
                     if (url != null) {
                         currentAction = new PdfAction(url);

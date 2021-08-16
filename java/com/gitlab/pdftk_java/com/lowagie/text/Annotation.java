@@ -1,9 +1,15 @@
 /*
- * $Id: Annotation.java,v 1.70 2005/04/13 09:17:09 blowagie Exp $
- * $Name:  $
+ * $Id: Annotation.java 3373 2008-05-12 16:21:24Z xlv $
  *
  * Copyright 1999, 2000, 2001, 2002 by Bruno Lowagie.
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,51 +22,39 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text;
 
 import java.net.URL;
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Properties;
-import java.util.Set;
+import java.util.HashMap;
 
 /**
  * An <CODE>Annotation</CODE> is a little note that can be added to a page on
@@ -70,7 +64,7 @@ import java.util.Set;
  * @see Anchor
  */
 
-public class Annotation implements Element, MarkupAttributes {
+public class Annotation implements Element {
 
 	// membervariables
 
@@ -99,61 +93,58 @@ public class Annotation implements Element, MarkupAttributes {
 	public static final int SCREEN = 7;
 
 	/** This is a possible attribute. */
-	public static String TITLE = "title";
+	public static final String TITLE = "title";
 
 	/** This is a possible attribute. */
-	public static String CONTENT = "content";
+	public static final String CONTENT = "content";
 
 	/** This is a possible attribute. */
-	public static String URL = "url";
+	public static final String URL = "url";
 
 	/** This is a possible attribute. */
-	public static String FILE = "file";
+	public static final String FILE = "file";
 
 	/** This is a possible attribute. */
-	public static String DESTINATION = "destination";
+	public static final String DESTINATION = "destination";
 
 	/** This is a possible attribute. */
-	public static String PAGE = "page";
+	public static final String PAGE = "page";
 
 	/** This is a possible attribute. */
-	public static String NAMED = "named";
+	public static final String NAMED = "named";
 
 	/** This is a possible attribute. */
-	public static String APPLICATION = "application";
+	public static final String APPLICATION = "application";
 
 	/** This is a possible attribute. */
-	public static String PARAMETERS = "parameters";
+	public static final String PARAMETERS = "parameters";
 
 	/** This is a possible attribute. */
-	public static String OPERATION = "operation";
+	public static final String OPERATION = "operation";
 
 	/** This is a possible attribute. */
-	public static String DEFAULTDIR = "defaultdir";
+	public static final String DEFAULTDIR = "defaultdir";
 
 	/** This is a possible attribute. */
-	public static String LLX = "llx";
+	public static final String LLX = "llx";
 
 	/** This is a possible attribute. */
-	public static String LLY = "lly";
+	public static final String LLY = "lly";
 
 	/** This is a possible attribute. */
-	public static String URX = "urx";
+	public static final String URX = "urx";
 
 	/** This is a possible attribute. */
-	public static String URY = "ury";
+	public static final String URY = "ury";
 
 	/** This is a possible attribute. */
-	public static String MIMETYPE = "mime";
+	public static final String MIMETYPE = "mime";
 
 	/** This is the type of annotation. */
 	protected int annotationtype;
 
 	/** This is the title of the <CODE>Annotation</CODE>. */
 	protected HashMap annotationAttributes = new HashMap();
-
-	/** Contains extra markupAttributes */
-	protected Properties markupAttributes = null;
 
 	/** This is the lower left x-value */
 	protected float llx = Float.NaN;
@@ -182,7 +173,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param ury
 	 *            upper right y coordinate
 	 */
-
 	private Annotation(float llx, float lly, float urx, float ury) {
 		this.llx = llx;
 		this.lly = lly;
@@ -190,10 +180,12 @@ public class Annotation implements Element, MarkupAttributes {
 		this.ury = ury;
 	}
 
+	/**
+	 * Copy constructor.
+	 */
     public Annotation(Annotation an) {
         annotationtype = an.annotationtype;
         annotationAttributes = an.annotationAttributes;
-        markupAttributes = an.markupAttributes;
         llx = an.llx;
         lly = an.lly;
         urx = an.urx;
@@ -209,7 +201,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param text
 	 *            the content of the annotation
 	 */
-
 	public Annotation(String title, String text) {
 		annotationtype = TEXT;
 		annotationAttributes.put(TITLE, title);
@@ -233,7 +224,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param ury
 	 *            the upper right y-value
 	 */
-
 	public Annotation(String title, String text, float llx, float lly,
 			float urx, float ury) {
 		this(llx, lly, urx, ury);
@@ -256,7 +246,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param url
 	 *            the external reference
 	 */
-
 	public Annotation(float llx, float lly, float urx, float ury, URL url) {
 		this(llx, lly, urx, ury);
 		annotationtype = URL_NET;
@@ -277,7 +266,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param url
 	 *            the external reference
 	 */
-
 	public Annotation(float llx, float lly, float urx, float ury, String url) {
 		this(llx, lly, urx, ury);
 		annotationtype = URL_AS_STRING;
@@ -300,7 +288,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param dest
 	 *            the destination in this file
 	 */
-
 	public Annotation(float llx, float lly, float urx, float ury, String file,
 			String dest) {
 		this(llx, lly, urx, ury);
@@ -310,7 +297,7 @@ public class Annotation implements Element, MarkupAttributes {
 	}
 
 	/**
-	 * Creates a Screen anotation to embed media clips
+	 * Creates a Screen annotation to embed media clips
 	 * 
 	 * @param llx
 	 * @param lly
@@ -349,7 +336,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param page
 	 *            a page number in this file
 	 */
-
 	public Annotation(float llx, float lly, float urx, float ury, String file,
 			int page) {
 		this(llx, lly, urx, ury);
@@ -372,7 +358,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param named
 	 *            a named destination in this file
 	 */
-
 	public Annotation(float llx, float lly, float urx, float ury, int named) {
 		this(llx, lly, urx, ury);
 		annotationtype = NAMED_DEST;
@@ -399,7 +384,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param defaultdir
 	 *            the default directory to run this application in
 	 */
-
 	public Annotation(float llx, float lly, float urx, float ury,
 			String application, String parameters, String operation,
 			String defaultdir) {
@@ -411,79 +395,6 @@ public class Annotation implements Element, MarkupAttributes {
 		annotationAttributes.put(DEFAULTDIR, defaultdir);
 	}
 
-	/**
-	 * Returns an <CODE>Annotation</CODE> that has been constructed taking in
-	 * account the value of some <VAR>attributes </VAR>.
-	 * 
-	 * @param attributes
-	 *            Some attributes
-	 */
-
-	public Annotation(Properties attributes) {
-		String value = (String) attributes.remove(ElementTags.LLX);
-		if (value != null) {
-			llx = Float.valueOf(value + "f").floatValue();
-		}
-		value = (String) attributes.remove(ElementTags.LLY);
-		if (value != null) {
-			lly = Float.valueOf(value + "f").floatValue();
-		}
-		value = (String) attributes.remove(ElementTags.URX);
-		if (value != null) {
-			urx = Float.valueOf(value + "f").floatValue();
-		}
-		value = (String) attributes.remove(ElementTags.URY);
-		if (value != null) {
-			ury = Float.valueOf(value + "f").floatValue();
-		}
-		String title = (String) attributes.remove(ElementTags.TITLE);
-		String text = (String) attributes.remove(ElementTags.CONTENT);
-		if (title != null || text != null) {
-			annotationtype = TEXT;
-		} else if ((value = (String) attributes.remove(ElementTags.URL)) != null) {
-			annotationtype = URL_AS_STRING;
-			annotationAttributes.put(FILE, value);
-		} else if ((value = (String) attributes.remove(ElementTags.NAMED)) != null) {
-			annotationtype = NAMED_DEST;
-			annotationAttributes.put(NAMED, Integer.valueOf(value));
-		} else {
-			String file = (String) attributes.remove(ElementTags.FILE);
-			String destination = (String) attributes
-					.remove(ElementTags.DESTINATION);
-			String page = (String) attributes.remove(ElementTags.PAGE);
-			if (file != null) {
-				annotationAttributes.put(FILE, file);
-				if (destination != null) {
-					annotationtype = FILE_DEST;
-					annotationAttributes.put(DESTINATION, destination);
-				} else if (page != null) {
-					annotationtype = FILE_PAGE;
-					annotationAttributes.put(FILE, file);
-					annotationAttributes.put(PAGE, Integer.valueOf(page));
-				}
-			} else if ((value = (String) attributes.remove(ElementTags.NAMED)) != null) {
-				annotationtype = LAUNCH;
-				annotationAttributes.put(APPLICATION, value);
-				annotationAttributes.put(PARAMETERS, attributes
-						.remove(ElementTags.PARAMETERS));
-				annotationAttributes.put(OPERATION, attributes
-						.remove(ElementTags.OPERATION));
-				annotationAttributes.put(DEFAULTDIR, attributes
-						.remove(ElementTags.DEFAULTDIR));
-			}
-		}
-		if (annotationtype == TEXT) {
-			if (title == null)
-				title = "";
-			if (text == null)
-				text = "";
-			annotationAttributes.put(TITLE, title);
-			annotationAttributes.put(CONTENT, text);
-		}
-		if (attributes.size() > 0)
-			setMarkupAttributes(attributes);
-	}
-
 	// implementation of the Element-methods
 
 	/**
@@ -491,12 +402,9 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a type
 	 */
-
 	public int type() {
 		return Element.ANNOTATION;
 	}
-
-	// methods
 
 	/**
 	 * Processes the element by adding it (or the different parts) to an <CODE>
@@ -506,7 +414,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 *            an <CODE>ElementListener</CODE>
 	 * @return <CODE>true</CODE> if the element was processed successfully
 	 */
-
 	public boolean process(ElementListener listener) {
 		try {
 			return listener.add(this);
@@ -539,7 +446,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * @param ury
 	 *            the upper right y-value
 	 */
-
 	public void setDimensions(float llx, float lly, float urx, float ury) {
 		this.llx = llx;
 		this.lly = lly;
@@ -554,7 +460,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a value
 	 */
-
 	public float llx() {
 		return llx;
 	}
@@ -564,27 +469,24 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a value
 	 */
-
 	public float lly() {
 		return lly;
 	}
 
 	/**
-	 * Returns the uppper right x-value.
+	 * Returns the upper right x-value.
 	 * 
 	 * @return a value
 	 */
-
 	public float urx() {
 		return urx;
 	}
 
 	/**
-	 * Returns the uppper right y-value.
+	 * Returns the upper right y-value.
 	 * 
 	 * @return a value
 	 */
-
 	public float ury() {
 		return ury;
 	}
@@ -596,7 +498,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 *            the default value
 	 * @return a value
 	 */
-
 	public float llx(float def) {
 		if (Float.isNaN(llx))
 			return def;
@@ -610,7 +511,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 *            the default value
 	 * @return a value
 	 */
-
 	public float lly(float def) {
 		if (Float.isNaN(lly))
 			return def;
@@ -624,7 +524,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 *            the default value
 	 * @return a value
 	 */
-
 	public float urx(float def) {
 		if (Float.isNaN(urx))
 			return def;
@@ -638,7 +537,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 *            the default value
 	 * @return a value
 	 */
-
 	public float ury(float def) {
 		if (Float.isNaN(ury))
 			return def;
@@ -650,7 +548,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a type
 	 */
-
 	public int annotationType() {
 		return annotationtype;
 	}
@@ -660,7 +557,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a name
 	 */
-
 	public String title() {
 		String s = (String) annotationAttributes.get(TITLE);
 		if (s == null)
@@ -673,7 +569,6 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a reference
 	 */
-
 	public String content() {
 		String s = (String) annotationAttributes.get(CONTENT);
 		if (s == null)
@@ -686,58 +581,24 @@ public class Annotation implements Element, MarkupAttributes {
 	 * 
 	 * @return a reference
 	 */
-
 	public HashMap attributes() {
 		return annotationAttributes;
 	}
-
+	
 	/**
-	 * Checks if a given tag corresponds with this object.
-	 * 
-	 * @param tag
-	 *            the given tag
-	 * @return true if the tag corresponds
+	 * @see com.lowagie.text.Element#isContent()
+	 * @since	iText 2.0.8
 	 */
-
-	public static boolean isTag(String tag) {
-		return ElementTags.ANNOTATION.equals(tag);
+	public boolean isContent() {
+		return true;
 	}
 
 	/**
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#setMarkupAttribute(java.lang.String,
-	 *      java.lang.String)
+	 * @see com.lowagie.text.Element#isNestable()
+	 * @since	iText 2.0.8
 	 */
-	public void setMarkupAttribute(String name, String value) {
-		if (markupAttributes == null) markupAttributes = new Properties();
-		markupAttributes.put(name, value);
+	public boolean isNestable() {
+		return true;
 	}
 
-	/**
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#setMarkupAttributes(java.util.Properties)
-	 */
-	public void setMarkupAttributes(Properties markupAttributes) {
-		this.markupAttributes = markupAttributes;
-	}
-
-	/**
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#getMarkupAttribute(java.lang.String)
-	 */
-	public String getMarkupAttribute(String name) {
-		return (markupAttributes == null) ? null : String
-				.valueOf(markupAttributes.get(name));
-	}
-
-	/**
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#getMarkupAttributeNames()
-	 */
-	public Set getMarkupAttributeNames() {
-		return Chunk.getKeySet(markupAttributes);
-	}
-
-	/**
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.MarkupAttributes#getMarkupAttributes()
-	 */
-	public Properties getMarkupAttributes() {
-		return markupAttributes;
-	}
 }
