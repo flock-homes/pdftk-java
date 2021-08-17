@@ -41,16 +41,19 @@ Changes are listed in individual file headers.
 * com/lowagie/text/html/WebColors.java
 
 * com/lowagie/text/pdf/AcroFields.java
+* com/lowagie/text/pdf/AsianFontMapper.java
 * com/lowagie/text/pdf/BaseField.java
 * com/lowagie/text/pdf/BaseFont.java
 * com/lowagie/text/pdf/BidiLine.java
 * com/lowagie/text/pdf/ColumnText.java
 * com/lowagie/text/pdf/CJKFont.java
+* com/lowagie/text/pdf/DefaultFontMapper.java
 * com/lowagie/text/pdf/DefaultSplitCharacter.java
 * com/lowagie/text/pdf/DocumentFont.java
 * com/lowagie/text/pdf/ExtraEncoding.java
 * com/lowagie/text/pdf/FdfReader.java
 * com/lowagie/text/pdf/FontDetails.java
+* com/lowagie/text/pdf/FontMapper.java
 * com/lowagie/text/pdf/FontSelector.java
 * com/lowagie/text/pdf/GrayColor.java
 * com/lowagie/text/pdf/MappedRandomAccessFile.java
@@ -78,6 +81,23 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/draw/DrawInterface.java
 * com/lowagie/text/pdf/draw/LineSeparator.java
 * com/lowagie/text/pdf/draw/VerticalPositionMark.java
+
+* com/lowagie/text/pdf/fonts/Courier-Bold.afm
+* com/lowagie/text/pdf/fonts/Courier-BoldOblique.afm
+* com/lowagie/text/pdf/fonts/Courier-Oblique.afm
+* com/lowagie/text/pdf/fonts/Courier.afm
+* com/lowagie/text/pdf/fonts/FontsResourceAnchor.java
+* com/lowagie/text/pdf/fonts/Helvetica-Bold.afm
+* com/lowagie/text/pdf/fonts/Helvetica-BoldOblique.afm
+* com/lowagie/text/pdf/fonts/Helvetica-Oblique.afm
+* com/lowagie/text/pdf/fonts/Helvetica.afm
+* com/lowagie/text/pdf/fonts/License-Adobe.txt
+* com/lowagie/text/pdf/fonts/Symbol.afm
+* com/lowagie/text/pdf/fonts/Times-Bold.afm
+* com/lowagie/text/pdf/fonts/Times-BoldItalic.afm
+* com/lowagie/text/pdf/fonts/Times-Italic.afm
+* com/lowagie/text/pdf/fonts/Times-Roman.afm
+* com/lowagie/text/pdf/fonts/ZapfDingbats.afm
 
 ## Based on itext-2.1.7
 
@@ -145,7 +165,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 
   * **Multiple changes**
 * com/lowagie/text/pdf/ArabicLigaturizer.java
-* com/lowagie/text/pdf/AsianFontMapper.java
 * com/lowagie/text/pdf/BadPdfFormatException.java
 * com/lowagie/text/pdf/BidiOrder.java
   * Cosmetic unused variable removed
@@ -156,12 +175,10 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
   * Commented out code
 * com/lowagie/text/pdf/CMYKColor.java
 * com/lowagie/text/pdf/ColorDetails.java
-* com/lowagie/text/pdf/DefaultFontMapper.java
 * com/lowagie/text/pdf/EnumerateTTC.java
 * com/lowagie/text/pdf/ExtendedColor.java
 * com/lowagie/text/pdf/FdfWriter.java
   * **Multiple changes**
-* com/lowagie/text/pdf/FontMapper.java
 * com/lowagie/text/pdf/GlyphList.java
 * com/lowagie/text/pdf/HyphenationEvent.java
 * com/lowagie/text/pdf/OutputStreamCounter.java
@@ -273,26 +290,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/SpotColor.java
 * com/lowagie/text/pdf/StampContent.java
 * com/lowagie/text/pdf/VerticalText.java
-
-* com/lowagie/text/pdf/codec/postscript/paparser.jj
-
-* com/lowagie/text/pdf/fonts/Courier-Bold.afm
-* com/lowagie/text/pdf/fonts/Courier-BoldOblique.afm
-* com/lowagie/text/pdf/fonts/Courier-Oblique.afm
-* com/lowagie/text/pdf/fonts/Courier.afm
-* com/lowagie/text/pdf/fonts/FontsResourceAnchor.java
-* com/lowagie/text/pdf/fonts/Helvetica-Bold.afm
-* com/lowagie/text/pdf/fonts/Helvetica-BoldOblique.afm
-* com/lowagie/text/pdf/fonts/Helvetica-Oblique.afm
-* com/lowagie/text/pdf/fonts/Helvetica.afm
-* com/lowagie/text/pdf/fonts/License-Adobe.txt
-* com/lowagie/text/pdf/fonts/Symbol.afm
-* com/lowagie/text/pdf/fonts/Times-Bold.afm
-* com/lowagie/text/pdf/fonts/Times-BoldItalic.afm
-* com/lowagie/text/pdf/fonts/Times-Italic.afm
-* com/lowagie/text/pdf/fonts/Times-Roman.afm
-* com/lowagie/text/pdf/fonts/ZapfDingbats.afm
-
 
 ## Based on Apache Batik?!
 
