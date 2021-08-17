@@ -376,7 +376,7 @@ public class PdfSignatureAppearance {
                 font = new Font();
             else
                 font = new Font(layer2Font);
-            float size = font.size();
+            float size = font.getSize();
             if (size <= 0) {
                 Rectangle sr = new Rectangle(rect.width() - 2 * margin, rect.height() * (1 - topSection) - 2 * margin);
                 size = fitText(font, text, sr, 12, runDirection);
@@ -401,7 +401,7 @@ public class PdfSignatureAppearance {
                 font = new Font();
             else
                 font = new Font(layer2Font);
-            float size = font.size();
+            float size = font.getSize();
             String text = "Signature Not Verified";
             if (layer4Text != null)
                 text = layer4Text;

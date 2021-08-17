@@ -55,7 +55,7 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (kept MarkupAttributes from 155)
+// pdftk-java modified yes (patched constructor, dropped Header & Footer)
 
 package com.gitlab.pdftk_java.com.lowagie.text;
 
@@ -63,6 +63,8 @@ import java.io.BufferedOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Properties;
+
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.OutputStreamCounter;
 
 /**
@@ -255,7 +257,7 @@ public abstract class DocWriter implements DocListener {
 /**
  * Resets the footer of this document.
  * <P>
- * This method should be overriden in the specific <CODE>DocWriter<CODE> classes
+ * This method should be overridden in the specific <CODE>DocWriter<CODE> classes
  * derived from this abstract class if they actually support the use of
  * footers.
  */
@@ -448,31 +450,21 @@ public abstract class DocWriter implements DocListener {
 /**
  * Writes the markup attributes of the specified <CODE>MarkupAttributes</CODE>
  * object to the <CODE>OutputStream</CODE>.
- * @param mAtt   the <CODE>MarkupAttributes</CODE> to write.
+ * @param markup   a <CODE>Properties</CODE> collection to write.
  * @return true, if writing the markup attributes succeeded
  * @throws IOException
  */
-    protected boolean writeMarkupAttributes(MarkupAttributes mAtt)
-     throws IOException
-    {
-      Iterator attributeIterator = mAtt.getMarkupAttributeNames().iterator();
-      boolean result = attributeIterator.hasNext();
-      while (attributeIterator.hasNext()) {
-        String name = String.valueOf(attributeIterator.next());
-        write(name, mAtt.getMarkupAttribute(name));
-      }
-      return result;
-    }
-
-/**
- * Returns <CODE>true</CODE> if the specified <CODE>Element</CODE> implements
- * <CODE>MarkupAttributes</CODE> and has one or more attributes to write.
- * @param element   the <CODE>Element</CODE> to check.
- * @return <CODE>boolean</CODE>.
- */
-    protected static boolean hasMarkupAttributes(Element element) {
-      return (element instanceof MarkupAttributes &&
-       !(((MarkupAttributes)element).getMarkupAttributeNames().isEmpty()));
+    protected boolean writeMarkupAttributes(Properties markup)
+    throws IOException {
+    	if (markup == null) return false;
+    	Iterator attributeIterator = markup.keySet().iterator();
+    	String name;
+    	while (attributeIterator.hasNext()) {
+    		name = String.valueOf(attributeIterator.next());
+    		write(name, markup.getProperty(name));
+    	}
+    	markup.clear();
+    	return true;
     }
 
     /** Checks if the stream is to be closed on document close

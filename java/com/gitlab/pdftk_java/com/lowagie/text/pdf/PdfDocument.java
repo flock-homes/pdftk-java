@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 // ssteward omit: import java.util.ListIterator;
@@ -88,7 +89,6 @@ import com.gitlab.pdftk_java.com.lowagie.text.Phrase;
 import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 // import com.gitlab.pdftk_java.com.lowagie.text.Section; ssteward: dropped in 1.44
 // import com.gitlab.pdftk_java.com.lowagie.text.SimpleTable; ssteward: dropped in 1.44
-import com.gitlab.pdftk_java.com.lowagie.text.StringCompare;
 // import com.gitlab.pdftk_java.com.lowagie.text.Table; ssteward: dropped in 1.44
 // import com.gitlab.pdftk_java.com.lowagie.text.Watermark; ssteward: dropped in 1.44
 // ssteward omit: import com.gitlab.pdftk_java.com.lowagie.text.xml.xmp.XmpWriter;
@@ -101,12 +101,18 @@ import com.gitlab.pdftk_java.com.lowagie.text.StringCompare;
  * and adds the Pdf representation of every <CODE>Element</CODE> that is
  * added to the <CODE>Document</CODE>.
  *
- * @see		com.gitlab.pdftk_java.com.lowagie.text.Document
- * @see		com.gitlab.pdftk_java.com.lowagie.text.DocListener
+ * @see		com.lowagie.text.Document
+ * @see		com.lowagie.text.DocListener
  * @see		PdfWriter
  */
 
 class PdfDocument extends Document implements DocListener {
+
+static class StringCompare implements Comparator {
+    public int compare(Object o1, Object o2) {
+        return ((String)o1).compareTo((String)o2);
+    }
+}
     
     /**
      * <CODE>PdfInfo</CODE> is the PDF InfoDictionary.
@@ -240,7 +246,7 @@ class PdfDocument extends Document implements DocListener {
     
     static class PdfCatalog extends PdfDictionary {
         
-        PdfWriter writer = null;
+        PdfWriter writer;
         // constructors
         
         /**
@@ -354,13 +360,13 @@ class PdfDocument extends Document implements DocListener {
     }
     
     // membervariables
-    private PdfIndirectReference thumb = null;
+    private PdfIndirectReference thumb;
     
     /** The characters to be applied the hanging ponctuation. */
     static final String hangingPunctuation = ".,;:'";
     
     /** The <CODE>PdfWriter</CODE>. */
-    private PdfWriter writer = null;
+    private PdfWriter writer;
     
     /** some meta information about the Document. */
     private PdfInfo info = new PdfInfo();
@@ -391,10 +397,10 @@ class PdfDocument extends Document implements DocListener {
     // Vertical lines
     
     /** This is the PdfContentByte object, containing the text. */
-    private PdfContentByte text = null;
+    private PdfContentByte text;
     
     /** This is the PdfContentByte object, containing the borders and other Graphics. */
-    private PdfContentByte graphics = null;
+    private PdfContentByte graphics;
     
     /** The lines that are written until now. */
     private ArrayList lines = new ArrayList();
@@ -414,7 +420,7 @@ class PdfDocument extends Document implements DocListener {
     /** This checks if the page is empty. */
     private boolean pageEmpty = true;
     
-    private int textEmptySize = 0;
+    private int textEmptySize;
     // resources
     
     /** This is the size of the next page. */
@@ -428,7 +434,7 @@ class PdfDocument extends Document implements DocListener {
     protected HashMap boxSize = new HashMap();
     
     /** This are the page resources of the current Page. */
-    protected PageResources pageResources = null;
+    protected PageResources pageResources;
     
     // images
     
@@ -447,7 +453,7 @@ class PdfDocument extends Document implements DocListener {
     // annotations and outlines
     
     /** This is the array containing the references to the annotations. */
-    private ArrayList annotations = null;
+    private ArrayList annotations;
     
     /** This is an array containg references to some delayed annotations. */
     private ArrayList delayedAnnotations = new ArrayList();
@@ -457,10 +463,10 @@ class PdfDocument extends Document implements DocListener {
     private PdfAcroForm acroForm = null;
     
     /** This is the root outline of the document. */
-    private PdfOutline rootOutline = null;
+    private PdfOutline rootOutline;
     
     /** This is the current <CODE>PdfOutline</CODE> in the hierarchy of outlines. */
-    private PdfOutline currentOutline = null;
+    private PdfOutline currentOutline;
     
     /** The current active <CODE>PdfAction</CODE> when processing an <CODE>Anchor</CODE>. */
     private PdfAction currentAction = null;
@@ -476,10 +482,10 @@ class PdfDocument extends Document implements DocListener {
     /** these are the viewerpreferences of the document */
     private int viewerPreferences = 0;
     
-    private String openActionName = null;
-    private PdfAction openActionAction = null;
-    private PdfDictionary additionalActions = null;
-    private PdfPageLabels pageLabels = null;
+    private String openActionName;
+    private PdfAction openActionAction;
+    private PdfDictionary additionalActions;
+    private PdfPageLabels pageLabels;
     
     //add by Jin-Hsia Yang
     private boolean isNewpage = false;
@@ -488,22 +494,22 @@ class PdfDocument extends Document implements DocListener {
     //end add by Jin-Hsia Yang
     
     /** margin in x direction starting from the left. Will be valid in the next page */
-    protected float nextMarginLeft = 0.0f;
+    protected float nextMarginLeft;
     
     /** margin in x direction starting from the right. Will be valid in the next page */
-    protected float nextMarginRight = 0.0f;
+    protected float nextMarginRight;
     
     /** margin in y direction starting from the top. Will be valid in the next page */
-    protected float nextMarginTop = 0.0f;
+    protected float nextMarginTop;
     
     /** margin in y direction starting from the bottom. Will be valid in the next page */
-    protected float nextMarginBottom = 0.0f;
+    protected float nextMarginBottom;
     
 /** The duration of the page */
-    protected int duration = -1; // negative values will indicate no duration
+    protected int duration=-1; // negative values will indicate no duration
     
 /** The page transition */
-    protected PdfTransition transition = null; 
+    protected PdfTransition transition=null; 
     
     protected PdfDictionary pageAA = null;
     
@@ -513,7 +519,7 @@ class PdfDocument extends Document implements DocListener {
     /** Holds the type of the last element, that has been added to the document. */
     private int lastElementType = -1;    
     
-    protected int markPoint = 0;
+    protected int markPoint;
        
     // constructors
     
@@ -835,7 +841,7 @@ class PdfDocument extends Document implements DocListener {
             text.endText();
         else
             text = null;
-        writer.add(page, new PdfContents(writer.getDirectContentUnder(), graphics, text, writer.getDirectContent(), pageSize));
+        PdfIndirectReference pageReference = writer.add(page, new PdfContents(writer.getDirectContentUnder(), graphics, text, writer.getDirectContent(), pageSize));
         // we initialize the new page
         initPage();
         
@@ -1321,6 +1327,7 @@ class PdfDocument extends Document implements DocListener {
      * @return <CODE>true</CODE> if the element was added, <CODE>false</CODE> if not.
      * @throws DocumentException when a document isn't open yet, or has been closed
      */
+    
     public boolean add(Element element) throws DocumentException {
         if (writer != null && writer.isPaused()) {
             return false;
@@ -1357,6 +1364,7 @@ class PdfDocument extends Document implements DocListener {
                     info.addCreationDate();
                     break;
                     
+                    // content (text)
                 case Element.CHUNK: {
                     // if there isn't a current line available, we make one
                     if (line == null) {
@@ -1418,7 +1426,7 @@ class PdfDocument extends Document implements DocListener {
                         leading = spacingBefore;
                         carriageReturn();
                         if (!pageEmpty) {
-			    /*
+                            /*
                              * Don't add spacing before a paragraph if it's the first
                              * on the page
                              */
@@ -1494,7 +1502,7 @@ class PdfDocument extends Document implements DocListener {
                         leading = spacingAfter;
                         carriageReturn();
                         if (currentHeight + line.height() + leading < indentTop() - indentBottom()) {
-			    /*
+                            /*
                              * Only add spacing after a paragraph if the extra
                              * spacing fits on the page.
                              */
@@ -1609,7 +1617,7 @@ class PdfDocument extends Document implements DocListener {
                         leading = spacingBefore;
                         carriageReturn();
                         if (!pageEmpty) {
-			    /*
+                            /*
                              * Don't add spacing before a paragraph if it's the first
                              * on the page
                              */
@@ -1635,7 +1643,7 @@ class PdfDocument extends Document implements DocListener {
                         leading = spacingAfter;
                         carriageReturn();
                         if (currentHeight + line.height() + leading < indentTop() - indentBottom()) {
-			    /*
+                            /*
                              * Only add spacing after a paragraph if the extra
                              * spacing fits on the page.
                              */
@@ -1915,6 +1923,9 @@ class PdfDocument extends Document implements DocListener {
         // if there is a footer, the footer is added
 	/* ssteward: dropped in 1.44
         if (footer != null) {
+			*//*
+				Added by Edgar Leonardo Prieto Perilla
+			*//*
 			// Avoid footer identation
 			float tmpIndentLeft = indentLeft;
 			float tmpIndentRight = indentRight;
@@ -1930,6 +1941,9 @@ class PdfDocument extends Document implements DocListener {
                         imageIndentLeft = 0;
                         imageIndentRight = 0;
                         // End added: Bonf (Marc Schneider) 2003-07-29
+			*//*
+				End Added by Edgar Leonardo Prieto Perilla
+			*//*
 
 			footer.setPageNumber(pageN);
             leading = footer.paragraph().leading();
@@ -1947,6 +1961,9 @@ class PdfDocument extends Document implements DocListener {
             indentBottom = currentHeight + leading * 2;
             currentHeight = 0;
 
+			*//*
+				Added by Edgar Leonardo Prieto Perilla
+			*//*
 			indentLeft = tmpIndentLeft;
 			indentRight = tmpIndentRight;
                         // Begin added: Bonf (Marc Schneider) 2003-07-29
@@ -1954,6 +1971,9 @@ class PdfDocument extends Document implements DocListener {
                         imageIndentLeft = tmpImageIndentLeft;
                         imageIndentRight = tmpImageIndentRight;
                         // End added: Bonf (Marc Schneider) 2003-07-29
+			*//*
+				End Added by Edgar Leonardo Prieto Perilla
+			*//*
         }
 	*/
         
@@ -1963,6 +1983,9 @@ class PdfDocument extends Document implements DocListener {
 	/* ssteward: dropped in 1.44
         // if there is a header, the header = added
         if (header != null) {
+			*//*
+				Added by Edgar Leonardo Prieto Perilla
+			*//*
 			// Avoid header identation
 			float tmpIndentLeft = indentLeft;
 			float tmpIndentRight = indentRight;
@@ -1978,6 +2001,9 @@ class PdfDocument extends Document implements DocListener {
                         imageIndentLeft = 0;
                         imageIndentRight = 0;
                         // End added: Bonf
+			*//*
+				End Added by Edgar Leonardo Prieto Perilla
+			*//*
 			
 			header.setPageNumber(pageN);
             leading = header.paragraph().leading();
@@ -1993,6 +2019,9 @@ class PdfDocument extends Document implements DocListener {
             flushLines();
             currentHeight = 0;
 
+			*//*
+				Added by Edgar Leonardo Prieto Perilla
+			*//*
 			// Restore identation
 			indentLeft = tmpIndentLeft;
 			indentRight = tmpIndentRight;
@@ -2001,6 +2030,9 @@ class PdfDocument extends Document implements DocListener {
                         imageIndentLeft = tmpImageIndentLeft;
                         imageIndentRight = tmpImageIndentRight;
                         // End added: Bonf (Marc Schneider) 2003-07-29
+			*//*
+				End Added by Edgar Leonardo Prieto Perilla
+			*//*
         }
 	*/
         
@@ -2037,6 +2069,7 @@ class PdfDocument extends Document implements DocListener {
      * of lines and a new empty line is added.
      * @throws DocumentException on error
      */
+    
     private void carriageReturn() throws DocumentException {
         // the arraylist with lines may not be null
         if (lines == null) {
@@ -2071,6 +2104,7 @@ class PdfDocument extends Document implements DocListener {
      * Adds the current line to the list of lines and also adds an empty line.
      * @throws DocumentException on error
      */
+    
     private void newLine() throws DocumentException {
         lastElementType = -1;
         carriageReturn();
@@ -2453,6 +2487,7 @@ class PdfDocument extends Document implements DocListener {
                             subtract += hangingCorrection;
                         Object unders[][] = (Object[][])chunk.getAttribute(Chunk.UNDERLINE);
                         Color scolor = null;
+                        int cap = 0;
                         for (int k = 0; k < unders.length; ++k) {
                             Object obj[] = unders[k];
                             scolor = (Color)obj[0];
@@ -2541,7 +2576,7 @@ class PdfDocument extends Document implements DocListener {
                     float params[] = (float[])chunk.getAttribute(Chunk.SKEW);
                     Float hs = (Float)chunk.getAttribute(Chunk.HSCALE);
                     if (params != null || hs != null) {
-                        float b = 0, c = 0;
+                        float a = 1, b = 0, c = 0;
                         if (params != null) {
                             b = params[0];
                             c = params[1];
@@ -2886,7 +2921,7 @@ class PdfDocument extends Document implements DocListener {
     }
 	/**
 	 * Method added by Pelikan Stephan
-	 * @see com.gitlab.pdftk_java.com.lowagie.text.DocListener#clearTextWrap()
+	 * @see com.lowagie.text.DocListener#clearTextWrap()
 	 */
     /* ssteward: dropped in 1.44
 	public void clearTextWrap() throws DocumentException {
@@ -2896,8 +2931,8 @@ class PdfDocument extends Document implements DocListener {
 			tmpHeight += line.height();
 		}
 		if ((imageEnd > -1) && (tmpHeight > 0)) {
-		    carriageReturn();
-		    currentHeight += tmpHeight;
+			carriageReturn();
+			currentHeight += tmpHeight;
 		}
 	}
     */
@@ -2907,7 +2942,7 @@ class PdfDocument extends Document implements DocListener {
     }
 
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.DocListener#setMarginMirroring(boolean)
+     * @see com.lowagie.text.DocListener#setMarginMirroring(boolean)
      */
     public boolean setMarginMirroring(boolean MarginMirroring) {
         if (writer != null && writer.isPaused()) {

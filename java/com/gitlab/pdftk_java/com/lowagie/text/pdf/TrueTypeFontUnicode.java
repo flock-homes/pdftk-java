@@ -3,6 +3,13 @@
  *
  * Copyright 2001, 2002 Paulo Soares
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -15,20 +22,25 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
+ *
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
@@ -36,7 +48,7 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (minor)
+// pdftk-java modified no
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -44,6 +56,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.Utilities;
@@ -60,7 +73,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
      * <CODE>true</CODE> if the encoding is vertical.
      */    
     boolean vertical = false;
-
+    
     /**
      * Creates a new TrueType font addressed by Unicode characters. The font
      * will always be embedded.
@@ -88,11 +101,11 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         if ((fileName.toLowerCase().endsWith(".ttf") || fileName.toLowerCase().endsWith(".otf") || fileName.toLowerCase().endsWith(".ttc")) && ((enc.equals(IDENTITY_H) || enc.equals(IDENTITY_V)) && emb)) {
             process(ttfAfm, forceRead);
             if (os_2.fsType == 2)
-                throw new DocumentException(fileName + style + " cannot be embedded due to licensing restrictions.");
+                throw new DocumentException(MessageLocalization.getComposedMessage("1.cannot.be.embedded.due.to.licensing.restrictions", fileName + style));
             // Sivan
             if ((cmap31 == null && !fontSpecific) || (cmap10 == null && fontSpecific))
                 directTextToByte=true;
-                //throw new DocumentException(fileName + " " + style + " does not contain an usable cmap.");
+                //throw new DocumentException(MessageLocalization.getComposedMessage("1.2.does.not.contain.an.usable.cmap", fileName, style));
             if (fontSpecific) {
                 fontSpecific = false;
                 String tempEncoding = encoding;
@@ -103,11 +116,11 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
             }
         }
         else
-            throw new DocumentException(fileName + " " + style + " is not a TTF font file.");
+            throw new DocumentException(MessageLocalization.getComposedMessage("1.2.is.not.a.ttf.font.file", fileName, style));
         vertical = enc.endsWith("V");
     }
     
-/**
+    /**
      * Gets the width of a <CODE>char</CODE> in normalized 1000 units.
      * @param char1 the unicode <CODE>char</CODE> to get the width of
      * @return the width in normalized 1000 units
@@ -127,10 +140,10 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     }
     
     /**
- * Gets the width of a <CODE>String</CODE> in normalized 1000 units.
+     * Gets the width of a <CODE>String</CODE> in normalized 1000 units.
      * @param text the <CODE>String</CODE> to get the width of
- * @return the width in normalized 1000 units
- */
+     * @return the width in normalized 1000 units
+     */
     public int getWidth(String text) {
         if (vertical)
             return text.length() * 1000;
@@ -152,7 +165,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
                     ++k;
                 }
                 else
-                total += getRawWidth(text.charAt(k), encoding);
+                    total += getRawWidth(text.charAt(k), encoding);
             }
         }
         return total;
@@ -318,7 +331,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     }
     
     private static final byte[] rotbits = {(byte)0x80,(byte)0x40,(byte)0x20,(byte)0x10,(byte)0x08,(byte)0x04,(byte)0x02,(byte)0x01};
-
+    
     /** Outputs to the writer the font dictionaries and streams.
      * @param writer the writer for this document
      * @param ref the font indirect reference
@@ -339,24 +352,24 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
             PdfStream stream;
             if (metrics.length == 0) {
                 stream = new PdfStream(new byte[]{(byte)0x80});
-				}
+            }
             else {
                 int top = ((int[])metrics[metrics.length - 1])[0];
                 byte[] bt = new byte[top / 8 + 1];
                 for (int k = 0; k < metrics.length; ++k) {
                     int v = ((int[])metrics[k])[0];
                     bt[v / 8] |= rotbits[v % 8];
-			}
+                }
                 stream = new PdfStream(bt);
                 stream.flateCompress(compressionLevel);
-			}
+            }
             cidset = writer.addToBody(stream).getIndirectReference();
         }
         // sivan: cff
         if (cff) {
 			byte b[] = readCffFont();
             if (subset || subsetRanges != null) {
-			CFFFontSubset cff = new CFFFontSubset(new RandomAccessFileOrArray(b),longTag);
+                CFFFontSubset cff = new CFFFontSubset(new RandomAccessFileOrArray(b),longTag);
                 b = cff.Process(cff.getNames()[0]);
             }
 			pobj = new StreamFont(b, "CIDFontType0C", compressionLevel);
@@ -410,7 +423,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         }
     	return super.getFullFontStream();
     }
-
+    
     /** A forbidden operation. Will throw a null pointer exception.
      * @param text the text
      * @return always <CODE>null</CODE>
@@ -426,7 +439,7 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
     /** Gets the glyph index and metrics for a character.
      * @param c the character
      * @return an <CODE>int</CODE> array with {glyph index, width}
-     */
+     */    
     public int[] getMetricsTT(int c) {
         if (cmapExt != null)
             return (int[])cmapExt.get(new Integer(c));

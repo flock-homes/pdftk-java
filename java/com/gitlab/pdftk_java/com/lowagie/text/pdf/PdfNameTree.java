@@ -13,50 +13,19 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
- *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (patched for compatibility with Acrobat 5)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.io.IOException;
-import com.gitlab.pdftk_java.com.lowagie.text.StringCompare;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Creates a name tree.
@@ -65,26 +34,25 @@ import com.gitlab.pdftk_java.com.lowagie.text.StringCompare;
 public class PdfNameTree {
     
     private static final int leafSize = 64;
-    private static final StringCompare stringCompare = new StringCompare();
     
     /**
-     * Creates a name tree.
+     * Writes a name tree to a PdfWriter.
      * @param items the item of the name tree. The key is a <CODE>String</CODE>
-     * and the value is a <CODE>PdfIndirectReference</CODE>. Note that although the
+     * and the value is a <CODE>PdfObject</CODE>. Note that although the
      * keys are strings only the lower byte is used and no check is made for chars
      * with the same lower byte and different upper byte. This will generate a wrong
      * tree name.
      * @param writer the writer
      * @throws IOException on error
      * @return the dictionary with the name tree. This dictionary is the one
-     * generally pointed to by the key /Dests
+     * generally pointed to by the key /Dests, for example
      */    
     public static PdfDictionary writeTree(HashMap items, PdfWriter writer) throws IOException {
-        if (items.size() == 0)
+        if (items.isEmpty())
             return null;
         String names[] = new String[items.size()];
         names = (String[])items.keySet().toArray(names);
-        Arrays.sort(names, stringCompare);
+        Arrays.sort(names);
         if (names.length <= leafSize) {
             PdfDictionary dic = new PdfDictionary();
             PdfArray ar = new PdfArray();
@@ -94,7 +62,7 @@ public class PdfNameTree {
 		// its EmbeddedFiles name tree, so I added the TEXT_UNICODE option here and throughout;
 		// looks like an Acro5 bug to me;
                 ar.add(new PdfString(names[k], PdfObject.TEXT_UNICODE )); // ssteward
-                ar.add((PdfIndirectReference)items.get(names[k]));
+                ar.add((PdfObject)items.get(names[k]));
             }
             dic.put(PdfName.NAMES, ar);
             return dic;
@@ -115,7 +83,7 @@ public class PdfNameTree {
             for (; offset < end; ++offset) {
                 //arr.add(new PdfString(names[offset], null));
 		arr.add(new PdfString(names[offset], PdfObject.TEXT_UNICODE)); // ssteward
-                arr.add((PdfIndirectReference)items.get(names[offset]));
+                arr.add((PdfObject)items.get(names[offset]));
             }
             dic.put(PdfName.NAMES, arr);
             kids[k] = writer.addToBody(dic).getIndirectReference();
@@ -156,17 +124,15 @@ public class PdfNameTree {
     private static void iterateItems(PdfDictionary dic, HashMap items) {
         PdfArray nn = (PdfArray)PdfReader.getPdfObjectRelease(dic.get(PdfName.NAMES));
         if (nn != null) {
-            ArrayList arr = nn.getArrayList();
-            for (int k = 0; k < arr.size(); ++k) {
-                PdfString s = (PdfString)PdfReader.getPdfObjectRelease((PdfObject)arr.get(k++));
-                //items.put(s.toString(), arr.get(k));
-		items.put(s.toUnicodeString(), arr.get(k)); // ssteward; to match above changes
+            for (int k = 0; k < nn.size(); ++k) {
+                PdfString s = (PdfString)PdfReader.getPdfObjectRelease(nn.getPdfObject(k++));
+                //items.put(PdfEncodings.convertToString(s.getBytes(), null), nn.getPdfObject(k));
+items.put(PdfEncodings.convertToString(s.getBytes(), PdfObject.TEXT_UNICODE), nn.getPdfObject(k)); // ssteward; to match above changes
             }
         }
         else if ((nn = (PdfArray)PdfReader.getPdfObjectRelease(dic.get(PdfName.KIDS))) != null) {
-            ArrayList arr = nn.getArrayList();
-            for (int k = 0; k < arr.size(); ++k) {
-                PdfDictionary kid = (PdfDictionary)PdfReader.getPdfObjectRelease((PdfObject)arr.get(k));
+            for (int k = 0; k < nn.size(); ++k) {
+                PdfDictionary kid = (PdfDictionary)PdfReader.getPdfObjectRelease(nn.getPdfObject(k));
                 iterateItems(kid, items);
             }
         }

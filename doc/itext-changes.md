@@ -4,22 +4,33 @@ Changes are listed in individual file headers.
 
 * com/lowagie/text/Anchor.java
 * com/lowagie/text/Annotation.java
+* com/lowagie/text/BadElementException.java
 * com/lowagie/text/Chunk.java
 * com/lowagie/text/DocListener.java
 * com/lowagie/text/DocWriter.java
 * com/lowagie/text/Document.java
+* com/lowagie/text/DocumentException.java
+* com/lowagie/text/Element.java
+* com/lowagie/text/ElementListener.java
+* com/lowagie/text/ElementTags.java
+* com/lowagie/text/ExceptionConverter.java
 * com/lowagie/text/Font.java
 * com/lowagie/text/FontFactory.java
 * com/lowagie/text/FontFactoryImp.java
 * com/lowagie/text/FontProvider.java
+* com/lowagie/text/Header.java
 * com/lowagie/text/LargeElement.java
 * com/lowagie/text/List.java
 * com/lowagie/text/ListItem.java
 * com/lowagie/text/Meta.java
+* com/lowagie/text/PageSize.java
 * com/lowagie/text/Paragraph.java
 * com/lowagie/text/Phrase.java
 * com/lowagie/text/Rectangle.java
 * com/lowagie/text/RtfElementInterface.java
+* com/lowagie/text/SpecialSymbol.java
+* com/lowagie/text/SplitCharacter.java
+* com/lowagie/text/TextElementArray.java
 * com/lowagie/text/Utilities.java
 
 * com/lowagie/text/error_messages/MessageLocalization.java
@@ -53,6 +64,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfFormField.java
 * com/lowagie/text/pdf/PdfFormXObject.java
 * com/lowagie/text/pdf/PdfLine.java
+* com/lowagie/text/pdf/PdfNameTree.java
 * com/lowagie/text/pdf/PdfTemplate.java
 * com/lowagie/text/pdf/RandomAccessFileOrArray.java
 * com/lowagie/text/pdf/TextField.java
@@ -131,21 +143,6 @@ Changes are marked `ssteward`. Cosmetic changes are unmarked. Added `serialVersi
 
 Dropped code has to do with images, watermarks, headers, footers, tables.
 
-* com/lowagie/text/BadElementException.java
-* com/lowagie/text/DocumentException.java
-* com/lowagie/text/Element.java
-* com/lowagie/text/ElementListener.java
-* com/lowagie/text/ElementTags.java
-* com/lowagie/text/Entities.java
-* com/lowagie/text/ExceptionConverter.java
-* com/lowagie/text/Header.java
-* com/lowagie/text/MarkupAttributes.java
-* com/lowagie/text/PageSize.java
-* com/lowagie/text/SpecialSymbol.java
-* com/lowagie/text/SplitCharacter.java
-* com/lowagie/text/StringCompare.java
-* com/lowagie/text/TextElementArray.java
-
   * **Multiple changes**
 * com/lowagie/text/pdf/ArabicLigaturizer.java
 * com/lowagie/text/pdf/AsianFontMapper.java
@@ -210,8 +207,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfLister.java
 * com/lowagie/text/pdf/PdfLiteral.java
 * com/lowagie/text/pdf/PdfMediaClipData.java
-* com/lowagie/text/pdf/PdfNameTree.java
-  * Multiple changes
 * com/lowagie/text/pdf/PdfNull.java
   * Cosmetic rename
 * com/lowagie/text/pdf/PdfNumber.java

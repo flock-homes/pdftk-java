@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 /**
  * A generic Document class.
@@ -72,9 +73,9 @@ import java.util.Iterator;
  *   // creation of the different writers 
  *   HtmlWriter.getInstance(<STRONG>document </STRONG>, System.out);
  *   PdfWriter.getInstance(<STRONG>document </STRONG>, new FileOutputStream("text.pdf"));
- *    // we add some meta information to the document
- * <STRONG>document.addAuthor("Bruno Lowagie"); </STRONG>
- * <STRONG>document.addSubject("This is the result of a Test."); </STRONG>
+ *   // we add some meta information to the document
+ *   <STRONG>document.addAuthor("Bruno Lowagie"); </STRONG>
+ *   <STRONG>document.addSubject("This is the result of a Test."); </STRONG>
  *   // we open the document for writing
  *   <STRONG>document.open(); </STRONG>
  *   <STRONG>document.add(new Paragraph("Hello world"));</STRONG>
@@ -257,31 +258,10 @@ public class Document implements DocListener {
     
     public boolean add(Element element) throws DocumentException {
         if (close) {
-			throw new DocumentException(
-					"The document has been closed. You can't add any Elements.");
+			throw new DocumentException(MessageLocalization.getComposedMessage("the.document.has.been.closed.you.can.t.add.any.elements"));
         }
-        int type = element.type();
-        if (open) {
-			if (!(type == Element.CHUNK || type == Element.PHRASE
-					|| type == Element.PARAGRAPH || type == Element.TABLE
-					|| type == Element.PTABLE
-					|| type == Element.MULTI_COLUMN_TEXT
-					|| type == Element.ANCHOR || type == Element.ANNOTATION
-					|| type == Element.CHAPTER || type == Element.SECTION
-					|| type == Element.LIST || type == Element.LISTITEM
-					|| type == Element.RECTANGLE || type == Element.JPEG
-					|| type == Element.IMGRAW || type == Element.IMGTEMPLATE || type == Element.GRAPHIC)) {
-				throw new DocumentException(
-						"The document is open; you can only add Elements with content.");
-			}
-		} else {
-			if (!(type == Element.HEADER || type == Element.TITLE
-					|| type == Element.SUBJECT || type == Element.KEYWORDS
-					|| type == Element.AUTHOR || type == Element.PRODUCER
-					|| type == Element.CREATOR || type == Element.CREATIONDATE)) {
-				throw new DocumentException(
-						"The document is not open yet; you can only add Meta information.");
-            }
+		if (!open && element.isContent()) {
+			throw new DocumentException(MessageLocalization.getComposedMessage("the.document.is.not.open.yet.you.can.only.add.meta.information"));
         }
         boolean success = false;
         DocListener listener;
