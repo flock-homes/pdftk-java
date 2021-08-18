@@ -51,4 +51,14 @@ public class FormTest extends BlackBox {
     pdftk("test/files/form-utf8.pdf", "fill_form", "test/files/form-utf8-filled.fdf", "output", "-");
   }
 
+  @Test
+  public void replace_font_ttf() throws IOException {
+    pdftk("test/files/form.pdf", "fill_form", "test/files/form-filled.fdf", "output", "-", "replacement_font", "test/files/D-DIN.ttf");
+  }
+
+  @Test
+  public void replace_font_cff() throws IOException {
+    pdftk("test/files/form.pdf", "fill_form", "test/files/form-filled.fdf", "output", "-", "replacement_font", "test/files/D-DIN.otf");
+  }
+
 };

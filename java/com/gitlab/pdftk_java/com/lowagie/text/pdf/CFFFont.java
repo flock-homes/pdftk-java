@@ -711,10 +711,10 @@ public class CFFFont {
         
         seek(0);
         
-        // ssteward omit: int major = getCard8();
-        // ssteward omit: int minor = getCard8();
+        int major = getCard8();
+        int minor = getCard8();
         int hdrSize = getCard8();
-        // ssteward omit: int offSize = getCard8();
+        int offSize = getCard8();
         nextIndexOffset = hdrSize;
         
         l.addLast(new RangeItem(buf,0,hdrSize));
@@ -1039,13 +1039,13 @@ public class CFFFont {
         buf = inputbuffer;
         seek(0);
         
-        // ssteward omit: int major = getCard8();
-        // ssteward omit: int minor = getCard8();
+        int major = getCard8();
+        int minor = getCard8();
         
         //System.err.println("CFF Major-Minor = "+major+"-"+minor);
         
         int hdrSize = getCard8();
-	// ssteward omit: int offSize = getCard8();
+	int offSize = getCard8();
         
         //System.err.println("offSize = "+offSize);
         
@@ -1123,7 +1123,8 @@ public class CFFFont {
                 }
                 else if (key=="Encoding"){
                     fonts[j].encodingOffset = ((Integer)args[0]).intValue();
-                    ReadEncoding(fonts[j].encodingOffset);
+                    // https://github.com/LibrePDF/OpenPDF/pull/214
+                    // ReadEncoding(fonts[j].encodingOffset);
                 }
                 else if (key=="CharStrings") {
                     fonts[j].charstringsOffset = ((Integer)args[0]).intValue();
@@ -1177,10 +1178,4 @@ public class CFFFont {
         //System.err.println("CFF: done");
     }
     
-    // ADDED BY Oren & Ygal
-    
-    void ReadEncoding(int nextIndexOffset){
-    	seek(nextIndexOffset);
-    	// ssteward omit: int format = getCard8();
-    }    
 }
