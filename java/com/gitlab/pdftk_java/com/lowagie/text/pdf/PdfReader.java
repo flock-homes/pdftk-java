@@ -769,7 +769,7 @@ public class PdfReader implements PdfViewerPreferences {
             else {
                 if (appendable) {
                     switch (obj.type()) {
-                        case PdfObject.m_NULL:
+                        case PdfObject.NULL:
                             obj = new PdfNull();
                             break;
                         case PdfObject.BOOLEAN:
@@ -815,7 +815,7 @@ public class PdfReader implements PdfViewerPreferences {
             PRIndirectReference ref = null;
             if (parent != null && (ref = parent.getIndRef()) != null && ref.getReader().isAppendable()) {
                 switch (obj.type()) {
-                    case PdfObject.m_NULL: // ssteward
+                    case PdfObject.NULL:
                         obj = new PdfNull();
                         break;
                     case PdfObject.BOOLEAN:

@@ -16,7 +16,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,28 +30,14 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (constants [cosmetic?])
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -62,6 +47,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 import com.gitlab.pdftk_java.com.lowagie.text.DocWriter;
 import com.gitlab.pdftk_java.com.lowagie.text.Document;
@@ -123,11 +109,11 @@ public class PdfStream extends PdfDictionary {
     protected int compressionLevel = NO_COMPRESSION;
     
     protected ByteArrayOutputStream streamBytes = null;
-    protected InputStream inputStream = null;
-    protected PdfIndirectReference ref = null;
+    protected InputStream inputStream;
+    protected PdfIndirectReference ref;
     protected int inputStreamLength = -1;
-    protected PdfWriter writer = null;
-    protected int rawLength = 0;
+    protected PdfWriter writer;
+    protected int rawLength;
         
     static final byte STARTSTREAM[] = DocWriter.getISOBytes("\nstream\n"); // ssteward
     static final byte ENDSTREAM[] = DocWriter.getISOBytes("\nendstream "); // ssteward
@@ -192,9 +178,9 @@ public class PdfStream extends PdfDictionary {
      */
     public void writeLength() throws IOException {
         if (inputStream == null)
-            throw new UnsupportedOperationException("writeLength() can only be called in a contructed PdfStream(InputStream,PdfWriter).");
+            throw new UnsupportedOperationException(MessageLocalization.getComposedMessage("writelength.can.only.be.called.in.a.contructed.pdfstream.inputstream.pdfwriter"));
         if (inputStreamLength == -1)
-            throw new IOException("writeLength() can only be called after output of the stream body.");
+            throw new IOException(MessageLocalization.getComposedMessage("writelength.can.only.be.called.after.output.of.the.stream.body"));
         writer.addToBody(new PdfNumber(inputStreamLength), ref, false);
     }
     
@@ -242,7 +228,7 @@ public class PdfStream extends PdfDictionary {
                     return;
             }
             else {
-                throw new RuntimeException("Stream could not be compressed: filter is not a name or array.");
+                throw new RuntimeException(MessageLocalization.getComposedMessage("stream.could.not.be.compressed.filter.is.not.a.name.or.array"));
             }
         }
         try {

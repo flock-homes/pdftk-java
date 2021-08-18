@@ -89,7 +89,7 @@ public class PdfFunction {
         func.dictionary = new PdfStream(stream);
         ((PdfStream)func.dictionary).flateCompress();
         func.dictionary.put(PdfName.FUNCTIONTYPE, new PdfNumber(0));
-        func.dictionary.put(PdfName.m_DOMAIN, new PdfArray(domain)); // ssteward
+        func.dictionary.put(PdfName.DOMAIN, new PdfArray(domain));
         func.dictionary.put(PdfName.RANGE, new PdfArray(range));
         func.dictionary.put(PdfName.SIZE, new PdfArray(size));
         func.dictionary.put(PdfName.BITSPERSAMPLE, new PdfNumber(bitsPerSample));
@@ -106,7 +106,7 @@ public class PdfFunction {
         PdfFunction func = new PdfFunction(writer);
         func.dictionary = new PdfDictionary();
         func.dictionary.put(PdfName.FUNCTIONTYPE, new PdfNumber(2));
-        func.dictionary.put(PdfName.m_DOMAIN, new PdfArray(domain)); // ssteward
+        func.dictionary.put(PdfName.DOMAIN, new PdfArray(domain));
         if (range != null)
             func.dictionary.put(PdfName.RANGE, new PdfArray(range));
         if (c0 != null)
@@ -121,7 +121,7 @@ public class PdfFunction {
         PdfFunction func = new PdfFunction(writer);
         func.dictionary = new PdfDictionary();
         func.dictionary.put(PdfName.FUNCTIONTYPE, new PdfNumber(3));
-        func.dictionary.put(PdfName.m_DOMAIN, new PdfArray(domain)); // ssteward
+        func.dictionary.put(PdfName.DOMAIN, new PdfArray(domain));
         if (range != null)
             func.dictionary.put(PdfName.RANGE, new PdfArray(range));
         PdfArray array = new PdfArray();
@@ -141,7 +141,7 @@ public class PdfFunction {
         func.dictionary = new PdfStream(b);
         ((PdfStream)func.dictionary).flateCompress();
         func.dictionary.put(PdfName.FUNCTIONTYPE, new PdfNumber(4));
-        func.dictionary.put(PdfName.m_DOMAIN, new PdfArray(domain)); // ssteward
+        func.dictionary.put(PdfName.DOMAIN, new PdfArray(domain));
         func.dictionary.put(PdfName.RANGE, new PdfArray(range));
         return func;
     }

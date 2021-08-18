@@ -1,7 +1,5 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4 -*- */
 /*
- * $Id: PdfName.java,v 1.74 2005/07/15 13:04:21 blowagie Exp $
- * $Name:  $
+ * $Id: PdfName.java 4082 2009-10-25 14:18:28Z psoares33 $
  *
  * Copyright 1999-2006 Bruno Lowagie
  *
@@ -17,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -32,34 +29,21 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (added constants)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 /**
  * <CODE>PdfName</CODE> is an object that can be used as a name in a PDF-file.
@@ -486,9 +470,7 @@ public class PdfName extends PdfObject implements Comparable{
      */
     public static final PdfName DOCUMENT = new PdfName( "Document" );
     /** A name */
-    //public static final PdfName DOMAIN = new PdfName("Domain");
-    // changed this member name to prevent confusion on gcj (ssteward)
-    public static final PdfName m_DOMAIN = new PdfName("Domain");
+    public static final PdfName DOMAIN = new PdfName("Domain");
     /** A name */
     public static final PdfName DP = new PdfName("DP");
     /** A name */
@@ -1810,7 +1792,7 @@ public class PdfName extends PdfObject implements Comparable{
         // The minimum number of characters in a name is 0, the maximum is 127 (the '/' not included)
         int length = name.length();
         if (lengthCheck && length > 127)
-            throw new IllegalArgumentException("the.name.1.is.too.long.2.characters: "+ String.valueOf(length));
+            throw new IllegalArgumentException(MessageLocalization.getComposedMessage("the.name.1.is.too.long.2.characters", name, String.valueOf(length)));
         bytes = encodeName(name);
     }
 

@@ -1,6 +1,13 @@
 /*
  * Copyright 2005 by Paulo Soares.
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -13,49 +20,38 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Creates a number tree.
@@ -68,13 +64,13 @@ public class PdfNumberTree {
     /**
      * Creates a number tree.
      * @param items the item of the number tree. The key is an <CODE>Integer</CODE>
-     * and the value is a <CODE>PdfIndirectReference</CODE>.
+     * and the value is a <CODE>PdfObject</CODE>.
      * @param writer the writer
      * @throws IOException on error
      * @return the dictionary with the number tree.
      */    
     public static PdfDictionary writeTree(HashMap items, PdfWriter writer) throws IOException {
-        if (items.size() == 0)
+        if (items.isEmpty())
             return null;
         Integer numbers[] = new Integer[items.size()];
         numbers = (Integer[])items.keySet().toArray(numbers);
@@ -84,7 +80,7 @@ public class PdfNumberTree {
             PdfArray ar = new PdfArray();
             for (int k = 0; k < numbers.length; ++k) {
                 ar.add(new PdfNumber(numbers[k].intValue()));
-                ar.add((PdfIndirectReference)items.get(numbers[k]));
+                ar.add((PdfObject)items.get(numbers[k]));
             }
             dic.put(PdfName.NUMS, ar);
             return dic;
@@ -102,7 +98,7 @@ public class PdfNumberTree {
             arr = new PdfArray();
             for (; offset < end; ++offset) {
                 arr.add(new PdfNumber(numbers[offset].intValue()));
-                arr.add((PdfIndirectReference)items.get(numbers[offset]));
+                arr.add((PdfObject)items.get(numbers[offset]));
             }
             dic.put(PdfName.NUMS, arr);
             kids[k] = writer.addToBody(dic).getIndirectReference();
@@ -141,16 +137,14 @@ public class PdfNumberTree {
     private static void iterateItems(PdfDictionary dic, HashMap items) {
         PdfArray nn = (PdfArray)PdfReader.getPdfObjectRelease(dic.get(PdfName.NUMS));
         if (nn != null) {
-            ArrayList arr = nn.getArrayList();
-            for (int k = 0; k < arr.size(); ++k) {
-                PdfNumber s = (PdfNumber)PdfReader.getPdfObjectRelease((PdfObject)arr.get(k++));
-                items.put(new Integer(s.intValue()), arr.get(k));
+            for (int k = 0; k < nn.size(); ++k) {
+                PdfNumber s = (PdfNumber)PdfReader.getPdfObjectRelease(nn.getPdfObject(k++));
+                items.put(new Integer(s.intValue()), nn.getPdfObject(k));
             }
         }
         else if ((nn = (PdfArray)PdfReader.getPdfObjectRelease(dic.get(PdfName.KIDS))) != null) {
-            ArrayList arr = nn.getArrayList();
-            for (int k = 0; k < arr.size(); ++k) {
-                PdfDictionary kid = (PdfDictionary)PdfReader.getPdfObjectRelease((PdfObject)arr.get(k));
+            for (int k = 0; k < nn.size(); ++k) {
+                PdfDictionary kid = (PdfDictionary)PdfReader.getPdfObjectRelease(nn.getPdfObject(k));
                 iterateItems(kid, items);
             }
         }

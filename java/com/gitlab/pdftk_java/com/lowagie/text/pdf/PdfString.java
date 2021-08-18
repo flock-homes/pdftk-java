@@ -55,12 +55,16 @@
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (heavily patched encodings)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * A <CODE>PdfString</CODE>-class is the PDF-equivalent of a JAVA-<CODE>String</CODE>-object.
+ * A <CODE>PdfString</CODE>-class is the PDF-equivalent of a
+ * JAVA-<CODE>String</CODE>-object.
  * <P>
  * A string is a sequence of characters delimited by parenthesis.
  * If a string is too long to be conveniently placed on a single line, it may

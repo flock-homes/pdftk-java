@@ -1,7 +1,5 @@
-/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4 -*- */
 /*
- * $Id: PRTokeniser.java,v 1.15 2002/06/20 13:30:25 blowagie Exp $
- * $Name:  $
+ * $Id: PRTokeniser.java 4083 2009-10-30 21:25:10Z trumpetinc $
  *
  * Copyright 2001, 2002 by Paulo Soares.
  *
@@ -17,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -32,33 +29,20 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (patched getStartxref(), nextValidToken())
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.io.IOException;
 import com.gitlab.pdftk_java.com.lowagie.text.exceptions.InvalidPdfException;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 /**
  *
  * @author  Paulo Soares (psoares@consiste.pt)
@@ -107,12 +91,12 @@ public class PRTokeniser {
     static final String EMPTY = "";
 
     
-    protected RandomAccessFileOrArray file = null;
-    protected int type = 0;
-    protected String stringValue = "";
-    protected int reference = 0;
-    protected int generation = 0;
-    protected boolean hexString = false;
+    protected RandomAccessFileOrArray file;
+    protected int type;
+    protected String stringValue;
+    protected int reference;
+    protected int generation;
+    protected boolean hexString;
        
     public PRTokeniser(String filename) throws IOException {
         file = new RandomAccessFileOrArray(filename);
@@ -146,7 +130,7 @@ public class PRTokeniser {
         return file.read();
     }
     
-    public RandomAccessFileOrArray getSafeFile() throws IOException {
+    public RandomAccessFileOrArray getSafeFile() {
         return new RandomAccessFileOrArray(file);
     }
     
@@ -200,7 +184,7 @@ public class PRTokeniser {
     }
     
     public void throwError(String error) throws IOException {
-        throw new InvalidPdfException(error + " at file pointer " + file.getFilePointer());
+        throw new InvalidPdfException(MessageLocalization.getComposedMessage("1.at.file.pointer.2", error, String.valueOf(file.getFilePointer())));
     }
     
     public char checkPdfHeader() throws IOException {
@@ -208,7 +192,7 @@ public class PRTokeniser {
         String str = readString(1024);
         int idx = str.indexOf("%PDF-");
         if (idx < 0)
-            throw new InvalidPdfException("PDF header signature not found.");
+            throw new InvalidPdfException(MessageLocalization.getComposedMessage("pdf.header.not.found"));
         file.setStartOffset(idx);
         return str.charAt(idx + 7);
     }
@@ -218,7 +202,7 @@ public class PRTokeniser {
         String str = readString(1024);
         int idx = str.indexOf("%FDF-1.2");
         if (idx < 0)
-            throw new InvalidPdfException("FDF header signature not found.");
+            throw new InvalidPdfException(MessageLocalization.getComposedMessage("fdf.header.not.found"));
         file.setStartOffset(idx);
     }
 
@@ -235,7 +219,7 @@ public class PRTokeniser {
             int idx = str.lastIndexOf("startxref");
             if (idx >= 0) return pos + idx;
         }
-        throw new InvalidPdfException("PDF startxref not found.");
+        throw new InvalidPdfException(MessageLocalization.getComposedMessage("pdf.startxref.not.found"));
     }
 
     public static int getHex(int v) {
@@ -293,6 +277,9 @@ public class PRTokeniser {
                 }
             }
         }
+        // if we hit here, the file is either corrupt (stream ended unexpectedly),
+        // or the last token ended exactly at the end of a stream.  This last
+        // case can occur inside an Object Stream.
 		// http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=687669#20
         if (level > 0) {
             type = TK_NUMBER;
@@ -345,7 +332,7 @@ public class PRTokeniser {
             case '>':
                 ch = file.read();
                 if (ch != '>')
-                    throwError("'>' not expected");
+                    throwError(MessageLocalization.getComposedMessage("greaterthan.not.expected"));
                 type = TK_END_DIC;
                 break;
             case '<':
@@ -383,7 +370,7 @@ public class PRTokeniser {
                     v1 = file.read();
                 }
                 if (v1 < 0 || v2 < 0)
-                    throwError("Error reading string");
+                    throwError(MessageLocalization.getComposedMessage("error.reading.string"));
                 break;
             }
             case '%':
@@ -483,7 +470,7 @@ public class PRTokeniser {
                     outBuf.append((char)ch);
                 }
                 if (ch == -1)
-                    throwError("Error reading string");
+                    throwError(MessageLocalization.getComposedMessage("error.reading.string"));
                 break;
             }
             default:
@@ -521,58 +508,56 @@ public class PRTokeniser {
         boolean eol = false;
         int ptr = 0;
         int len = input.length;
+	// ssteward, pdftk-1.10, 040922: 
+	// skip initial whitespace; added this because PdfReader.rebuildXref()
+	// assumes that line provided by readLineSegment does not have init. whitespace;
+	if ( ptr < len ) {
+	    while ( isWhitespace( (c = read()) ) );
+	}
+	while ( !eol && ptr < len ) {
+	    switch (c) {
+                case -1:
+                case '\n':
+                    eol = true;
+                    break;
+                case '\r':
+                    eol = true;
+                    int cur = getFilePointer();
+                    if ((read()) != '\n') {
+                        seek(cur);
+                    }
+                    break;
+                default:
+                    input[ptr++] = (byte)c;
+                    break;
+            }
 
-		// ssteward, pdftk-1.10, 040922: 
-		// skip initial whitespace; added this because PdfReader.rebuildXref()
-		// assumes that line provided by readLineSegment does not have init. whitespace;
-		if ( ptr < len ) {
-			while ( isWhitespace( (c = read()) ) );
-		}
-		while ( !eol && ptr < len ) {
-			switch (c) {
-			case -1:
-			case '\n':
-				eol = true;
-			break;
-			case '\r':
-				eol = true;
-				int cur = getFilePointer();
-				if ((read()) != '\n') {
-					seek(cur);
-				}
-				break;
-			default:
-				input[ptr++] = (byte)c;
-				break;
-			}
-
-			// break loop? do it before we read() again
-			if( eol || len <= ptr ) {
-				break;
-			}
-			else {
-				c = read();
-			}
-		}
-
-		if( len <= ptr  ) {
-			eol = false;
-			while (!eol) {
-				switch (c = read()) {
-				case -1:
-				case '\n':
-					eol = true;
-				break;
-				case '\r':
-					eol = true;
-					int cur = getFilePointer();
-					if ((read()) != '\n') {
-						seek(cur);
-					}
-					break;
-				}
-			}
-		}
+	    // break loop? do it before we read() again
+	    if( eol || len <= ptr ) {
+		break;
+	    }
+	    else {
+		c = read();
+	    }
+        }
+        if (ptr >= len) {
+            eol = false;
+            while (!eol) {
+                switch (c = read()) {
+                    case -1:
+                    case '\n':
+                        eol = true;
+                        break;
+                    case '\r':
+                        eol = true;
+                        int cur = getFilePointer();
+                        if ((read()) != '\n') {
+                            seek(cur);
+                        }
+                        break;
+                }
+            }
+        }
         
         if ((c == -1) && (ptr == 0)) {
             return false;

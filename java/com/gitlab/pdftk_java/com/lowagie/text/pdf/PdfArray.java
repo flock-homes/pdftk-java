@@ -16,7 +16,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,28 +30,14 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (patched toPdf() [cosmetic?])
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -65,57 +50,74 @@ import java.util.ListIterator;
 /**
  * <CODE>PdfArray</CODE> is the PDF Array object.
  * <P>
- * An array is a sequence of PDF objects. An array may contain a mixture of object types.
- * An array is written as a left square bracket ([), followed by a sequence of objects,
- * followed by a right square bracket (]).<BR>
- * This object is described in the 'Portable Document Format Reference Manual version 1.3'
- * section 4.6 (page 40).
+ * An array is a sequence of PDF objects. An array may contain a mixture of
+ * object types.
+ * An array is written as a left square bracket ([), followed by a sequence of
+ * objects, followed by a right square bracket (]).<BR>
+ * This object is described in the 'Portable Document Format Reference Manual
+ * version 1.7' section 3.2.5 (page 58).
  *
  * @see		PdfObject
  */
-
 public class PdfArray extends PdfObject {
-    
-    // membervariables
-    
-/** this is the actual array of PdfObjects */
+
+	// CLASS VARIABLES
+
+	/** this is the actual array of PdfObjects */
     protected ArrayList arrayList;
-    
+
     // constructors
-    
-/**
- * Constructs an empty <CODE>PdfArray</CODE>-object.
- */
-    
+
+    /**
+     * Constructs an empty <CODE>PdfArray</CODE>-object.
+     */
     public PdfArray() {
         super(ARRAY);
         arrayList = new ArrayList();
     }
-    
-/**
- * Constructs an <CODE>PdfArray</CODE>-object, containing 1 <CODE>PdfObject</CODE>.
- *
- * @param	object		a <CODE>PdfObject</CODE> that has to be added to the array
- */
-    
+
+    /**
+     * Constructs an <CODE>PdfArray</CODE>-object, containing 1
+     * <CODE>PdfObject</CODE>.
+     *
+     * @param	object		a <CODE>PdfObject</CODE> that has to be added to the array
+     */
     public PdfArray(PdfObject object) {
         super(ARRAY);
         arrayList = new ArrayList();
         arrayList.add(object);
     }
-    
+
+    /**
+     * Constructs a <CODE>PdfArray</CODE>-object, containing all
+     * <CODE>float</CODE> values in a specified array.
+     * 
+     * The <CODE>float</CODE> values are internally converted to
+     * <CODE>PdfNumber</CODE> objects.
+     *
+     * @param values    an array of <CODE>float</CODE> values to be added
+     */
     public PdfArray(float values[]) {
         super(ARRAY);
         arrayList = new ArrayList();
         add(values);
     }
     
+    /**
+     * Constructs a <CODE>PdfArray</CODE>-object, containing all
+     * <CODE>int</CODE> values in a specified array.
+     * 
+     * The <CODE>int</CODE> values are internally converted to
+     * <CODE>PdfNumber</CODE> objects.
+     *
+     * @param values    an array of <CODE>int</CODE> values to be added
+     */
     public PdfArray(int values[]) {
         super(ARRAY);
         arrayList = new ArrayList();
         add(values);
     }
-    
+
     /**
      * Constructs a <CODE>PdfArray</CODE>, containing all elements of a
      * specified <CODE>ArrayList</CODE>.
@@ -132,46 +134,51 @@ public class PdfArray extends PdfObject {
         	add((PdfObject)i.next());
     }
 
-/**
- * Constructs an <CODE>PdfArray</CODE>-object, containing all the <CODE>PdfObject</CODE>s in a given <CODE>PdfArray</CODE>.
- *
- * @param	array		a <CODE>PdfArray</CODE> that has to be added to the array
- */
-    
+    /**
+     * Constructs an <CODE>PdfArray</CODE>-object, containing all
+     * <CODE>PdfObject</CODE>s in a specified <CODE>PdfArray</CODE>.
+     *
+     * @param array    a <CODE>PdfArray</CODE> to be added to the array
+     */
     public PdfArray(PdfArray array) {
         super(ARRAY);
-        arrayList = new ArrayList(array.getArrayList());
+        arrayList = new ArrayList(array.arrayList);
     }
-    
-    // methods overriding some methods in PdfObject
-    
-/**
- * Returns the PDF representation of this <CODE>PdfArray</CODE>.
- *
- * @return		an array of <CODE>byte</CODE>s
- */
-    
+
+    // METHODS OVERRIDING SOME PDFOBJECT METHODS
+
+    /**
+     * Writes the PDF representation of this <CODE>PdfArray</CODE> as an array
+     * of <CODE>byte</CODE> to the specified <CODE>OutputStream</CODE>.
+     * 
+     * @param writer for backwards compatibility
+     * @param os the <CODE>OutputStream</CODE> to write the bytes to.
+     */
     public void toPdf(PdfWriter writer, OutputStream os) throws IOException {
         os.write('[');
 
         Iterator i = arrayList.iterator();
         PdfObject object;
-        // int type = 0; // ssteward
+        int type = 0;
         if (i.hasNext()) {
             object = (PdfObject) i.next();
+            if (object == null)
+                object = PdfNull.PDFNULL;
             object.toPdf(writer, os);
         }
         while (i.hasNext()) {
             object = (PdfObject) i.next();
+            if (object == null)
+                object = PdfNull.PDFNULL;
+            type = object.type();
 	    // ssteward
-            //type = object.type();
             //if (type != PdfObject.ARRAY && type != PdfObject.DICTIONARY && type != PdfObject.NAME && type != PdfObject.STRING)
 	    os.write(' ');
             object.toPdf(writer, os);
         }
         os.write(']');
     }
-    
+
     /**
      * Returns a string representation of this <CODE>PdfArray</CODE>.
      * 
@@ -186,7 +193,7 @@ public class PdfArray extends PdfObject {
     	return arrayList.toString();
     }
     
-    // methods concerning the ArrayList-membervalue
+    // ARRAY CONTENT METHODS
     
     /**
      * Overwrites a specified location of the array, returning the previous
@@ -216,26 +223,25 @@ public class PdfArray extends PdfObject {
         return (PdfObject) arrayList.remove(idx);
     }
 
-/**
- * Returns an ArrayList containing <CODE>PdfObject</CODE>s.
- *
- * @return		an ArrayList
- */
-    
+    /**
+     * Get the internal arrayList for this PdfArray.  Not Recommended.
+     * 
+     * @deprecated
+     * @return the internal ArrayList.  Naughty Naughty.
+     */
     public ArrayList getArrayList() {
         return arrayList;
     }
-    
-/**
- * Returns the number of entries in the array.
- *
- * @return		the size of the ArrayList
- */
-    
+
+    /**
+     * Returns the number of entries in the array.
+     *
+     * @return		the size of the ArrayList
+     */
     public int size() {
         return arrayList.size();
     }
-    
+
     /**
      * Returns <CODE>true</CODE> if the array is empty.
      * 
@@ -246,29 +252,51 @@ public class PdfArray extends PdfObject {
         return arrayList.isEmpty();
     }
 
-/**
- * Adds a <CODE>PdfObject</CODE> to the <CODE>PdfArray</CODE>.
- *
- * @param		object			<CODE>PdfObject</CODE> to add
- * @return		<CODE>true</CODE>
- */
-    
+    /**
+     * Adds a <CODE>PdfObject</CODE> to the end of the <CODE>PdfArray</CODE>.
+     * 
+     * The <CODE>PdfObject</CODE> will be the last element.
+     *
+     * @param object <CODE>PdfObject</CODE> to add
+     * @return always <CODE>true</CODE>
+     */
     public boolean add(PdfObject object) {
         return arrayList.add(object);
     }
-    
+
+    /**
+     * Adds an array of <CODE>float</CODE> values to end of the
+     * <CODE>PdfArray</CODE>.
+     * 
+     * The values will be the last elements.
+     * The <CODE>float</CODE> values are internally converted to
+     * <CODE>PdfNumber</CODE> objects.
+     *
+     * @param values An array of <CODE>float</CODE> values to add
+     * @return always <CODE>true</CODE>
+     */
     public boolean add(float values[]) {
         for (int k = 0; k < values.length; ++k)
             arrayList.add(new PdfNumber(values[k]));
         return true;
     }
-    
+
+    /**
+     * Adds an array of <CODE>int</CODE> values to end of the <CODE>PdfArray</CODE>.
+     * 
+     * The values will be the last elements.
+     * The <CODE>int</CODE> values are internally converted to
+     * <CODE>PdfNumber</CODE> objects.
+     *
+     * @param values An array of <CODE>int</CODE> values to add
+     * @return always <CODE>true</CODE>
+     */
     public boolean add(int values[]) {
         for (int k = 0; k < values.length; ++k)
             arrayList.add(new PdfNumber(values[k]));
         return true;
     }
-    
+
     /**
      * Inserts the specified element at the specified position.
      * 
@@ -285,29 +313,35 @@ public class PdfArray extends PdfObject {
         arrayList.add(index, element);
     }
 
-/**
- * Adds a <CODE>PdfObject</CODE> to the <CODE>PdfArray</CODE>.
- * <P>
- * The newly added object will be the first element in the <CODE>ArrayList</CODE>.
- *
- * @param		object			<CODE>PdfObject</CODE> to add
- */
-    
+    /**
+     * Inserts a <CODE>PdfObject</CODE> at the beginning of the
+     * <CODE>PdfArray</CODE>.
+     * 
+     * The <CODE>PdfObject</CODE> will be the first element, any other elements
+     * will be shifted to the right (adds one to their indices).
+     *
+     * @param object The <CODE>PdfObject</CODE> to add
+     */
     public void addFirst(PdfObject object) {
         arrayList.add(0, object);
     }
-    
-/**
- * Checks if the <CODE>PdfArray</CODE> already contains a certain <CODE>PdfObject</CODE>.
- *
- * @param		object			<CODE>PdfObject</CODE> to check
- * @return		<CODE>true</CODE>
- */
-    
+
+    /**
+     * Checks if the <CODE>PdfArray</CODE> already contains a certain
+     * <CODE>PdfObject</CODE>.
+     *
+     * @param object The <CODE>PdfObject</CODE> to check
+     * @return <CODE>true</CODE>
+     */
     public boolean contains(PdfObject object) {
         return arrayList.contains(object);
     }
-    
+
+    /**
+     * Returns the list iterator for the array.
+     * 
+     * @return a ListIterator
+     */
     public ListIterator listIterator() {
         return arrayList.listIterator();
     }

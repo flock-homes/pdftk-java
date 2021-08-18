@@ -1,6 +1,5 @@
 /*
- * $Id: PRStream.java,v 1.12 2002/06/20 13:30:25 blowagie Exp $
- * $Name:  $
+ * $Id: PRStream.java 3633 2008-12-23 18:42:06Z xlv $
  *
  * Copyright 2001, 2002 by Paulo Soares.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,28 +29,14 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (added filtersAreKnown(), patched toPdf() [seems important])
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -68,9 +52,9 @@ import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 
 public class PRStream extends PdfStream {
     
-    protected PdfReader reader = null;
-    protected int offset = 0;
-    protected int length = 0;
+    protected PdfReader reader;
+    protected int offset;
+    protected int length;
     
     //added by ujihara for decryption
     protected int objNum = 0;

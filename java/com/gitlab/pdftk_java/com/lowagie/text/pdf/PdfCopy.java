@@ -346,7 +346,7 @@ public class PdfCopy extends PdfWriter {
             case PdfObject.NUMBER:
             case PdfObject.NAME:
             case PdfObject.STRING:
-            case PdfObject.m_NULL: // ssteward
+            case PdfObject.NULL:
             case PdfObject.BOOLEAN:
                 return in;
             case PdfObject.STREAM:

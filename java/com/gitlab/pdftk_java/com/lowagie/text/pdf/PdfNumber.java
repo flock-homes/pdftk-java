@@ -1,9 +1,15 @@
 /*
- * $Id: PdfNumber.java,v 1.24 2002/07/09 11:28:23 blowagie Exp $
- * $Name:  $
+ * $Id: PdfNumber.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
  * Copyright 1999, 2000, 2001, 2002 Bruno Lowagie
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,148 +22,142 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
+
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 /**
  * <CODE>PdfNumber</CODE> provides two types of numbers, integer and real.
  * <P>
  * Integers may be specified by signed or unsigned constants. Reals may only be
  * in decimal format.<BR>
- * This object is described in the 'Portable Document Format Reference Manual version 1.3'
- * section 4.3 (page 37).
+ * This object is described in the 'Portable Document Format Reference Manual
+ * version 1.7' section 3.3.2 (page 52-53).
  *
  * @see		PdfObject
  * @see		BadPdfFormatException
  */
-
 public class PdfNumber extends PdfObject {
+
+    // CLASS VARIABLES
     
-/** actual value of this <CODE>PdfNumber</CODE>, represented as a <CODE>double</CODE> */
+    /**
+     * actual value of this <CODE>PdfNumber</CODE>, represented as a
+     * <CODE>double</CODE>
+     */
     private double value;
     
-    // constructors
+    // CONSTRUCTORS
     
-/**
- * Constructs a <CODE>PdfNumber</CODE>-object.
- *
- * @param		content			value of the new <CODE>PdfNumber</CODE>-object
- */
-    
+    /**
+     * Constructs a <CODE>PdfNumber</CODE>-object.
+     *
+     * @param content    value of the new <CODE>PdfNumber</CODE>-object
+     */
     public PdfNumber(String content) {
         super(NUMBER);
         try {
-            value = Double.valueOf(content.trim()).doubleValue();
+            value = Double.parseDouble(content.trim());
             setContent(content);
         }
         catch (NumberFormatException nfe){
-            throw new RuntimeException(content + " is not a valid number - " + nfe.toString());
+            throw new RuntimeException(MessageLocalization.getComposedMessage("1.is.not.a.valid.number.2", content, nfe.toString()));
         }
     }
     
-/**
- * Constructs a new INTEGER <CODE>PdfNumber</CODE>-object.
- *
- * @param		value				value of the new <CODE>PdfNumber</CODE>-object
- */
-    
+    /**
+     * Constructs a new <CODE>PdfNumber</CODE>-object of type integer.
+     *
+     * @param value    value of the new <CODE>PdfNumber</CODE>-object
+     */
     public PdfNumber(int value) {
         super(NUMBER);
         this.value = value;
         setContent(String.valueOf(value));
     }
     
-/**
- * Constructs a new REAL <CODE>PdfNumber</CODE>-object.
- *
- * @param		value				value of the new <CODE>PdfNumber</CODE>-object
- */
-    
+    /**
+     * Constructs a new <CODE>PdfNumber</CODE>-object of type real.
+     *
+     * @param value    value of the new <CODE>PdfNumber</CODE>-object
+     */
     public PdfNumber(double value) {
         super(NUMBER);
         this.value = value;
         setContent(ByteBuffer.formatDouble(value));
     }
     
-/**
- * Constructs a new REAL <CODE>PdfNumber</CODE>-object.
- *
- * @param		value				value of the new <CODE>PdfNumber</CODE>-object
- */
-    
+    /**
+     * Constructs a new <CODE>PdfNumber</CODE>-object of type real.
+     *
+     * @param value    value of the new <CODE>PdfNumber</CODE>-object
+     */
     public PdfNumber(float value) {
         this((double)value);
     }
     
     // methods returning the value of this object
     
-/**
- * Returns the primitive <CODE>int</CODE> value of this object.
- *
- * @return		a value
- */
-    
+    /**
+     * Returns the primitive <CODE>int</CODE> value of this object.
+     *
+     * @return The value as <CODE>int</CODE>
+     */
     public int intValue() {
         return (int) value;
     }
     
-/**
- * Returns the primitive <CODE>double</CODE> value of this object.
- *
- * @return		a value
- */
-    
+    /**
+     * Returns the primitive <CODE>double</CODE> value of this object.
+     *
+     * @return The value as <CODE>double</CODE>
+     */
     public double doubleValue() {
         return value;
     }
     
+    /**
+     * Returns the primitive <CODE>float</CODE> value of this object.
+     *
+     * @return The value as <CODE>float</CODE>
+     */
     public float floatValue() {
         return (float)value;
     }
     
     // other methods
     
-/**
- * Increments the value of the <CODE>PdfNumber</CODE>-object with 1.
- */
-    
+    /**
+     * Increments the value of the <CODE>PdfNumber</CODE>-object by 1.
+     */
     public void increment() {
         value += 1.0;
         setContent(ByteBuffer.formatDouble(value));
