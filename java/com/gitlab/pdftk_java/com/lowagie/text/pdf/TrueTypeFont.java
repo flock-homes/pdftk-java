@@ -3,6 +3,14 @@
  *
  * Copyright 2001-2006 Paulo Soares
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
+ *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
  * The Initial Developer of the Original Code is Bruno Lowagie. Portions created by
@@ -14,20 +22,25 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
@@ -35,7 +48,9 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (ssteward patches, no idea why, look very fishy, reverted one)
+// pdftk-java modified no
+// pdftk-java notes: getFullFont() was commented out in pdftk-1.43; reverted
+// pdftk-java notes: in getBaseFont() the lines reading platformEncodingID and languageID were commented out. Maybe this was done for compatibility with old fonts, but it harms modern fonts. Reverted.
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -45,6 +60,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 import com.gitlab.pdftk_java.com.lowagie.text.Document;
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
@@ -364,10 +380,10 @@ class TrueTypeFont extends BaseFont {
         if (fileName.toLowerCase().endsWith(".ttf") || fileName.toLowerCase().endsWith(".otf") || fileName.toLowerCase().endsWith(".ttc")) {
             process(ttfAfm, forceRead);
             if (!justNames && embedded && os_2.fsType == 2)
-                throw new DocumentException(fileName + style + " cannot be embedded due to licensing restrictions.");
+                throw new DocumentException(MessageLocalization.getComposedMessage("1.cannot.be.embedded.due.to.licensing.restrictions", fileName + style));
         }
         else
-            throw new DocumentException(fileName + style + " is not a TTF, OTF or TTC font file.");
+            throw new DocumentException(MessageLocalization.getComposedMessage("1.is.not.a.ttf.otf.or.ttc.font.file", fileName + style));
         if (!encoding.startsWith("#"))
             PdfEncodings.convertToBytes(" ", enc); // check if the encoding exists
         createEncoding();
@@ -397,7 +413,7 @@ class TrueTypeFont extends BaseFont {
         int table_location[];
         table_location = (int[])tables.get("head");
         if (table_location == null)
-            throw new DocumentException("Table 'head' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "head", fileName + style));
         rf.seek(table_location[0] + 16);
         head.flags = rf.readUnsignedShort();
         head.unitsPerEm = rf.readUnsignedShort();
@@ -410,7 +426,7 @@ class TrueTypeFont extends BaseFont {
         
         table_location = (int[])tables.get("hhea");
         if (table_location == null)
-            throw new DocumentException("Table 'hhea' does not exist " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "hhea", fileName + style));
         rf.seek(table_location[0] + 4);
         hhea.Ascender = rf.readShort();
         hhea.Descender = rf.readShort();
@@ -426,7 +442,7 @@ class TrueTypeFont extends BaseFont {
         
         table_location = (int[])tables.get("OS/2");
         if (table_location == null)
-            throw new DocumentException("Table 'OS/2' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "OS/2", fileName + style));
         rf.seek(table_location[0]);
         int version = rf.readUnsignedShort();
         os_2.xAvgCharWidth = rf.readShort();
@@ -494,14 +510,14 @@ class TrueTypeFont extends BaseFont {
         int table_location[];
         table_location = (int[])tables.get("name");
         if (table_location == null)
-            throw new DocumentException("Table 'name' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "name", fileName + style));
         rf.seek(table_location[0] + 2);
         int numRecords = rf.readUnsignedShort();
         int startOfStorage = rf.readUnsignedShort();
         for (int k = 0; k < numRecords; ++k) {
             int platformID = rf.readUnsignedShort();
-            // ssteward omit: int platformEncodingID = rf.readUnsignedShort();
-            // ssteward omit: int languageID = rf.readUnsignedShort();
+            int platformEncodingID = rf.readUnsignedShort();
+            int languageID = rf.readUnsignedShort();
             int nameID = rf.readUnsignedShort();
             int length = rf.readUnsignedShort();
             int offset = rf.readUnsignedShort();
@@ -526,7 +542,7 @@ class TrueTypeFont extends BaseFont {
         int table_location[];
         table_location = (int[])tables.get("name");
         if (table_location == null)
-            throw new DocumentException("Table 'name' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "name", fileName + style));
         rf.seek(table_location[0] + 2);
         int numRecords = rf.readUnsignedShort();
         int startOfStorage = rf.readUnsignedShort();
@@ -567,7 +583,7 @@ class TrueTypeFont extends BaseFont {
         int table_location[];
         table_location = (int[])tables.get("name");
         if (table_location == null)
-            throw new DocumentException("Table 'name' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "name", fileName + style));
         rf.seek(table_location[0] + 2);
         int numRecords = rf.readUnsignedShort();
         int startOfStorage = rf.readUnsignedShort();
@@ -625,21 +641,21 @@ class TrueTypeFont extends BaseFont {
             if (ttcIndex.length() > 0) {
                 int dirIdx = Integer.parseInt(ttcIndex);
                 if (dirIdx < 0)
-                    throw new DocumentException("The font index for " + fileName + " must be positive.");
+                    throw new DocumentException(MessageLocalization.getComposedMessage("the.font.index.for.1.must.be.positive", fileName));
                 String mainTag = readStandardString(4);
                 if (!mainTag.equals("ttcf"))
-                    throw new DocumentException(fileName + " is not a valid TTC file.");
+                    throw new DocumentException(MessageLocalization.getComposedMessage("1.is.not.a.valid.ttc.file", fileName));
                 rf.skipBytes(4);
                 int dirCount = rf.readInt();
                 if (dirIdx >= dirCount)
-                    throw new DocumentException("The font index for " + fileName + " must be between 0 and " + (dirCount - 1) + ". It was " + dirIdx + ".");
+                    throw new DocumentException(MessageLocalization.getComposedMessage("the.font.index.for.1.must.be.between.0.and.2.it.was.3", fileName, String.valueOf(dirCount - 1), String.valueOf(dirIdx)));
                 rf.skipBytes(dirIdx * 4);
                 directoryOffset = rf.readInt();
             }
             rf.seek(directoryOffset);
             int ttId = rf.readInt();
             if (ttId != 0x00010000 && ttId != 0x4F54544F)
-                throw new DocumentException(fileName + " is not a valid TTF or OTF file.");
+                throw new DocumentException(MessageLocalization.getComposedMessage("1.is.not.a.valid.ttf.or.otf.file", fileName));
             int num_tables = rf.readUnsignedShort();
             rf.skipBytes(6);
             for (int k = 0; k < num_tables; ++k) {
@@ -715,7 +731,7 @@ class TrueTypeFont extends BaseFont {
         int table_location[];
         table_location = (int[])tables.get("hmtx");
         if (table_location == null)
-            throw new DocumentException("Table 'hmtx' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "hmtx", fileName + style));
         rf.seek(table_location[0]);
         GlyphWidths = new int[hhea.numberOfHMetrics];
         for (int k = 0; k < hhea.numberOfHMetrics; ++k) {
@@ -738,7 +754,7 @@ class TrueTypeFont extends BaseFont {
         int tableLocation[];
         tableLocation = (int[])tables.get("head");
         if (tableLocation == null)
-            throw new DocumentException("Table 'head' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "head", fileName + style));
         rf.seek(tableLocation[0] + TrueTypeFontSubSet.HEAD_LOCA_FORMAT_OFFSET);
         boolean locaShortTable = (rf.readUnsignedShort() == 0);
         tableLocation = (int[])tables.get("loca");
@@ -760,7 +776,7 @@ class TrueTypeFont extends BaseFont {
         }
         tableLocation = (int[])tables.get("glyf");
         if (tableLocation == null)
-            throw new DocumentException("Table 'glyf' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "glyf", fileName + style));
         int tableGlyphOffset = tableLocation[0];
         bboxes = new int[locaTable.length - 1][];
         for (int glyph = 0; glyph < locaTable.length - 1; ++glyph) {
@@ -785,7 +801,7 @@ class TrueTypeFont extends BaseFont {
         int table_location[];
         table_location = (int[])tables.get("cmap");
         if (table_location == null)
-            throw new DocumentException("Table 'cmap' does not exist in " + fileName + style);
+            throw new DocumentException(MessageLocalization.getComposedMessage("table.1.does.not.exist.in.2", "cmap", fileName + style));
         rf.seek(table_location[0]);
         rf.skipBytes(2);
         int num_tables = rf.readUnsignedShort();
@@ -1140,7 +1156,6 @@ class TrueTypeFont extends BaseFont {
         return dic;
     }
     
-    /* ssteward omit */
     protected byte[] getFullFont() throws IOException {
         RandomAccessFileOrArray rf2 = null;
         try {
@@ -1154,8 +1169,7 @@ class TrueTypeFont extends BaseFont {
             try {if (rf2 != null) {rf2.close();}} catch (Exception e) {}
         }
     }
-    /* */
-
+    
     protected static int[] compactRanges(ArrayList ranges) {
         ArrayList simp = new ArrayList();
         for (int k = 0; k < ranges.size(); ++k) {

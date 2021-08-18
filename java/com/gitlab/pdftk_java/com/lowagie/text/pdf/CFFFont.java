@@ -2,42 +2,36 @@
  *
  * Copyright 2003 Sivan Toledo
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  */
 
@@ -72,11 +66,11 @@
  * future time.
  */
 
-package com.gitlab.pdftk_java.com.lowagie.text.pdf;
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed ReadEncoding())
+// pdftk-java notes: in getCID() and CFFFont() the lines reading major, minor and offSize were commented out. Maybe this was done for compatibility with old fonts, but it causes crashes with modern fonts. Reverted.
 
-/**
- * @author stoledo
- */
+package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -362,7 +356,7 @@ public class CFFFont {
                             if (nibble >= 0 && nibble <= 9)
                                 item += String.valueOf(nibble);
                             else {
-                                item += "<NIBBLE ERROR: "+String.valueOf(nibble)+">";
+                                item += "<NIBBLE ERROR: " + nibble + '>';
                                 done = true;
                             }
                             break;
@@ -496,9 +490,6 @@ public class CFFFont {
         }
     }
     /**
-     * 
-     * @author orly manor
-     *
      * TODO To change the template for this generated type comment go to
      * Window - Preferences - Java - Code Generation - Code and Comments
      */
@@ -641,7 +632,7 @@ public class CFFFont {
             super.increment(currentOffset);
             currentOffset[0] += size;
         }
-        // this is imcomplete!
+        // this is incomplete!
         public void emit(byte[] buffer) {
             if (size==5) {
                 buffer[myOffset]   = 29;
@@ -843,9 +834,9 @@ public class CFFFont {
             int currentStringsOffset = stringOffsets[stringOffsets.length-1]
             - stringsBaseOffset;
             //l.addLast(new IndexOffsetItem(stringsIndexOffSize,currentStringsOffset));
-            currentStringsOffset += ("Adobe").length();
+            currentStringsOffset += "Adobe".length();
             l.addLast(new IndexOffsetItem(stringsIndexOffSize,currentStringsOffset));
-            currentStringsOffset += ("Identity").length();
+            currentStringsOffset += "Identity".length();
             l.addLast(new IndexOffsetItem(stringsIndexOffSize,currentStringsOffset));
             currentStringsOffset += fdFontName.length();
             l.addLast(new IndexOffsetItem(stringsIndexOffSize,currentStringsOffset));
@@ -896,7 +887,7 @@ public class CFFFont {
             l.addLast(privateBase);
             
             // looking at the PS that acrobat generates from a PDF with
-            // a CFF opentype font embeded with an identity-H encoding,
+            // a CFF opentype font embedded with an identity-H encoding,
             // it seems that it does not need a FontName.
             //l.addLast(new DictNumberItem((standardStrings.length+(stringOffsets.length-1)+2)));
             //l.addLast(new UInt8Item((char)12));
@@ -980,9 +971,9 @@ public class CFFFont {
     }
     /**
      * A random Access File or an array
-     * (contributed by orly manor)
      */
     protected RandomAccessFileOrArray buf;
+    private int offSize;
     
     protected int nameIndexOffset;
     protected int topdictIndexOffset;
@@ -994,7 +985,6 @@ public class CFFFont {
     protected int[] gsubrOffsets;
     
     /**
-     * @author orly manor
      * TODO Changed from private to protected by Ygal&Oren
      */
     protected final class Font {
@@ -1039,13 +1029,15 @@ public class CFFFont {
         buf = inputbuffer;
         seek(0);
         
-        int major = getCard8();
-        int minor = getCard8();
+        int major, minor;
+        major = getCard8();
+        minor = getCard8();
         
         //System.err.println("CFF Major-Minor = "+major+"-"+minor);
         
         int hdrSize = getCard8();
-	int offSize = getCard8();
+        
+        offSize = getCard8();
         
         //System.err.println("offSize = "+offSize);
         
@@ -1079,7 +1071,7 @@ public class CFFFont {
             seek(nameOffsets[j]);
             fonts[j].name = "";
             for (int k=nameOffsets[j]; k<nameOffsets[j+1]; k++) {
-                fonts[j].name += (char)getCard8();
+                fonts[j].name += getCard8();
             }
             //System.err.println("name["+j+"]=<"+fonts[j].name+">");
         }
@@ -1149,7 +1141,7 @@ public class CFFFont {
                     getDictItem();
                     if (key=="Subrs")
                     	//Add the private offset to the lsubrs since the offset is 
-                    	// relative to the begining of the PrivateDict
+                    	// relative to the beginning of the PrivateDict
                         fonts[j].privateSubrs = ((Integer)args[0]).intValue()+fonts[j].privateOffset;
                 }
             }

@@ -46,6 +46,8 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/BaseFont.java
 * com/lowagie/text/pdf/BidiLine.java
 * com/lowagie/text/pdf/ColumnText.java
+* com/lowagie/text/pdf/CFFFont.java
+* com/lowagie/text/pdf/CFFFontSubset.java
 * com/lowagie/text/pdf/CJKFont.java
 * com/lowagie/text/pdf/DefaultFontMapper.java
 * com/lowagie/text/pdf/DefaultSplitCharacter.java
@@ -169,10 +171,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/BidiOrder.java
   * Cosmetic unused variable removed
 * com/lowagie/text/pdf/ByteBuffer.java
-* com/lowagie/text/pdf/CFFFont.java
-  * Commented out code
-* com/lowagie/text/pdf/CFFFontSubset.java
-  * Commented out code
 * com/lowagie/text/pdf/CMYKColor.java
 * com/lowagie/text/pdf/ColorDetails.java
 * com/lowagie/text/pdf/EnumerateTTC.java

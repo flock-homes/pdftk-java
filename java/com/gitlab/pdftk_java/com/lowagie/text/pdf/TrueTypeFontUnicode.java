@@ -368,6 +368,8 @@ class TrueTypeFontUnicode extends TrueTypeFont implements Comparator{
         // sivan: cff
         if (cff) {
 			byte b[] = readCffFont();
+                        System.err.println(subset);
+                        System.err.println(subsetRanges);
             if (subset || subsetRanges != null) {
                 CFFFontSubset cff = new CFFFontSubset(new RandomAccessFileOrArray(b),longTag);
                 b = cff.Process(cff.getNames()[0]);
