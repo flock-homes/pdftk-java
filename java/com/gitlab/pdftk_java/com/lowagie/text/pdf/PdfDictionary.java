@@ -1,6 +1,5 @@
 /*
- * $Id: PdfDictionary.java,v 1.27 2002/07/09 11:28:22 blowagie Exp $
- * $Name:  $
+ * $Id: PdfDictionary.java 3762 2009-03-06 16:53:44Z blowagie $
  *
  * Copyright 1999, 2000, 2001, 2002 Bruno Lowagie
  *
@@ -55,7 +54,7 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (patched toPdf() [cosmetic?])
+// pdftk-java modified yes (patched toPdf() [cosmetic?] [source: itext-paulo-155])
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 

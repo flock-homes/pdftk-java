@@ -83,20 +83,20 @@ class PdfCopyFieldsImp extends PdfWriter {
     ArrayList pageRefs = new ArrayList();
     ArrayList pageDics = new ArrayList();
     PdfDictionary resources = new PdfDictionary();
-    PdfDictionary form = null;
-    protected List newBookmarks = null;
+    PdfDictionary form;
+    protected List newBookmarks;
     boolean closing = false;
-    Document nd = null;
-    private HashMap tabOrder = null;
+    Document nd;
+    private HashMap tabOrder;
     private ArrayList calculationOrder = new ArrayList();
-    private ArrayList calculationOrderRefs = null;
+    private ArrayList calculationOrderRefs;
     
     PdfCopyFieldsImp(OutputStream os) throws DocumentException, IOException {
         this(os, '\0');
     }
     
     PdfCopyFieldsImp(OutputStream os, char pdfVersion) throws DocumentException, IOException {
-        super(/* ssteward omit: new PdfDocument(), */os);
+        super(new PdfDocument(), os);
         getPdfDocument().setWriter(this); // ssteward: okay
         if (pdfVersion != 0)
             super.setPdfVersion(pdfVersion);

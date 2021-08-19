@@ -1,9 +1,16 @@
 /*
- * $Id: PdfIndirectObject.java,v 1.35 2003/05/02 09:01:25 blowagie Exp $
- * $Name:  $
+ * $Id: PdfIndirectObject.java 3912 2009-04-26 08:38:15Z blowagie $
+ * $Name$
  *
  * Copyright 1999, 2000, 2001, 2002 Bruno Lowagie
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -16,43 +23,34 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+// pdftk-java notes: STARTOBJ and ENDOBJ were changed. The modification does not conform to the standard. See https://gitlab.com/pdftk-java/pdftk/-/issues/61. Reverted.
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
@@ -69,8 +67,8 @@ import com.gitlab.pdftk_java.com.lowagie.text.DocWriter;
  * An indirect object consists of an object identifier, a direct object, and the <B>endobj</B>
  * keyword. The <I>object identifier</I> consists of an integer <I>object number</I>, an integer
  * <I>generation number</I>, and the <B>obj</B> keyword.<BR>
- * This object is described in the 'Portable Document Format Reference Manual version 1.3'
- * section 4.10 (page 53).
+ * This object is described in the 'Portable Document Format Reference Manual version 1.7'
+ * section 3.2.9 (page 63-65).
  *
  * @see		PdfObject
  * @see		PdfIndirectReference
@@ -85,14 +83,7 @@ public class PdfIndirectObject {
     
 /** the generation number */
     protected int generation = 0;
-
-    // Unclear why the following two lines were changed from the original.
-    // The modification does not conform to the standard.
-    // Reverting.
-    // See https://gitlab.com/pdftk-java/pdftk/-/issues/61
-    //
-    // static final byte STARTOBJ[] = DocWriter.getISOBytes(" obj "); // ssteward
-    // static final byte ENDOBJ[] = DocWriter.getISOBytes("\nendobj "); // ssteward
+    
     static final byte STARTOBJ[] = DocWriter.getISOBytes(" obj\n");
     static final byte ENDOBJ[] = DocWriter.getISOBytes("\nendobj\n");
     static final int SIZEOBJ = STARTOBJ.length + ENDOBJ.length;
@@ -163,22 +154,17 @@ public class PdfIndirectObject {
     }
     
 /**
- * Writes eficiently to a stream
+ * Writes efficiently to a stream
  *
  * @param os the stream to write to
  * @throws IOException on write error
  */
     void writeTo(OutputStream os) throws IOException
     {
-	// ssteward: don't os.write() anything here, before the number, or you'll throw off the xref position
         os.write(DocWriter.getISOBytes(String.valueOf(number)));
         os.write(' ');
         os.write(DocWriter.getISOBytes(String.valueOf(generation)));
         os.write(STARTOBJ);
-	// ssteward
-        //int type = object.type();
-        //if (type != PdfObject.ARRAY && type != PdfObject.DICTIONARY && type != PdfObject.NAME && type != PdfObject.STRING)
-        //    os.write(' ');
         object.toPdf(writer, os);
         os.write(ENDOBJ);
     }

@@ -83,6 +83,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfFont.java
 * com/lowagie/text/pdf/PdfFormField.java
 * com/lowagie/text/pdf/PdfFormXObject.java
+* com/lowagie/text/pdf/PdfIndirectObject.java
 * com/lowagie/text/pdf/PdfIndirectReference.java
 * com/lowagie/text/pdf/PdfLine.java
 * com/lowagie/text/pdf/PdfName.java
@@ -208,8 +209,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfGState.java
 * com/lowagie/text/pdf/PdfImportedPage.java
   * Commented out methods
-* com/lowagie/text/pdf/PdfIndirectObject.java
-  * Multiple changes
 * com/lowagie/text/pdf/PdfLayerMembership.java
 * com/lowagie/text/pdf/PdfLister.java
 * com/lowagie/text/pdf/PdfLiteral.java

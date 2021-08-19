@@ -83,8 +83,8 @@ public class PdfCopy extends PdfWriter {
      * renumbered by iText.
      */
     static class IndirectReferences {
-        PdfIndirectReference theRef = null;
-        boolean hasCopied = false;
+        PdfIndirectReference theRef;
+        boolean hasCopied;
         IndirectReferences(PdfIndirectReference ref) {
             theRef = ref;
             hasCopied = false;
@@ -93,13 +93,13 @@ public class PdfCopy extends PdfWriter {
         boolean getCopied() { return hasCopied; }
         PdfIndirectReference getRef() { return theRef; }
     };
-    protected HashMap indirects = null;
-    protected HashMap indirectMap = null;
+    protected HashMap indirects;
+    protected HashMap indirectMap;
     protected int currentObjectNum = 1;
-    protected PdfReader reader = null;
+    protected PdfReader reader;
 	// ssteward: why does PdfCopy have an acroForm, when PdfDocument already has one
     //protected PdfIndirectReference acroForm = null;
-    protected PdfIndirectReference topPageParent = null;
+    protected PdfIndirectReference topPageParent;
     protected ArrayList pageNumbersToRefs = new ArrayList();
     //protected List newBookmarks = null; // ssteward: pdftk 1.46
 	protected PdfIndirectReference m_new_bookmarks = null; // ssteward: pdftk 1.46
@@ -124,8 +124,8 @@ public class PdfCopy extends PdfWriter {
      * A key to allow us to hash indirect references
      */
     protected static class RefKey {
-        int num = 0;
-        int gen = 0;
+        int num;
+        int gen;
         RefKey(int num, int gen) {
             this.num = num;
             this.gen = gen;
@@ -156,7 +156,7 @@ public class PdfCopy extends PdfWriter {
      * @param os outputstream
      */
     public PdfCopy(Document document, OutputStream os) throws DocumentException {
-        super(/* ssteward omit: new PdfDocument(),*/ os);
+        super(new PdfDocument(), os);
         document.addDocListener(getPdfDocument());
         getPdfDocument().setWriter(this); // ssteward: okay
         indirectMap = new HashMap();

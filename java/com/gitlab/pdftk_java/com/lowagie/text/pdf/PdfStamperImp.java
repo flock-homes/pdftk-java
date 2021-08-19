@@ -70,30 +70,30 @@ import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 public class PdfStamperImp extends PdfWriter {
     HashMap readers2intrefs = new HashMap();
     HashMap readers2file = new HashMap();
-    RandomAccessFileOrArray file = null;
-    PdfReader reader = null;
+    RandomAccessFileOrArray file;
+    PdfReader reader;
     IntHashtable myXref = new IntHashtable();
     /** Integer(page number) -> PageStamp */
     HashMap pagesToContent = new HashMap();
     boolean closed = false;
     /** Holds value of property rotateContents. */
     private boolean rotateContents = true;
-    protected AcroFields acroFields = null;
+    protected AcroFields acroFields;
     protected boolean flat = false;
     protected boolean flatFreeText = false;
     protected int namePtr[] = {0};
-    protected boolean namedAsNames = false;
-    protected List newBookmarks = null;
+    protected boolean namedAsNames;
+    protected List newBookmarks;
     protected HashSet partialFlattening = new HashSet();
     protected boolean useVp = false;
     protected int vp = 0;
     protected HashMap fieldTemplates = new HashMap();
     protected boolean fieldsAdded = false;
     protected int sigFlags = 0;
-    protected boolean append = false;
-    protected IntHashtable marked = null;
-    protected int initialXrefSize = 0;
-    protected PdfAction openAction = null;
+    protected boolean append;
+    protected IntHashtable marked;
+    protected int initialXrefSize;
+    protected PdfAction openAction;
     
     /** Creates new PdfStamperImp.
      * @param reader the read PDF
@@ -105,12 +105,11 @@ public class PdfStamperImp extends PdfWriter {
      * @throws IOException
      */
     public PdfStamperImp(PdfReader reader, OutputStream os, char pdfVersion, boolean append) throws DocumentException, IOException {
-        super(/* ssteward omit: new PdfDocument(),*/ os);
+        super(new PdfDocument(), os);
 
         this.reader = reader;
         if (reader.isTampered())
-            throw new DocumentException
-				("The original document was reused. Read it again from file.");
+            throw new DocumentException("The original document was reused. Read it again from file.");
         reader.setTampered(true);
         file = reader.getSafeFile();
 
@@ -137,7 +136,6 @@ public class PdfStamperImp extends PdfWriter {
             else
                 super.setPdfVersion(pdfVersion);
         }
-
         super.open();
         getPdfDocument().setWriter(this); // ssteward: okay
 
@@ -973,7 +971,7 @@ public class PdfStamperImp extends PdfWriter {
 	}
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter#getPageReference(int)
+     * @see com.lowagie.text.pdf.PdfWriter#getPageReference(int)
      */
     public PdfIndirectReference getPageReference(int page) {
         PdfIndirectReference ref = reader.getPageOrigRef(page);
@@ -983,7 +981,7 @@ public class PdfStamperImp extends PdfWriter {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter#addAnnotation(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfAnnotation)
+     * @see com.lowagie.text.pdf.PdfWriter#addAnnotation(com.lowagie.text.pdf.PdfAnnotation)
      */
     public void addAnnotation(PdfAnnotation annot) {
         throw new RuntimeException("Unsupported in this context. Use PdfStamper.addAnnotation()");
@@ -1350,21 +1348,21 @@ public class PdfStamperImp extends PdfWriter {
     }
 
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter#setOpenAction(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfAction)
+     * @see com.lowagie.text.pdf.PdfWriter#setOpenAction(com.lowagie.text.pdf.PdfAction)
      */
     public void setOpenAction(PdfAction action) {
         openAction = action;
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter#setOpenAction(java.lang.String)
+     * @see com.lowagie.text.pdf.PdfWriter#setOpenAction(java.lang.String)
      */
     public void setOpenAction(String name) {
         throw new UnsupportedOperationException("Open actions by name are not supported.");
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter#setThumbnail(com.gitlab.pdftk_java.com.lowagie.text.Image)
+     * @see com.lowagie.text.pdf.PdfWriter#setThumbnail(com.lowagie.text.Image)
      */
 	/* ssteward: dropped in 1.44
     public void setThumbnail(com.gitlab.pdftk_java.com.lowagie.text.Image image) {

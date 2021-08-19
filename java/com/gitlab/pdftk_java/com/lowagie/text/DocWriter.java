@@ -1,6 +1,5 @@
 /*
- * $Id: DocWriter.java,v 1.70 2004/12/14 11:52:47 blowagie Exp $
- * $Name:  $
+ * $Id: DocWriter.java 3937 2009-05-27 12:56:48Z blowagie $
  *
  * Copyright 1999, 2000, 2001, 2002 by Bruno Lowagie.
  *
@@ -16,7 +15,6 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -31,23 +29,6 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301, USA.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
@@ -55,7 +36,7 @@
  */
 
 // pdftk-java iText base version 4.2.0
-// pdftk-java modified yes (patched constructor, dropped Header & Footer)
+// pdftk-java modified yes (dropped Header & Footer)
 
 package com.gitlab.pdftk_java.com.lowagie.text;
 
@@ -115,7 +96,7 @@ public abstract class DocWriter implements DocListener {
     protected Rectangle pageSize;
 
 /** This is the document that has to be written. */
-    // ssteward omit: protected Document document;
+    protected Document document;
 
 /** The outputstream of this writer. */
     protected OutputStreamCounter os;
@@ -141,8 +122,8 @@ public abstract class DocWriter implements DocListener {
  * @param os  The <CODE>OutputStream</CODE> the writer has to write to.
  */
 
-    protected DocWriter( /* ssteward omit: Document document,*/ OutputStream os)  {
-        // ssteward omit: this.document = document;
+    protected DocWriter(Document document, OutputStream os)  {
+        this.document = document;
         this.os = new OutputStreamCounter(new BufferedOutputStream(os));
     }
 

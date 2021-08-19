@@ -1329,7 +1329,7 @@ public class PdfReader implements PdfViewerPreferences {
                 pos = tokens.intValue();
                 tokens.nextValidToken();
                 gen = tokens.intValue();
-                if (pos == 0 && gen == PdfWriter.GENERATION_MAX) {
+                if (pos == 0 && gen == 65535) {
                     --start;
                     --end;
                 }

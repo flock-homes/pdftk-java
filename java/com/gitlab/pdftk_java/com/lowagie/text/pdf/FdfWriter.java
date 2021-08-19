@@ -319,7 +319,7 @@ public class FdfWriter {
         private FdfWriter fdf;
        
         Wrt(OutputStream os, FdfWriter fdf) throws IOException {
-            super(/* ssteward omit: new PdfDocument(), */os);
+            super(new PdfDocument(), os);
             this.fdf = fdf;
             this.os.write(HEADER_FDF);
             body = new PdfBody(this); // ssteward TODO -- sketchy

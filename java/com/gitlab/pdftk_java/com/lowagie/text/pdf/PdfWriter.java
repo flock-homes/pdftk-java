@@ -88,12 +88,6 @@ import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 public class PdfWriter extends DocWriter {
     
-	/**
-	 * The highest generation number possible.
-	 * @since	iText 2.1.6
-	 */
-	public static final int GENERATION_MAX = 65535;
-
     // inner classes
     
     /**
@@ -119,14 +113,14 @@ public class PdfWriter extends DocWriter {
         static class PdfCrossReference implements Comparable {
             
             // membervariables
-            private int type = 0;
+            private int type;
             
             /**	Byte offset in the PDF file. */
-            private int offset = 0;
+            private int offset;
             
-            private int refnum = 0;
+            private int refnum;
             /**	generation of the object. */
-            private int generation = 0;
+            private int generation;
             
             // constructors
             /**
@@ -184,7 +178,7 @@ public class PdfWriter extends DocWriter {
                 StringBuffer off = new StringBuffer(s.substring(s.length() - 10));
                 s = "00000" + generation;
                 String gen = s.substring(s.length() - 5);
-                if (generation == GENERATION_MAX) {
+                if (generation == 65535) {
                     os.write(getISOBytes(off.append(' ').append(gen).append(" f \n").toString()));
                 }
                 else
@@ -230,11 +224,11 @@ public class PdfWriter extends DocWriter {
         // membervariables
         
         /** array containing the cross-reference table of the normal objects. */
-        private TreeSet xrefs = null;
-        private int refnum = 0;
+        private TreeSet xrefs;
+        private int refnum;
         /** the current byteposition in the body. */
-        private int position = 0;
-        private PdfWriter writer = null;
+        private int position;
+        private PdfWriter writer;
         // constructors
         
         /**
@@ -243,7 +237,7 @@ public class PdfWriter extends DocWriter {
          */
         PdfBody(PdfWriter writer) {
             xrefs = new TreeSet();
-            xrefs.add(new PdfCrossReference(0, 0, GENERATION_MAX));
+            xrefs.add(new PdfCrossReference(0, 0, 65535));
             position = writer.getOs().getCounter();
             refnum = 1;
             this.writer = writer;
@@ -257,9 +251,9 @@ public class PdfWriter extends DocWriter {
         
         private static final int OBJSINSTREAM = 200;
         
-        private ByteBuffer index = null;
-        private ByteBuffer streamObjects = null;
-        private int currentObjNum = 0;
+        private ByteBuffer index;
+        private ByteBuffer streamObjects;
+        private int currentObjNum;
         private int numObj = 0;
         
         private PdfWriter.PdfBody.PdfCrossReference addToObjStm(PdfObject obj, int nObj) throws IOException {
@@ -326,12 +320,12 @@ public class PdfWriter extends DocWriter {
          */
         
         PdfIndirectReference getPdfIndirectReference() {
-            return new PdfIndirectReference( 0, getIndirectReferenceNumber() );
+            return new PdfIndirectReference(0, getIndirectReferenceNumber());
         }
         
         int getIndirectReferenceNumber() {
             int n = refnum++;
-            xrefs.add(new PdfCrossReference(n, 0, GENERATION_MAX));
+            xrefs.add(new PdfCrossReference(n, 0, 65536));
             return n;
         }
         
@@ -764,9 +758,9 @@ public class PdfWriter extends DocWriter {
     
     protected HashMap documentShadingPatterns = new HashMap();
     
-    protected ColorDetails patternColorspaceRGB = null;
-    protected ColorDetails patternColorspaceGRAY = null;
-    protected ColorDetails patternColorspaceCMYK = null;
+    protected ColorDetails patternColorspaceRGB;
+    protected ColorDetails patternColorspaceGRAY;
+    protected ColorDetails patternColorspaceCMYK;
     protected HashMap documentSpotPatterns = new HashMap();
     
     protected HashMap documentExtGState = new HashMap();
@@ -774,17 +768,17 @@ public class PdfWriter extends DocWriter {
     protected HashMap documentProperties = new HashMap();
     protected HashSet documentOCG = new HashSet();
     protected ArrayList documentOCGorder = new ArrayList();
-    protected PdfOCProperties OCProperties = null;
+    protected PdfOCProperties OCProperties;
     protected PdfArray OCGRadioGroup = new PdfArray();
     
     protected PdfDictionary defaultColorspace = new PdfDictionary();
     protected float userunit = 0f;
     
-    /** A PDF/X level. */
+    /** PDF/X value */
     public static final int PDFXNONE = 0;
-    /** A PDF/X level. */
+    /** PDF/X value */
     public static final int PDFX1A2001 = 1;
-    /** A PDF/X level. */
+    /** PDF/X value */
     public static final int PDFX32002 = 2;
     /** PDFA-1A level. */
     public static final int PDFA1A = 3;
@@ -804,25 +798,27 @@ public class PdfWriter extends DocWriter {
     // membervariables
     
     /** body of the PDF document */
-    protected PdfBody body = null;
+    protected PdfBody body;
     
     /** the pdfdocument object. */
 	// ssteward: added accessor
     private PdfDocument pdf = null;
     
     /** The <CODE>PdfPageEvent</CODE> for this document. */
-    private PdfPageEvent pageEvent = null;
+    private PdfPageEvent pageEvent;
+    
+    protected PdfEncryption crypto;
     
     protected HashMap importedPages = new HashMap();
     
-    protected PdfReaderInstance currentPdfReaderInstance = null;
+    protected PdfReaderInstance currentPdfReaderInstance;
     
     /** The PdfIndirectReference to the pages. */
     protected ArrayList pageReferences = new ArrayList();
     
     protected int currentPageNumber = 1;
     
-    protected PdfDictionary group = null;
+    protected PdfDictionary group;
     
     /** The default space-char ratio. */    
     public static final float SPACE_CHAR_RATIO_DEFAULT = 2.5f;
@@ -849,7 +845,7 @@ public class PdfWriter extends DocWriter {
     private float spaceCharRatio = SPACE_CHAR_RATIO_DEFAULT;
     
     /** Holds value of property extraCatalog. */
-    private PdfDictionary extraCatalog = null;
+    private PdfDictionary extraCatalog;
 
     // ssteward: for PRStream.toPdf()
     public boolean filterStreams = false;   // apply decode filters to some streams upon output
@@ -866,7 +862,7 @@ public class PdfWriter extends DocWriter {
 
     protected PdfObject fileID = null; // ssteward: allow setting of fileID
 
-    protected PdfStructureTreeRoot structureTreeRoot = null;
+    protected PdfStructureTreeRoot structureTreeRoot;
    
     // constructor
     
@@ -882,15 +878,12 @@ public class PdfWriter extends DocWriter {
      * @param	document	The <CODE>PdfDocument</CODE> that has to be written
      * @param	os			The <CODE>OutputStream</CODE> the writer has to write to.
      */
-    /* ssteward omit:
+    
     protected PdfWriter(PdfDocument document, OutputStream os) {
-        super(os);
-        this.pdf = document;
-    }
-	*/
-	// ssteward:
-    protected PdfWriter(OutputStream os) {
-        super(os);
+        super(document, os);
+        pdf = document;
+        directContent = new PdfContentByte(this);
+        directContentUnder = new PdfContentByte(this);
     }
     
     // get an instance of the PdfWriter
@@ -1589,7 +1582,7 @@ public class PdfWriter extends DocWriter {
         }
         FontDetails ret = (FontDetails)documentFonts.get(bf);
         if (ret == null) {
-            checkPDFXConformance(this, PDFXKEY_FONT, bf); 
+            checkPDFXConformance(this, PDFXKEY_FONT, bf);
             ret = new FontDetails(new PdfName("F" + (fontNumber++)), body.getPdfIndirectReference(), bf);
             documentFonts.put(bf, ret);
         }
@@ -1635,7 +1628,7 @@ public class PdfWriter extends DocWriter {
                         patternColorspaceRGB = new ColorDetails(getColorspaceName(), body.getPdfIndirectReference(), null);
                         PdfArray array = new PdfArray(PdfName.PATTERN);
                         array.add(PdfName.DEVICERGB);
-                        addToBody(array, patternColorspaceRGB.getIndirectReference());
+                        PdfIndirectObject cobj = addToBody(array, patternColorspaceRGB.getIndirectReference());
                     }
                     return patternColorspaceRGB;
                 case ExtendedColor.TYPE_CMYK:
@@ -1643,7 +1636,7 @@ public class PdfWriter extends DocWriter {
                         patternColorspaceCMYK = new ColorDetails(getColorspaceName(), body.getPdfIndirectReference(), null);
                         PdfArray array = new PdfArray(PdfName.PATTERN);
                         array.add(PdfName.DEVICECMYK);
-                        addToBody(array, patternColorspaceCMYK.getIndirectReference());
+                        PdfIndirectObject cobj = addToBody(array, patternColorspaceCMYK.getIndirectReference());
                     }
                     return patternColorspaceCMYK;
                 case ExtendedColor.TYPE_GRAY:
@@ -1651,7 +1644,7 @@ public class PdfWriter extends DocWriter {
                         patternColorspaceGRAY = new ColorDetails(getColorspaceName(), body.getPdfIndirectReference(), null);
                         PdfArray array = new PdfArray(PdfName.PATTERN);
                         array.add(PdfName.DEVICEGRAY);
-                        addToBody(array, patternColorspaceGRAY.getIndirectReference());
+                        PdfIndirectObject cobj = addToBody(array, patternColorspaceGRAY.getIndirectReference());
                     }
                     return patternColorspaceGRAY;
                 case ExtendedColor.TYPE_SEPARATION: {
@@ -1661,7 +1654,7 @@ public class PdfWriter extends DocWriter {
                         patternDetails = new ColorDetails(getColorspaceName(), body.getPdfIndirectReference(), null);
                         PdfArray array = new PdfArray(PdfName.PATTERN);
                         array.add(details.getIndirectReference());
-                        addToBody(array, patternDetails.getIndirectReference());
+                        PdfIndirectObject cobj = addToBody(array, patternDetails.getIndirectReference());
                         documentSpotPatterns.put(details, patternDetails);
                     }
                     return patternDetails;
@@ -1720,7 +1713,7 @@ public class PdfWriter extends DocWriter {
     PdfObject[] addSimpleProperty(Object prop, PdfIndirectReference refi) {
         if (!documentProperties.containsKey(prop)) {
             if (prop instanceof PdfOCG)
-				checkPDFXConformance(this, PDFXKEY_LAYER, null);
+                checkPDFXConformance(this, PDFXKEY_LAYER, null);
             documentProperties.put(prop, new PdfObject[]{new PdfName("Pr" + (documentProperties.size() + 1)), refi});
         }
         return (PdfObject[])documentProperties.get(prop);
@@ -1848,7 +1841,7 @@ public class PdfWriter extends DocWriter {
                 throw new RuntimeException("The name '" + name + "' has no local destination.");
             if (obj[1] == null)
                 obj[1] = getPdfIndirectReference();
-            addToBody(destination, (PdfIndirectReference)obj[1]);
+            PdfIndirectObject iob = addToBody(destination, (PdfIndirectReference)obj[1]);
         }
     }
     
@@ -1979,7 +1972,6 @@ public class PdfWriter extends DocWriter {
      */
     public static final int ALLOW_DEGRADED_PRINTING = 4;
 
-    protected PdfEncryption crypto = null;
     PdfEncryption getEncryption() {
         return crypto;
     }
