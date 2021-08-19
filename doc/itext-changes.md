@@ -35,6 +35,11 @@ Changes are listed in individual file headers.
 
 * com/lowagie/text/error_messages/MessageLocalization.java
 
+* com/lowagie/text/exceptions/BadPasswordException.java
+* com/lowagie/text/exceptions/IllegalPdfSyntaxException.java
+* com/lowagie/text/exceptions/InvalidPdfException.java
+* com/lowagie/text/exceptions/UnsupportedPdfException.java
+
 * com/lowagie/text/factories/RomanAlphabetFactory.java
 
 * com/lowagie/text/html/Markup.java
@@ -72,6 +77,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfBoolean.java
 * com/lowagie/text/pdf/PdfChunk.java
 * com/lowagie/text/pdf/PdfContentParser.java
+* com/lowagie/text/pdf/PdfDictionary.java
 * com/lowagie/text/pdf/PdfEncodings.java
 * com/lowagie/text/pdf/PdfException.java
 * com/lowagie/text/pdf/PdfFont.java
@@ -86,6 +92,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfNumberTree.java
 * com/lowagie/text/pdf/PdfObject.java
 * com/lowagie/text/pdf/PdfStream.java
+* com/lowagie/text/pdf/PdfString.java
 * com/lowagie/text/pdf/PdfTemplate.java
 * com/lowagie/text/pdf/PdfXConformanceException.java
 * com/lowagie/text/pdf/RandomAccessFileOrArray.java
@@ -95,6 +102,10 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/TrueTypeFontUnicode.java
 * com/lowagie/text/pdf/Type1Font.java
 * com/lowagie/text/pdf/XfdfReader.java
+
+* com/lowagie/text/pdf/crypto/AESCipher.java
+* com/lowagie/text/pdf/crypto/ARCFOUREncryption.java
+* com/lowagie/text/pdf/crypto/IVGenerator.java
 
 * com/lowagie/text/pdf/draw/DottedLineSeparator.java
 * com/lowagie/text/pdf/draw/DrawInterface.java
@@ -118,39 +129,6 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/fonts/Times-Roman.afm
 * com/lowagie/text/pdf/fonts/ZapfDingbats.afm
 
-## Based on itext-2.1.7
-
-* com/lowagie/text/exceptions/BadPasswordException.java
-* com/lowagie/text/exceptions/IllegalPdfSyntaxException.java
-* com/lowagie/text/exceptions/InvalidPdfException.java
-* com/lowagie/text/exceptions/UnsupportedPdfException.java
-
-* com/lowagie/text/pdf/IntHashtable.java
-  * Exceptions renamed
-* com/lowagie/text/pdf/OutputStreamEncryption.java
-* com/lowagie/text/pdf/PdfDeveloperExtension.java
-  * Added singleton method.
-* com/lowagie/text/pdf/PdfDictionary.java
-  * Changes in `toPdf`.
-  * Unmarked changes come from itext-paulo-155.
-* com/lowagie/text/pdf/PdfEncryption.java
-  * Commented out code related to public keys.
-    * Marked as `// 4.2.0`, but mot related to iText 4.2.0 AFAICT.
-    * Unmkarked.
-  * Changes in `setupAllKeys`.
-  * Legacy code left at the end of the file.
-* com/lowagie/text/pdf/PdfLayer.java
-* com/lowagie/text/pdf/PdfReader.java
-  * **Multiple changes**
-    * Marked as `ssteward`, `4.2.0`, and unmarked.
-* com/lowagie/text/pdf/PdfString.java
-  * Multiple changes
-* com/lowagie/text/pdf/StandardDecryption.java
-
-* com/lowagie/text/pdf/crypto/AESCipher.java
-* com/lowagie/text/pdf/crypto/ARCFOUREncryption.java
-* com/lowagie/text/pdf/crypto/IVGenerator.java
-
 * com/lowagie/text/pdf/interfaces/PdfAnnotations.java
 * com/lowagie/text/pdf/interfaces/PdfDocumentActions.java
 * com/lowagie/text/pdf/interfaces/PdfEncryptionSettings.java
@@ -163,6 +141,24 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/internal/PdfVersionImp.java
 * com/lowagie/text/pdf/internal/PdfViewerPreferencesImp.java
 
+## Based on itext-2.1.7
+
+* com/lowagie/text/pdf/IntHashtable.java
+  * Exceptions renamed
+* com/lowagie/text/pdf/OutputStreamEncryption.java
+* com/lowagie/text/pdf/PdfDeveloperExtension.java
+  * Added singleton method.
+* com/lowagie/text/pdf/PdfEncryption.java
+  * Commented out code related to public keys.
+    * Marked as `// 4.2.0`, but mot related to iText 4.2.0 AFAICT.
+    * Unmkarked.
+  * Changes in `setupAllKeys`.
+  * Legacy code left at the end of the file.
+* com/lowagie/text/pdf/PdfLayer.java
+* com/lowagie/text/pdf/PdfReader.java
+  * **Multiple changes**
+    * Marked as `ssteward`, `4.2.0`, and unmarked.
+* com/lowagie/text/pdf/StandardDecryption.java
 
 ## Based on itext-paulo-155
 
