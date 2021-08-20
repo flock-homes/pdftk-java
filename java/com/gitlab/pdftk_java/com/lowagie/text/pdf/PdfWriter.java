@@ -801,8 +801,7 @@ public class PdfWriter extends DocWriter {
     protected PdfBody body;
     
     /** the pdfdocument object. */
-	// ssteward: added accessor
-    private PdfDocument pdf = null;
+    protected PdfDocument pdf;
     
     /** The <CODE>PdfPageEvent</CODE> for this document. */
     private PdfPageEvent pageEvent;
@@ -1058,7 +1057,7 @@ public class PdfWriter extends DocWriter {
         return (PdfIndirectReference) imageDictionary.get(pdfImage.name());
     }
 	*/
-    /* ssteward: gcc 3.4.0 doesn't have ICC_Profile
+
     protected PdfIndirectReference add(PdfICCBased icc) throws PdfException {
         PdfIndirectObject object;
         try {
@@ -1069,7 +1068,6 @@ public class PdfWriter extends DocWriter {
         }
         return object.getIndirectReference();
     }
-	*/
     
     /**
      * return the <CODE>PdfIndirectReference</CODE> to the image with a given name.
@@ -1248,12 +1246,12 @@ public class PdfWriter extends DocWriter {
         // add the color
         for (Iterator it = documentColors.values().iterator(); it.hasNext();) {
             ColorDetails color = (ColorDetails)it.next();
-            addToBody(color.getSpotColor(this), color.getIndirectReference());
+            PdfIndirectObject cobj = addToBody(color.getSpotColor(this), color.getIndirectReference());
         }
         // add the pattern
         for (Iterator it = documentPatterns.keySet().iterator(); it.hasNext();) {
             PdfPatternPainter pat = (PdfPatternPainter)it.next();
-            addToBody(pat.getPattern(), pat.getIndirectReference());
+            PdfIndirectObject pobj = addToBody(pat.getPattern(), pat.getIndirectReference());
         }
         // add the shading patterns
         for (Iterator it = documentShadingPatterns.keySet().iterator(); it.hasNext();) {
@@ -1411,11 +1409,12 @@ public class PdfWriter extends DocWriter {
      * @param table the <CODE>Table</CODE>
      * @return the bottom height of the just added table
      */
+    
     /* ssteward: dropped in 1.44
     public float getTableBottom(Table table) {
         return pdf.bottom(table) - pdf.indentBottom();
     }
-	*/
+    */
     
     /**
 	 * Gets a pre-rendered table.
@@ -1423,11 +1422,12 @@ public class PdfWriter extends DocWriter {
 	 * @param table		Contains the table definition.  Its contents are deleted, after being pre-rendered.
      * @return a PdfTable
 	 */
-	/*  ssteward: dropped in 1.44
+	
+    /* ssteward: dropped in 1.44
 	public PdfTable getPdfTable(Table table) {
 		return pdf.getPdfTable(table, true);
 	}
-	*/
+    */
 
 	/**
 	 * Row additions to the original {@link Table} used to build the {@link PdfTable} are processed and pre-rendered,
@@ -1441,11 +1441,13 @@ public class PdfWriter extends DocWriter {
 	 * @throws DocumentException
 	 * @see #getPdfTable(Table)
 	 */
-	/* ssteward: dropped in 1.44
+	
+    /* ssteward: dropped in 1.44
 	public boolean breakTableIfDoesntFit(PdfTable table) throws DocumentException {
 		return pdf.breakTableIfDoesntFit(table);
 	}
     */
+    
     /**
      * Checks if a <CODE>Table</CODE> fits the current page of the <CODE>PdfDocument</CODE>.
      *
@@ -1453,11 +1455,12 @@ public class PdfWriter extends DocWriter {
      * @param	margin	a certain margin
      * @return	<CODE>true</CODE> if the <CODE>Table</CODE> fits the page, <CODE>false</CODE> otherwise.
      */
+    
     /* ssteward: dropped in 1.44
     public boolean fitsPage(Table table, float margin) {
         return pdf.bottom(table) > pdf.indentBottom() + margin;
     }
-	*/
+    */
     
     /**
      * Checks if a <CODE>Table</CODE> fits the current page of the <CODE>PdfDocument</CODE>.
@@ -1465,11 +1468,12 @@ public class PdfWriter extends DocWriter {
      * @param	table	the table that has to be checked
      * @return	<CODE>true</CODE> if the <CODE>Table</CODE> fits the page, <CODE>false</CODE> otherwise.
      */
+    
     /* ssteward: dropped in 1.44
     public boolean fitsPage(Table table) {
         return fitsPage(table, 0);
     }
-	*/
+    */
     
     /**
      * Checks if a <CODE>PdfPTable</CODE> fits the current page of the <CODE>PdfDocument</CODE>.
@@ -1478,11 +1482,11 @@ public class PdfWriter extends DocWriter {
      * @param	margin	a certain margin
      * @return	<CODE>true</CODE> if the <CODE>PdfPTable</CODE> fits the page, <CODE>false</CODE> otherwise.
      */
-	/* ssteward: dropped in 1.44
+    /* ssteward: dropped in 1.44
     public boolean fitsPage(PdfPTable table, float margin) {
         return pdf.fitsPage(table, margin);
     }
-	*/
+    */
     
     /**
      * Checks if a <CODE>PdfPTable</CODE> fits the current page of the <CODE>PdfDocument</CODE>.
@@ -1490,11 +1494,11 @@ public class PdfWriter extends DocWriter {
      * @param	table	the table that has to be checked
      * @return	<CODE>true</CODE> if the <CODE>PdfPTable</CODE> fits the page, <CODE>false</CODE> otherwise.
      */
-	/* ssteward: dropped in 1.44
+    /* ssteward: dropped in 1.44
     public boolean fitsPage(PdfPTable table) {
         return pdf.fitsPage(table, 0);
     }
-	*/
+    */
     
     /**
      * Gets the current vertical page position.
@@ -1727,9 +1731,7 @@ public class PdfWriter extends DocWriter {
      * @return the <CODE>PdfDocument</CODE>
      */
     
-    public PdfDocument getPdfDocument() {
-		if( this.pdf== null )
-			this.pdf = new PdfDocument();
+    PdfDocument getPdfDocument() {
         return pdf;
     }
     
@@ -1852,7 +1854,7 @@ public class PdfWriter extends DocWriter {
      */
     
     public int getPageNumber() {
-        return getPdfDocument().getPageNumber();
+        return pdf.getPageNumber();
     }
     
     /**
@@ -1915,7 +1917,7 @@ public class PdfWriter extends DocWriter {
      */
     
     public void setViewerPreferences(int preferences) {
-        getPdfDocument().setViewerPreferences(preferences);
+        pdf.setViewerPreferences(preferences);
     }
     
     // types of encryption
@@ -1972,10 +1974,6 @@ public class PdfWriter extends DocWriter {
      */
     public static final int ALLOW_DEGRADED_PRINTING = 4;
 
-    PdfEncryption getEncryption() {
-        return crypto;
-    }
-    
     /** Sets the encryption options for this document. The userPassword and the
      *  ownerPassword can be null or have zero length. In this case the ownerPassword
      *  is replaced by a random string. The open permissions for the document can be
@@ -1993,7 +1991,7 @@ public class PdfWriter extends DocWriter {
     }
 	//
     public void setEncryption(byte userPassword[], byte ownerPassword[], int permissions, int encryptionType) throws DocumentException {
-        if (getPdfDocument().isOpen())
+        if (pdf.isOpen())
             throw new DocumentException("Encryption can only be added before opening the document.");
         crypto = new PdfEncryption();
         crypto.setCryptoMode(encryptionType, 0);
@@ -2097,7 +2095,7 @@ public class PdfWriter extends DocWriter {
      * @param name the name of the destination to jump to
      */
     public void setOpenAction(String name) {
-        getPdfDocument().setOpenAction(name);
+        pdf.setOpenAction(name);
     }
     
     /** Additional-actions defining the actions to be taken in
@@ -2118,7 +2116,7 @@ public class PdfWriter extends DocWriter {
         actionType.equals(DID_PRINT))) {
             throw new PdfException("Invalid additional action type: " + actionType.toString());
         }
-        getPdfDocument().addAdditionalAction(actionType, action);
+        pdf.addAdditionalAction(actionType, action);
     }
     
     /** When the document opens this <CODE>action</CODE> will be
@@ -2126,14 +2124,18 @@ public class PdfWriter extends DocWriter {
      * @param action the action to be invoked
      */
     public void setOpenAction(PdfAction action) {
-        getPdfDocument().setOpenAction(action);
+        pdf.setOpenAction(action);
     }
     
     /** Sets the page labels
      * @param pageLabels the page labels
      */
     public void setPageLabels(PdfPageLabels pageLabels) {
-        getPdfDocument().setPageLabels(pageLabels);
+        pdf.setPageLabels(pageLabels);
+    }
+    
+    PdfEncryption getEncryption() {
+        return crypto;
     }
     
     RandomAccessFileOrArray getReaderFile(PdfReader reader) throws IOException {
@@ -2165,7 +2167,7 @@ public class PdfWriter extends DocWriter {
      * @param js The JavaScrip action
      */
     public void addJavaScript(PdfAction js) {
-        getPdfDocument().addJavaScript(js);
+        pdf.addJavaScript(js);
     }
     
     /** Adds a JavaScript action at the document level. When the document
@@ -2193,7 +2195,7 @@ public class PdfWriter extends DocWriter {
      * @param crop the crop box
      */
     public void setCropBoxSize(Rectangle crop) {
-        getPdfDocument().setCropBoxSize(crop);
+        pdf.setCropBoxSize(crop);
     }
     
     /** Gets a reference to a page existing or not. If the page does not exist
@@ -2238,14 +2240,14 @@ public class PdfWriter extends DocWriter {
      * @param annot the <CODE>PdfAnnotation</CODE> to be added
      */
     public void addCalculationOrder(PdfFormField annot) throws DocumentException {
-        getPdfDocument().addCalculationOrder(annot);
+        pdf.addCalculationOrder(annot);
     }
     
     /** Set the signature flags.
      * @param f the flags. This flags are ORed with current ones
      */
     public void setSigFlags(int f) throws DocumentException {
-        getPdfDocument().setSigFlags(f);
+        pdf.setSigFlags(f);
     }
     
     /** Adds a <CODE>PdfAnnotation</CODE> or a <CODE>PdfFormField</CODE>
@@ -2254,7 +2256,7 @@ public class PdfWriter extends DocWriter {
      * @param annot the <CODE>PdfAnnotation</CODE> or the <CODE>PdfFormField</CODE> to add
      */
     public void addAnnotation(PdfAnnotation annot) {
-        getPdfDocument().addAnnotation(annot);
+        pdf.addAnnotation(annot);
     }
     
     void addAnnotation(PdfAnnotation annot, int page) {
@@ -2328,7 +2330,7 @@ public class PdfWriter extends DocWriter {
      * @param seconds   the number of seconds to display the page
      */
     public void setDuration(int seconds) {
-        getPdfDocument().setDuration(seconds);
+        pdf.setDuration(seconds);
     }
     
     /**
@@ -2336,7 +2338,7 @@ public class PdfWriter extends DocWriter {
      * @param transition   the Transition object
      */
     public void setTransition(PdfTransition transition) {
-        getPdfDocument().setTransition(transition);
+        pdf.setTransition(transition);
     }
     
     /** Writes the reader to the document and frees the memory used by it.
@@ -2363,7 +2365,7 @@ public class PdfWriter extends DocWriter {
     public void setPageAction(PdfName actionType, PdfAction action) throws PdfException {
         if (!actionType.equals(PAGE_OPEN) && !actionType.equals(PAGE_CLOSE))
             throw new PdfException("Invalid page additional action type: " + actionType.toString());
-        getPdfDocument().setPageAction(actionType, action);
+        pdf.setPageAction(actionType, action);
     }
     
     /** Gets the current document size. This size only includes
@@ -2382,7 +2384,7 @@ public class PdfWriter extends DocWriter {
      *
      */
     public boolean isStrictImageSequence() {
-        return getPdfDocument().isStrictImageSequence();
+        return pdf.isStrictImageSequence();
     }
     
     /** Sets the image sequence to follow the text in strict order.
@@ -2390,7 +2392,7 @@ public class PdfWriter extends DocWriter {
      *
      */
     public void setStrictImageSequence(boolean strictImageSequence) {
-        getPdfDocument().setStrictImageSequence(strictImageSequence);
+        pdf.setStrictImageSequence(strictImageSequence);
     }
     
     /**
@@ -2398,14 +2400,14 @@ public class PdfWriter extends DocWriter {
      * @param pageEmpty the state
      */
     public void setPageEmpty(boolean pageEmpty) {
-        getPdfDocument().setPageEmpty(pageEmpty);
+        pdf.setPageEmpty(pageEmpty);
     }
 
     /** Gets the info dictionary for changing.
      * @return the info dictionary
      */    
     public PdfDictionary getInfo() {
-        return getPdfDocument().getInfo(); // ssteward
+        return pdf.getInfo(); // ssteward
     }
     
     /**
@@ -2449,7 +2451,7 @@ public class PdfWriter extends DocWriter {
     public void setPDFXConformance(int pdfxConformance) {
         if (this.pdfxConformance == pdfxConformance)
             return;
-        if (getPdfDocument().isOpen())
+        if (pdf.isOpen())
             throw new PdfXConformanceException("PDFX conformance can only be set before opening the document.");
         if (crypto != null)
             throw new PdfXConformanceException("A PDFX conforming document cannot be encrypted.");
@@ -2465,7 +2467,7 @@ public class PdfWriter extends DocWriter {
     public int getPDFXConformance() {
         return pdfxConformance;
     }
-
+    
     static void checkPDFXConformance(PdfWriter writer, int key, Object obj1) {
         if (writer == null || writer.pdfxConformance == PDFXNONE)
             return;
@@ -2628,7 +2630,7 @@ public class PdfWriter extends DocWriter {
      * @param size the size
      */    
     public void setBoxSize(String boxName, Rectangle size) {
-		getPdfDocument().setBoxSize(boxName, size);
+        pdf.setBoxSize(boxName, size);
     }
     
     /**
@@ -2713,7 +2715,7 @@ public class PdfWriter extends DocWriter {
      */    
 	/* ssteward: dropped in 1.44
     public void setThumbnail(Image image) throws PdfException, DocumentException {
-        getPdfDocument().setThumbnail(image);
+        pdf.setThumbnail(image);
     }
 	*/
 
@@ -2754,7 +2756,7 @@ public class PdfWriter extends DocWriter {
 	 */
 	/* ssteward omit:
 	public void createXmpMetadata() {
-		setXmpMetadata(getPdfDocument().createXmpMetadata());
+		setXmpMetadata(pdf.createXmpMetadata());
 	}
 	*/
     
