@@ -145,7 +145,11 @@ public class PRAcroForm extends PdfDictionary {
      */
     protected void iterateFields(PdfArray fieldlist, PRIndirectReference fieldDict, String title) {
         for (Iterator it = fieldlist.getArrayList().iterator(); it.hasNext();) {
-            PRIndirectReference ref = (PRIndirectReference)it.next();
+            // refobj might be a PdfNull in the wild.
+            // https://gitlab.com/pdftk-java/pdftk/-/issues/108
+            PdfObject refobj = (PdfObject)it.next();
+            if (!refobj.isIndirect()) continue;
+            PRIndirectReference ref = (PRIndirectReference)refobj;
             PdfDictionary dict = (PdfDictionary) PdfReader.getPdfObjectRelease(ref);
             
             // if we are not a field dictionary, pass our parent's values
