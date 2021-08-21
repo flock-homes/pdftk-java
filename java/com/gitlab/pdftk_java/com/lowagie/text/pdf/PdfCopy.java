@@ -169,7 +169,7 @@ public class PdfCopy extends PdfWriter {
     public void open() {
         super.open();
         topPageParent = getPdfIndirectReference();
-        getRoot().setLinearMode(topPageParent);
+        root.setLinearMode(topPageParent);
     }
 
     /**
@@ -646,7 +646,7 @@ public class PdfCopy extends PdfWriter {
             newPage.put(PdfName.PARENT, topPageParent);
             addToBody(newPage, pageRef);
         }
-        getRoot().addPage(pageRef);
+        root.addPage(pageRef);
         pageNumbersToRefs.add(pageRef);
     }
     

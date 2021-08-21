@@ -1,8 +1,7 @@
-/* -*- java -*-
- * $Id: PdfEncryption.java,v 1.53 2005/08/05 23:13:44 psoares33 Exp $
- * $Name:  $
+/*
+ * $Id: PdfEncryption.java 4065 2009-09-16 23:09:11Z psoares33 $
  *
- * Copyright 2001, 2002 Paulo Soares
+ * Copyright 2001-2006 Paulo Soares
  *
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
@@ -57,11 +56,13 @@
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.crypto.ARCFOUREncryption;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
-import java.security.MessageDigest;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
+import java.security.MessageDigest;
+import java.security.cert.Certificate;
 
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 
@@ -93,19 +94,19 @@ public class PdfEncryption {
 			(byte) 255, (byte) 255 };
 
 	/** The encryption key for a particular object/generation */
-	byte key[] = null;
+	byte key[];
 
 	/** The encryption key length for a particular object/generation */
-	int keySize = 0;
+	int keySize;
 
 	/** The global encryption key */
-	byte mkey[] = null;
+	byte mkey[];
 
 	/** Work area to prepare the object/generation bytes */
 	byte extra[] = new byte[5];
 
 	/** The message digest algorithm MD5 */
-	MessageDigest md5 = null;
+	MessageDigest md5;
 
 	/** The encryption key for the owner */
 	byte ownerKey[] = new byte[32];
@@ -116,25 +117,28 @@ public class PdfEncryption {
 	/** The public key security handler for certificate encryption */
 	// 4.2.0: protected PdfPublicKeySecurityHandler publicKeyHandler = null;
 
-	int permissions = 0;
+	int permissions;
 
-	byte documentID[] = null;
+	byte documentID[];
 
 	static long seq = System.currentTimeMillis();
 
-	private int revision = 0;
+	private int revision;
 
 	private ARCFOUREncryption arcfour = new ARCFOUREncryption();
 
 	/** The generic key length. It may be 40 or 128. */
-	private int keyLength = 0;
+	private int keyLength;
 
-	private boolean encryptMetadata = false;
+	private boolean encryptMetadata;
 	
-	// Indicates if the encryption is only necessary for embedded files.
-	private boolean embeddedFilesOnly = false;
+	/**
+	 * Indicates if the encryption is only necessary for embedded files.
+	 * @since 2.1.3
+	 */
+	private boolean embeddedFilesOnly;
 
-	private int cryptoMode = 0;
+	private int cryptoMode;
 
 	public PdfEncryption() {
 		try {
@@ -185,7 +189,7 @@ public class PdfEncryption {
 			revision = AES_128;
 			break;
 		default:
-		  throw new IllegalArgumentException("no.valid.encryption.mode");
+			throw new IllegalArgumentException(MessageLocalization.getComposedMessage("no.valid.encryption.mode"));
 		}
 	}
 
@@ -313,7 +317,10 @@ public class PdfEncryption {
 		}
 	}
 
-    public void setupAllKeys(byte userPassword[], byte ownerPassword[], int permissions) {
+	// gets keylength and revision and uses revision to choose the initial values
+	// for permissions
+	public void setupAllKeys(byte userPassword[], byte ownerPassword[],
+			int permissions) {
 	// ssteward: this 'random' owner PW is generally unexpected behavior
 	// and could lead to unpleasant surprises; as noted, below,
 	// if no owner password is given, use the user password in its place;
@@ -324,7 +331,8 @@ public class PdfEncryption {
 	    System.arraycopy( userPassword, 0, ownerPassword, 0, userPassword.length );
 	}
 	// PDF 1.3 ref. (40 bit enc.) says to set unused, upper bits to 1
-	permissions |= (revision == STANDARD_ENCRYPTION_128 || revision == AES_128) ? 0xfffff0c0 : 0xffffffc0;
+		permissions |= (revision == STANDARD_ENCRYPTION_128 || revision == AES_128) ? 0xfffff0c0
+				: 0xffffffc0;
         permissions &= 0xfffffffc;
         //PDF reference 3.5.2 Standard Security Handler, Algorithm 3.3-1
         //If there is no owner password, use the user password instead.
@@ -337,11 +345,10 @@ public class PdfEncryption {
     }
 
     public static byte[] createDocumentId() {
-        MessageDigest md5 = null;
+		MessageDigest md5;
         try {
             md5 = MessageDigest.getInstance("MD5");
-        }
-        catch (Exception e) {
+		} catch (Exception e) {
              throw new ExceptionConverter(e);
        }
         long time = System.currentTimeMillis();
@@ -352,26 +359,35 @@ public class PdfEncryption {
 
     /**
      */
-    public void setupByUserPassword(byte[] documentID, byte userPassword[], byte ownerKey[], int permissions) {
-        setupByUserPad(documentID, padPassword(userPassword), ownerKey, permissions);
+	public void setupByUserPassword(byte[] documentID, byte userPassword[],
+			byte ownerKey[], int permissions) {
+		setupByUserPad(documentID, padPassword(userPassword), ownerKey,
+				permissions);
     }
 
     /**
      */
-    private void setupByUserPad(byte[] documentID, byte userPad[], byte ownerKey[], int permissions) {
+	private void setupByUserPad(byte[] documentID, byte userPad[],
+			byte ownerKey[], int permissions) {
         setupGlobalEncryptionKey(documentID, userPad, ownerKey, permissions);
         setupUserKey();
     }
 
     /**
      */
-    public void setupByOwnerPassword(byte[] documentID, byte ownerPassword[], byte userKey[], byte ownerKey[], int permissions) {
-        setupByOwnerPad(documentID, padPassword(ownerPassword), userKey, ownerKey, permissions);
+	public void setupByOwnerPassword(byte[] documentID, byte ownerPassword[],
+			byte userKey[], byte ownerKey[], int permissions) {
+		setupByOwnerPad(documentID, padPassword(ownerPassword), userKey,
+				ownerKey, permissions);
     }
 
-    private void setupByOwnerPad(byte[] documentID, byte ownerPad[], byte userKey[], byte ownerKey[], int permissions) {
-        byte userPad[] = computeOwnerKey(ownerKey, ownerPad);	//userPad will be set in this.ownerKey
-        setupGlobalEncryptionKey(documentID, userPad, ownerKey, permissions); //step 3
+	private void setupByOwnerPad(byte[] documentID, byte ownerPad[],
+			byte userKey[], byte ownerKey[], int permissions) {
+		byte userPad[] = computeOwnerKey(ownerKey, ownerPad); // userPad will
+																// be set in
+																// this.ownerKey
+		setupGlobalEncryptionKey(documentID, userPad, ownerKey, permissions); // step
+																				// 3
         setupUserKey();
     }
 
@@ -485,20 +501,20 @@ public class PdfEncryption {
 	} else {
       */
       dic.put(PdfName.FILTER, PdfName.STANDARD);
-      dic.put(PdfName.O, new PdfLiteral(PdfContentByte.escapeString(ownerKey)));
-      dic.put(PdfName.U, new PdfLiteral(PdfContentByte.escapeString(userKey)));
+			dic.put(PdfName.O, new PdfLiteral(PdfContentByte
+					.escapeString(ownerKey)));
+			dic.put(PdfName.U, new PdfLiteral(PdfContentByte
+					.escapeString(userKey)));
       dic.put(PdfName.P, new PdfNumber(permissions));
       dic.put(PdfName.R, new PdfNumber(revision));
 
       if (revision == STANDARD_ENCRYPTION_40) {
 	dic.put(PdfName.V, new PdfNumber(1));
-      } 
-      else if (revision == STANDARD_ENCRYPTION_128 && encryptMetadata) {
+			} else if (revision == STANDARD_ENCRYPTION_128 && encryptMetadata) {
 	dic.put(PdfName.V, new PdfNumber(2));
 	dic.put(PdfName.LENGTH, new PdfNumber(128));
 
-      }
-      else {
+			} else {
 	if (!encryptMetadata)
 	  dic.put(PdfName.ENCRYPTMETADATA, PdfBoolean.PDFFALSE);
 	dic.put(PdfName.R, new PdfNumber(AES_128));
@@ -602,64 +618,4 @@ public class PdfEncryption {
 		}
 		return userPad;
 	}
-
-    ////
-    // legacy code that should be eventually removed;
-    // callers should instead use ARCFOUREncryption
-
-    byte state[] = new byte[256];
-    int x;
-    int y;
-
-    public void prepareKey() {
-        prepareRC4Key(key, 0, keySize);
-    }
-
-    public void prepareRC4Key(byte kk[]) {
-        prepareRC4Key(kk, 0, kk.length);
-    }
-
-    public void prepareRC4Key(byte kk[], int off, int len) {
-        int index1 = 0;
-        int index2 = 0;
-        for (int k = 0; k < 256; ++k)
-            state[k] = (byte)k;
-        x = 0;
-        y = 0;
-        byte tmp;
-        for (int k = 0; k < 256; ++k) {
-            index2 = (kk[index1 + off] + state[k] + index2) & 255;
-            tmp = state[k];
-            state[k] = state[index2];
-            state[index2] = tmp;
-            index1 = (index1 + 1) % len;
-        }
-    }
-
-    public void encryptRC4(byte dataIn[], int off, int len, byte dataOut[]) {
-        int length = len + off;
-        byte tmp;
-        for (int k = off; k < length; ++k) {
-            x = (x + 1) & 255;
-            y = (state[x] + y) & 255;
-            tmp = state[x];
-            state[x] = state[y];
-            state[y] = tmp;
-            dataOut[k] = (byte)(dataIn[k] ^ state[(state[x] + state[y]) & 255]);
-        }
-    }
-
-    public void encryptRC4(byte data[], int off, int len) {
-        encryptRC4(data, off, len, data);
-    }
-
-    public void encryptRC4(byte dataIn[], byte dataOut[]) {
-        encryptRC4(dataIn, 0, dataIn.length, dataOut);
-    }
-
-    public void encryptRC4(byte data[]) {
-        encryptRC4(data, 0, data.length, data);
-    }
-
-    
 }

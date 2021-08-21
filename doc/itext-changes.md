@@ -92,9 +92,14 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfNumber.java
 * com/lowagie/text/pdf/PdfNumberTree.java
 * com/lowagie/text/pdf/PdfObject.java
+* com/lowagie/text/pdf/PdfPattern.java
+* com/lowagie/text/pdf/PdfPatternPainter.java
+* com/lowagie/text/pdf/PdfShading.java
+* com/lowagie/text/pdf/PdfShadingPattern.java
 * com/lowagie/text/pdf/PdfStream.java
 * com/lowagie/text/pdf/PdfString.java
 * com/lowagie/text/pdf/PdfTemplate.java
+* com/lowagie/text/pdf/PdfWriter.java
 * com/lowagie/text/pdf/PdfXConformanceException.java
 * com/lowagie/text/pdf/RandomAccessFileOrArray.java
 * com/lowagie/text/pdf/TextField.java
@@ -104,6 +109,13 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/Type1Font.java
 * com/lowagie/text/pdf/XfdfReader.java
 
+* com/lowagie/text/pdf/collection/PdfCollection.java
+* com/lowagie/text/pdf/collection/PdfCollectionField.java
+* com/lowagie/text/pdf/collection/PdfCollectionItem.java
+* com/lowagie/text/pdf/collection/PdfCollectionSchema.java
+* com/lowagie/text/pdf/collection/PdfCollectionSort.java
+* com/lowagie/text/pdf/collection/PdfTargetDictionary.java
+
 * com/lowagie/text/pdf/crypto/AESCipher.java
 * com/lowagie/text/pdf/crypto/ARCFOUREncryption.java
 * com/lowagie/text/pdf/crypto/IVGenerator.java
@@ -112,6 +124,9 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/draw/DrawInterface.java
 * com/lowagie/text/pdf/draw/LineSeparator.java
 * com/lowagie/text/pdf/draw/VerticalPositionMark.java
+
+* com/lowagie/text/pdf/events/IndexEvents.java
+* com/lowagie/text/pdf/events/PdfPageEventForwarder.java
 
 * com/lowagie/text/pdf/fonts/Courier-Bold.afm
 * com/lowagie/text/pdf/fonts/Courier-BoldOblique.afm
@@ -139,8 +154,12 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/interfaces/PdfViewerPreferences.java
 * com/lowagie/text/pdf/interfaces/PdfXConformance.java
 
+* com/lowagie/text/pdf/internal/PdfAnnotationsImp.java
 * com/lowagie/text/pdf/internal/PdfVersionImp.java
 * com/lowagie/text/pdf/internal/PdfViewerPreferencesImp.java
+* com/lowagie/text/pdf/internal/PdfXConformanceImp.java
+* com/lowagie/text/pdf/internal/PolylineShape.java
+* com/lowagie/text/pdf/internal/PolylineShapeIterator.java
 
 ## Based on itext-2.1.7
 
@@ -227,16 +246,10 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfPageEventHelper.java
 * com/lowagie/text/pdf/PdfPageLabels.java
 * com/lowagie/text/pdf/PdfPages.java
-* com/lowagie/text/pdf/PdfPattern.java
-* com/lowagie/text/pdf/PdfPatternPainter.java
-  * Commented out code
 * com/lowagie/text/pdf/PdfReaderInstance.java
 * com/lowagie/text/pdf/PdfRectangle.java
 * com/lowagie/text/pdf/PdfRendition.java
 * com/lowagie/text/pdf/PdfResources.java
-* com/lowagie/text/pdf/PdfShading.java
-  * Cosmetic rename
-* com/lowagie/text/pdf/PdfShadingPattern.java
 * com/lowagie/text/pdf/PdfSigGenericPKCS.java
 * com/lowagie/text/pdf/PdfSignature.java
   * Few changes
@@ -253,11 +266,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfTextArray.java
 * com/lowagie/text/pdf/PdfTransition.java
 * com/lowagie/text/pdf/PdfTransparencyGroup.java
-* com/lowagie/text/pdf/PdfWriter.java
-  * **Multiple changes**
-    * Marked as `ssteward` and unmarked.
-  * Added constants, unmarked
-    * Some constants look mismatched
 * com/lowagie/text/pdf/Pfm2afm.java
   * Unmarked changes `private` -> `protected` 
   * Commented out code

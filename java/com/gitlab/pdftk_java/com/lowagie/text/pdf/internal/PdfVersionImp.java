@@ -77,7 +77,7 @@ public class PdfVersionImp implements PdfVersion {
     public static final byte[][] HEADER = {
     	DocWriter.getISOBytes("\n"),
     	DocWriter.getISOBytes("%PDF-"),
-    	DocWriter.getISOBytes("\n%\u00e2\u00e3\u00cf\u00d3\n")
+    	DocWriter.getISOBytes("\n%\u00e2\u00e3\u00cf\u00d3") // ssteward: dropped trailing \n
     };
     
 	/** Indicates if the header was already written. */

@@ -386,7 +386,7 @@ class PdfCopyFieldsImp extends PdfWriter {
                 for (int page = 1; page <= reader.getNumberOfPages(); ++page) {
                     PdfDictionary dic = reader.getPageN(page);
                     PdfIndirectReference pageRef = getNewReference(reader.getPageOrigRef(page));
-                    PdfIndirectReference parent = getRoot().addPageRef(pageRef);
+                    PdfIndirectReference parent = root.addPageRef(pageRef);
                     dic.put(PdfName.PARENT, parent);
                     propagate(dic, pageRef, false);
                 }

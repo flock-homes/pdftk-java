@@ -2362,13 +2362,9 @@ static class StringCompare implements Comparator {
      * Gets the AcroForm object.
      * @return the PdfAcroform object of the PdfDocument
      */
-    public PdfAcroForm getAcroForm() throws DocumentException {
+    public PdfAcroForm getAcroForm() {
 	if( acroForm== null ) {
-	    if( writer!= null )
 		acroForm= new PdfAcroForm( writer );
-	    else
-		throw new DocumentException
-		    ("Accessing PdfAcroForm before initializing writer.");
 	}
         return acroForm;
     }
@@ -2834,6 +2830,14 @@ static class StringCompare implements Comparator {
             throw new ExceptionConverter(e);
         }
     }
+
+    void setSigFlags(int f) {
+        getAcroForm().setSigFlags(f);
+    }
+
+    void addCalculationOrder(PdfFormField formField) {
+        getAcroForm().addCalculationOrder(formField);
+    }
     
     void setCropBoxSize(Rectangle crop) {
         setBoxSize("crop", crop);
@@ -2846,13 +2850,6 @@ static class StringCompare implements Comparator {
             boxSize.put(boxName, new PdfRectangle(size));
     }
     
-    void addCalculationOrder(PdfFormField formField) throws DocumentException {
-        getAcroForm().addCalculationOrder(formField);
-    }
-    
-    void setSigFlags(int f) throws DocumentException {
-        getAcroForm().setSigFlags(f);
-    }
     
     void addFormFieldRaw(PdfFormField field) {
         annotations.add(field);

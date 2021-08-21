@@ -1,4 +1,13 @@
 /*
+ * Copyright 2002 by Phillip Pan
+ * 
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -11,66 +20,58 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed Image)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-// import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
-// import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
-import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 import java.awt.Color;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
+
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+//import com.gitlab.pdftk_java.com.lowagie.text.Image;
+import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 
 /**
  * Implements the pattern.
  */
 
-public class PdfPatternPainter extends PdfTemplate {
+public final class PdfPatternPainter extends PdfTemplate {
     
-    protected float xstep, ystep;
-    protected boolean stencil = false;
-    protected Color defaultColor;
+    float xstep, ystep;
+    boolean stencil = false;
+    Color defaultColor;
     
     /**
      *Creates a <CODE>PdfPattern</CODE>.
      */
     
     private PdfPatternPainter() {
-        super(null);
+        super();
         type = TYPE_PATTERN;
     }
     
@@ -152,12 +153,20 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     /**
      * Gets the stream representing this pattern
-     *
      * @return the stream representing this pattern
      */
-    
     PdfPattern getPattern() {
         return new PdfPattern(this);
+    }
+    
+    /**
+     * Gets the stream representing this pattern
+     * @param	compressionLevel	the compression level of the stream
+     * @return the stream representing this pattern
+     * @since	2.1.3
+     */
+    PdfPattern getPattern(int compressionLevel) {
+        return new PdfPattern(this, compressionLevel);
     }
     
     /**
@@ -190,7 +199,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setGrayFill(float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setGrayFill(float)
      */
     public void setGrayFill(float gray) {
         checkNoColor();
@@ -198,7 +207,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#resetGrayFill()
+     * @see com.lowagie.text.pdf.PdfContentByte#resetGrayFill()
      */
     public void resetGrayFill() {
         checkNoColor();
@@ -206,7 +215,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setGrayStroke(float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setGrayStroke(float)
      */
     public void setGrayStroke(float gray) {
         checkNoColor();
@@ -214,7 +223,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#resetGrayStroke()
+     * @see com.lowagie.text.pdf.PdfContentByte#resetGrayStroke()
      */
     public void resetGrayStroke() {
         checkNoColor();
@@ -222,7 +231,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setRGBColorFillF(float, float, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setRGBColorFillF(float, float, float)
      */
     public void setRGBColorFillF(float red, float green, float blue) {
         checkNoColor();
@@ -230,7 +239,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#resetRGBColorFill()
+     * @see com.lowagie.text.pdf.PdfContentByte#resetRGBColorFill()
      */
     public void resetRGBColorFill() {
         checkNoColor();
@@ -238,7 +247,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setRGBColorStrokeF(float, float, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setRGBColorStrokeF(float, float, float)
      */
     public void setRGBColorStrokeF(float red, float green, float blue) {
         checkNoColor();
@@ -246,7 +255,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#resetRGBColorStroke()
+     * @see com.lowagie.text.pdf.PdfContentByte#resetRGBColorStroke()
      */
     public void resetRGBColorStroke() {
         checkNoColor();
@@ -254,7 +263,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setCMYKColorFillF(float, float, float, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setCMYKColorFillF(float, float, float, float)
      */
     public void setCMYKColorFillF(float cyan, float magenta, float yellow, float black) {
         checkNoColor();
@@ -262,7 +271,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#resetCMYKColorFill()
+     * @see com.lowagie.text.pdf.PdfContentByte#resetCMYKColorFill()
      */
     public void resetCMYKColorFill() {
         checkNoColor();
@@ -270,7 +279,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setCMYKColorStrokeF(float, float, float, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setCMYKColorStrokeF(float, float, float, float)
      */
     public void setCMYKColorStrokeF(float cyan, float magenta, float yellow, float black) {
         checkNoColor();
@@ -278,7 +287,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#resetCMYKColorStroke()
+     * @see com.lowagie.text.pdf.PdfContentByte#resetCMYKColorStroke()
      */
     public void resetCMYKColorStroke() {
         checkNoColor();
@@ -286,7 +295,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#addImage(com.gitlab.pdftk_java.com.lowagie.text.Image, float, float, float, float, float, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#addImage(com.lowagie.text.Image, float, float, float, float, float, float)
      */
     /* ssteward: dropped in 1.44
     public void addImage(Image image, float a, float b, float c, float d, float e, float f) throws DocumentException {
@@ -297,7 +306,7 @@ public class PdfPatternPainter extends PdfTemplate {
     */
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setCMYKColorFill(int, int, int, int)
+     * @see com.lowagie.text.pdf.PdfContentByte#setCMYKColorFill(int, int, int, int)
      */
     public void setCMYKColorFill(int cyan, int magenta, int yellow, int black) {
         checkNoColor();
@@ -305,7 +314,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setCMYKColorStroke(int, int, int, int)
+     * @see com.lowagie.text.pdf.PdfContentByte#setCMYKColorStroke(int, int, int, int)
      */
     public void setCMYKColorStroke(int cyan, int magenta, int yellow, int black) {
         checkNoColor();
@@ -313,7 +322,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setRGBColorFill(int, int, int)
+     * @see com.lowagie.text.pdf.PdfContentByte#setRGBColorFill(int, int, int)
      */
     public void setRGBColorFill(int red, int green, int blue) {
         checkNoColor();
@@ -321,7 +330,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setRGBColorStroke(int, int, int)
+     * @see com.lowagie.text.pdf.PdfContentByte#setRGBColorStroke(int, int, int)
      */
     public void setRGBColorStroke(int red, int green, int blue) {
         checkNoColor();
@@ -329,7 +338,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setColorStroke(java.awt.Color)
+     * @see com.lowagie.text.pdf.PdfContentByte#setColorStroke(java.awt.Color)
      */
     public void setColorStroke(Color color) {
         checkNoColor();
@@ -337,7 +346,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setColorFill(java.awt.Color)
+     * @see com.lowagie.text.pdf.PdfContentByte#setColorFill(java.awt.Color)
      */
     public void setColorFill(Color color) {
         checkNoColor();
@@ -345,7 +354,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setColorFill(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfSpotColor, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setColorFill(com.lowagie.text.pdf.PdfSpotColor, float)
      */
     public void setColorFill(PdfSpotColor sp, float tint) {
         checkNoColor();
@@ -353,7 +362,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setColorStroke(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfSpotColor, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setColorStroke(com.lowagie.text.pdf.PdfSpotColor, float)
      */
     public void setColorStroke(PdfSpotColor sp, float tint) {
         checkNoColor();
@@ -361,7 +370,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setPatternFill(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfPatternPainter)
+     * @see com.lowagie.text.pdf.PdfContentByte#setPatternFill(com.lowagie.text.pdf.PdfPatternPainter)
      */
     public void setPatternFill(PdfPatternPainter p) {
         checkNoColor();
@@ -369,7 +378,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setPatternFill(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfPatternPainter, java.awt.Color, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setPatternFill(com.lowagie.text.pdf.PdfPatternPainter, java.awt.Color, float)
      */
     public void setPatternFill(PdfPatternPainter p, Color color, float tint) {
         checkNoColor();
@@ -377,7 +386,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setPatternStroke(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfPatternPainter, java.awt.Color, float)
+     * @see com.lowagie.text.pdf.PdfContentByte#setPatternStroke(com.lowagie.text.pdf.PdfPatternPainter, java.awt.Color, float)
      */
     public void setPatternStroke(PdfPatternPainter p, Color color, float tint) {
         checkNoColor();
@@ -385,7 +394,7 @@ public class PdfPatternPainter extends PdfTemplate {
     }
     
     /**
-     * @see com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfContentByte#setPatternStroke(com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfPatternPainter)
+     * @see com.lowagie.text.pdf.PdfContentByte#setPatternStroke(com.lowagie.text.pdf.PdfPatternPainter)
      */
     public void setPatternStroke(PdfPatternPainter p) {
         checkNoColor();
@@ -394,6 +403,6 @@ public class PdfPatternPainter extends PdfTemplate {
     
     void checkNoColor() {
         if (stencil)
-            throw new RuntimeException("Colors are not allowed in uncolored tile patterns.");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("colors.are.not.allowed.in.uncolored.tile.patterns"));
     }
 }

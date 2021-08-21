@@ -120,7 +120,7 @@ public class PdfStamperImp extends PdfWriter {
 					("Append mode requires a document without errors even if recovery was possible.");
             if (reader.isEncrypted())
                 crypto = new PdfEncryption(reader.getDecrypt());
-            HEADER = getISOBytes("\n");
+            pdf_version.setAppendmode(true);
             file.reOpen();
             byte buf[] = new byte[8192];
             int n;
@@ -137,8 +137,7 @@ public class PdfStamperImp extends PdfWriter {
                 super.setPdfVersion(pdfVersion);
         }
         super.open();
-        getPdfDocument().setWriter(this); // ssteward: okay
-
+        pdf.setWriter(this);
         if (append) {
             body.setRefnum(reader.getXrefSize());
             marked = new IntHashtable();
@@ -1192,7 +1191,7 @@ public class PdfStamperImp extends PdfWriter {
         markUsed(reader.getCatalog());
     }
     
-    void setOutlines(List outlines) {
+    public void setOutlines(List outlines) {
         newBookmarks = outlines;
     }
     
