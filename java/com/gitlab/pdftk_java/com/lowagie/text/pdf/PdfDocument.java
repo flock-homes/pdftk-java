@@ -57,16 +57,15 @@
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
 import java.awt.Color;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-// ssteward omit: import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
 import com.gitlab.pdftk_java.com.lowagie.text.Anchor;
 import com.gitlab.pdftk_java.com.lowagie.text.Annotation;
@@ -78,11 +77,13 @@ import com.gitlab.pdftk_java.com.lowagie.text.Document;
 import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.Element;
 import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
-// import com.gitlab.pdftk_java.com.lowagie.text.Graphic; ssteward: dropped in 1.44
+import com.gitlab.pdftk_java.com.lowagie.text.Font;
 // import com.gitlab.pdftk_java.com.lowagie.text.HeaderFooter; ssteward: dropped in 1.44
 // import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
 import com.gitlab.pdftk_java.com.lowagie.text.List;
 import com.gitlab.pdftk_java.com.lowagie.text.ListItem;
+import com.gitlab.pdftk_java.com.lowagie.text.MarkedObject;
+import com.gitlab.pdftk_java.com.lowagie.text.MarkedSection;
 import com.gitlab.pdftk_java.com.lowagie.text.Meta;
 import com.gitlab.pdftk_java.com.lowagie.text.Paragraph;
 import com.gitlab.pdftk_java.com.lowagie.text.Phrase;
@@ -92,6 +93,14 @@ import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
 // import com.gitlab.pdftk_java.com.lowagie.text.Table; ssteward: dropped in 1.44
 // import com.gitlab.pdftk_java.com.lowagie.text.Watermark; ssteward: dropped in 1.44
 // ssteward omit: import com.gitlab.pdftk_java.com.lowagie.text.xml.xmp.XmpWriter;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.collection.PdfCollection;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.draw.DrawInterface;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.internal.PdfAnnotationsImp;
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.internal.PdfViewerPreferencesImp;
+import java.text.DecimalFormat;
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed Image, Table)
 
 /**
  * <CODE>PdfDocument</CODE> is the class that is used by <CODE>PdfWriter</CODE>
@@ -104,16 +113,11 @@ import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
  * @see		com.lowagie.text.Document
  * @see		com.lowagie.text.DocListener
  * @see		PdfWriter
+ * @since	2.0.8 (class was package-private before)
  */
 
-class PdfDocument extends Document implements DocListener {
+public class PdfDocument extends Document {
 
-static class StringCompare implements Comparator {
-    public int compare(Object o1, Object o2) {
-        return ((String)o1).compareTo((String)o2);
-    }
-}
-    
     /**
      * <CODE>PdfInfo</CODE> is the PDF InfoDictionary.
      * <P>
@@ -122,22 +126,21 @@ static class StringCompare implements Comparator {
      * should be strings.<BR>
      * This object is described in the 'Portable Document Format Reference Manual version 1.3'
      * section 6.10 (page 120-121)
+     * @since	2.0.8 (PdfDocument was package-private before)
      */
-    
+
     public static class PdfInfo extends PdfDictionary {
-        
-        // constructors
-        
+
         /**
          * Construct a <CODE>PdfInfo</CODE>-object.
          */
-        
+
         PdfInfo() {
             super();
             addProducer();
             addCreationDate();
         }
-        
+
         /**
          * Constructs a <CODE>PdfInfo</CODE>-object.
          *
@@ -145,91 +148,89 @@ static class StringCompare implements Comparator {
          * @param		title		title of the document
          * @param		subject		subject of the document
          */
-        
+
         PdfInfo(String author, String title, String subject) {
             this();
             addTitle(title);
             addSubject(subject);
             addAuthor(author);
         }
-        
+
         /**
          * Adds the title of the document.
          *
          * @param	title		the title of the document
          */
-        
+
         void addTitle(String title) {
             put(PdfName.TITLE, new PdfString(title/*ssteward , PdfObject.TEXT_UNICODE*/));
         }
-        
+
         /**
          * Adds the subject to the document.
          *
          * @param	subject		the subject of the document
          */
-        
+
         void addSubject(String subject) {
             put(PdfName.SUBJECT, new PdfString(subject/*ssteward, PdfObject.TEXT_UNICODE*/));
         }
-        
+
         /**
          * Adds some keywords to the document.
          *
          * @param	keywords		the keywords of the document
          */
-        
+
         void addKeywords(String keywords) {
             put(PdfName.KEYWORDS, new PdfString(keywords/*ssteward, PdfObject.TEXT_UNICODE*/));
         }
-        
+
         /**
          * Adds the name of the author to the document.
          *
          * @param	author		the name of the author
          */
-        
+
         void addAuthor(String author) {
             put(PdfName.AUTHOR, new PdfString(author/*ssteward, PdfObject.TEXT_UNICODE*/));
         }
-        
+
         /**
          * Adds the name of the creator to the document.
          *
          * @param	creator		the name of the creator
          */
-        
+
         void addCreator(String creator) {
             put(PdfName.CREATOR, new PdfString(creator/*, PdfObject.TEXT_UNICODE ssteward*/));
         }
-        
+
         /**
          * Adds the name of the producer to the document.
          */
-        
+
         void addProducer() {
-            // This line may only be changed by Bruno Lowagie or Paulo Soares
             put(PdfName.PRODUCER, new PdfString(getVersion()));
-            // Do not edit the line above!
         }
-        
+
         /**
          * Adds the date of creation to the document.
          */
-        
+
         void addCreationDate() {
             PdfString date = new PdfDate();
             put(PdfName.CREATIONDATE, date);
             put(PdfName.MODDATE, date);
         }
-        
+
         void addkey(String key, String value) {
             if (key.equals("Producer") || key.equals("CreationDate"))
                 return;
             put(new PdfName(key), new PdfString(value/*ssteward, PdfObject.TEXT_UNICODE*/));
         }
     }
-    
+
     /**
      * <CODE>PdfCatalog</CODE> is the PDF Catalog-object.
      * <P>
@@ -237,305 +238,112 @@ static class StringCompare implements Comparator {
      * to the tree of pages contained in the document, a reference to the tree of objects representing
      * the document's outline, a reference to the document's article threads, and the list of named
      * destinations. In addition, the Catalog indicates whether the document's outline or thumbnail
-     * page images should be displayed automatically when the document is viewed and wether some location
+     * page images should be displayed automatically when the document is viewed and whether some location
      * other than the first page should be shown when the document is opened.<BR>
      * In this class however, only the reference to the tree of pages is implemented.<BR>
      * This object is described in the 'Portable Document Format Reference Manual version 1.3'
      * section 6.2 (page 67-71)
      */
-    
+
     static class PdfCatalog extends PdfDictionary {
-        
+
+    	/** The writer writing the PDF for which we are creating this catalog object. */
         PdfWriter writer;
-        // constructors
-        
+
         /**
          * Constructs a <CODE>PdfCatalog</CODE>.
          *
          * @param		pages		an indirect reference to the root of the document's Pages tree.
          * @param writer the writer the catalog applies to
          */
-        
+
         PdfCatalog(PdfIndirectReference pages, PdfWriter writer) {
             super(CATALOG);
             this.writer = writer;
             put(PdfName.PAGES, pages);
         }
-        
-        /**
-         * Constructs a <CODE>PdfCatalog</CODE>.
-         *
-         * @param		pages		an indirect reference to the root of the document's Pages tree.
-         * @param		outlines	an indirect reference to the outline tree.
-         * @param writer the writer the catalog applies to
-         */
-        
-        PdfCatalog(PdfIndirectReference pages, PdfIndirectReference outlines, PdfWriter writer) {
-            super(CATALOG);
-            this.writer = writer;
-            put(PdfName.PAGES, pages);
-            put(PdfName.PAGEMODE, PdfName.USEOUTLINES);
-            put(PdfName.OUTLINES, outlines);
-        }
-        
+
         /**
          * Adds the names of the named destinations to the catalog.
          * @param localDestinations the local destinations
-         * @param documentJavaScript the javascript used in the document
+         * @param documentLevelJS the javascript used in the document
+         * @param documentFileAttachment	the attached files
          * @param writer the writer the catalog applies to
          */
-        void addNames(TreeMap localDestinations, ArrayList documentJavaScript, PdfWriter writer) {
-            if (localDestinations.size() == 0 && documentJavaScript.size() == 0)
+        void addNames(TreeMap localDestinations, HashMap documentLevelJS, HashMap documentFileAttachment, PdfWriter writer) {
+            if (localDestinations.isEmpty() && documentLevelJS.isEmpty() && documentFileAttachment.isEmpty())
                 return;
             try {
                 PdfDictionary names = new PdfDictionary();
-                if (localDestinations.size() > 0) {
+                if (!localDestinations.isEmpty()) {
                     PdfArray ar = new PdfArray();
-                    for (Iterator i = localDestinations.keySet().iterator(); i.hasNext();) {
-                        String name = (String)i.next();
-                        Object obj[] = (Object[])localDestinations.get(name);
+                    for (Iterator i = localDestinations.entrySet().iterator(); i.hasNext();) {
+                        Map.Entry entry = (Map.Entry) i.next();
+                        String name = (String) entry.getKey();
+                        Object obj[] = (Object[]) entry.getValue();
+                        if (obj[2] == null) //no destination
+                            continue;
                         PdfIndirectReference ref = (PdfIndirectReference)obj[1];
-                        ar.add(new PdfString(name));
+                        ar.add(new PdfString(name, null));
                         ar.add(ref);
                     }
-                    PdfDictionary dests = new PdfDictionary();
-                    dests.put(PdfName.NAMES, ar);
-                    names.put(PdfName.DESTS, writer.addToBody(dests).getIndirectReference());
-                }
-                if (documentJavaScript.size() > 0) {
-                    String s[] = new String[documentJavaScript.size()];
-                    for (int k = 0; k < s.length; ++k)
-                        s[k] = Integer.toHexString(k);
-                    Arrays.sort(s, new StringCompare());
-                    PdfArray ar = new PdfArray();
-                    for (int k = 0; k < s.length; ++k) {
-                        ar.add(new PdfString(s[k]));
-                        ar.add((PdfIndirectReference)documentJavaScript.get(k));
+                    if (ar.size() > 0) {
+                        PdfDictionary dests = new PdfDictionary();
+                        dests.put(PdfName.NAMES, ar);
+                        names.put(PdfName.DESTS, writer.addToBody(dests).getIndirectReference());
                     }
-                    PdfDictionary js = new PdfDictionary();
-                    js.put(PdfName.NAMES, ar);
-                    names.put(PdfName.JAVASCRIPT, writer.addToBody(js).getIndirectReference());
                 }
-                put(PdfName.NAMES, writer.addToBody(names).getIndirectReference());
+                if (!documentLevelJS.isEmpty()) {
+                    PdfDictionary tree = PdfNameTree.writeTree(documentLevelJS, writer);
+                    names.put(PdfName.JAVASCRIPT, writer.addToBody(tree).getIndirectReference());
+                }
+                if (!documentFileAttachment.isEmpty()) {
+                    names.put(PdfName.EMBEDDEDFILES, writer.addToBody(PdfNameTree.writeTree(documentFileAttachment, writer)).getIndirectReference());
+                }
+                if (names.size() > 0)
+                    put(PdfName.NAMES, writer.addToBody(names).getIndirectReference());
             }
             catch (IOException e) {
                 throw new ExceptionConverter(e);
             }
         }
-        
-        /** Sets the viewer preferences as the sum of several constants.
-         * @param preferences the viewer preferences
-         * @see PdfWriter#setViewerPreferences
+
+        /**
+         * Adds an open action to the catalog.
+         * @param	action	the action that will be triggered upon opening the document
          */
-        /* ssteward: debug
-        void setViewerPreferences(int preferences) {
-            PdfReader.setViewerPreferences(preferences, this);
-        }
-	*/
-        
         void setOpenAction(PdfAction action) {
             put(PdfName.OPENACTION, action);
         }
-        
-        
-        /** Sets the document level additional actions.
+
+
+        /**
+         * Sets the document level additional actions.
          * @param actions   dictionary of actions
          */
         void setAdditionalActions(PdfDictionary actions) {
             try {
                 put(PdfName.AA, writer.addToBody(actions).getIndirectReference());
             } catch (Exception e) {
-                new ExceptionConverter(e);
+                throw new ExceptionConverter(e);
             }
         }
-        
-        
-        void setPageLabels(PdfPageLabels pageLabels) {
-            put(PdfName.PAGELABELS, pageLabels.getDictionary());
-        }
-        
-        void setAcroForm(PdfObject fields) {
-            put(PdfName.ACROFORM, fields);
-        }
     }
-    
-    // membervariables
-    private PdfIndirectReference thumb;
-    
-    /** The characters to be applied the hanging ponctuation. */
-    static final String hangingPunctuation = ".,;:'";
-    
-    /** The <CODE>PdfWriter</CODE>. */
-    private PdfWriter writer;
-    
-    /** some meta information about the Document. */
-    private PdfInfo info = new PdfInfo();
-    
-    /** Signals that OnOpenDocument should be called. */
-    private boolean firstPageEvent = true;
-    
-    /** Signals that onParagraph is valid. */
-    private boolean isParagraph = true;
-    
-    // Horizontal line
-    
-    /** The line that is currently being written. */
-    private PdfLine line = null;
-    
-    /** This represents the current indentation of the PDF Elements on the left side. */
-    private float indentLeft = 0;
-    
-    /** This represents the current indentation of the PDF Elements on the right side. */
-    private float indentRight = 0;
-    
-    /** This represents the current indentation of the PDF Elements on the left side. */
-    private float listIndentLeft = 0;
-    
-    /** This represents the current alignment of the PDF Elements. */
-    private int alignment = Element.ALIGN_LEFT;
-    
-    // Vertical lines
-    
-    /** This is the PdfContentByte object, containing the text. */
-    private PdfContentByte text;
-    
-    /** This is the PdfContentByte object, containing the borders and other Graphics. */
-    private PdfContentByte graphics;
-    
-    /** The lines that are written until now. */
-    private ArrayList lines = new ArrayList();
-    
-    /** This represents the leading of the lines. */
-    private float leading = 0;
-    
-    /** This is the current height of the document. */
-    private float currentHeight = 0;
-    
-    /** This represents the current indentation of the PDF Elements on the top side. */
-    private float indentTop = 0;
-    
-    /** This represents the current indentation of the PDF Elements on the bottom side. */
-    private float indentBottom = 0;
-    
-    /** This checks if the page is empty. */
-    private boolean pageEmpty = true;
-    
-    private int textEmptySize;
-    // resources
-    
-    /** This is the size of the next page. */
-    protected Rectangle nextPageSize = null;
-    
-    /** This is the size of the several boxes of the current Page. */
-    protected HashMap thisBoxSize = new HashMap();
-    
-    /** This is the size of the several boxes that will be used in
-     * the next page. */
-    protected HashMap boxSize = new HashMap();
-    
-    /** This are the page resources of the current Page. */
-    protected PageResources pageResources;
-    
-    // images
-    
-    /** This is the image that could not be shown on a previous page. */
-    //private Image imageWait = null; ssteward: dropped in 1.44
-    
-    /** This is the position where the image ends. */
-    private float imageEnd = -1;
-    
-    /** This is the indentation caused by an image on the left. */
-    private float imageIndentLeft = 0;
-    
-    /** This is the indentation caused by an image on the right. */
-    private float imageIndentRight = 0;
-    
-    // annotations and outlines
-    
-    /** This is the array containing the references to the annotations. */
-    private ArrayList annotations;
-    
-    /** This is an array containg references to some delayed annotations. */
-    private ArrayList delayedAnnotations = new ArrayList();
-    
-    /** This is the AcroForm object. */
-    // ssteward: read via accessor, which will initialize as needed
-    private PdfAcroForm acroForm = null;
-    
-    /** This is the root outline of the document. */
-    private PdfOutline rootOutline;
-    
-    /** This is the current <CODE>PdfOutline</CODE> in the hierarchy of outlines. */
-    private PdfOutline currentOutline;
-    
-    /** The current active <CODE>PdfAction</CODE> when processing an <CODE>Anchor</CODE>. */
-    private PdfAction currentAction = null;
-    
-    /**
-     * Stores the destinations keyed by name. Value is
-     * <CODE>Object[]{PdfAction,PdfIndirectReference,PdfDestintion}</CODE>.
-     */
-    private TreeMap localDestinations = new TreeMap(new StringCompare());
-    
-    private ArrayList documentJavaScript = new ArrayList();
-    
-    /** these are the viewerpreferences of the document */
-    private int viewerPreferences = 0;
-    
-    private String openActionName;
-    private PdfAction openActionAction;
-    private PdfDictionary additionalActions;
-    private PdfPageLabels pageLabels;
-    
-    //add by Jin-Hsia Yang
-    private boolean isNewpage = false;
-    
-    private float paraIndent = 0;
-    //end add by Jin-Hsia Yang
-    
-    /** margin in x direction starting from the left. Will be valid in the next page */
-    protected float nextMarginLeft;
-    
-    /** margin in x direction starting from the right. Will be valid in the next page */
-    protected float nextMarginRight;
-    
-    /** margin in y direction starting from the top. Will be valid in the next page */
-    protected float nextMarginTop;
-    
-    /** margin in y direction starting from the bottom. Will be valid in the next page */
-    protected float nextMarginBottom;
-    
-/** The duration of the page */
-    protected int duration=-1; // negative values will indicate no duration
-    
-/** The page transition */
-    protected PdfTransition transition=null; 
-    
-    protected PdfDictionary pageAA = null;
-    
-    /** Holds value of property strictImageSequence. */
-    private boolean strictImageSequence = false;    
 
-    /** Holds the type of the last element, that has been added to the document. */
-    private int lastElementType = -1;    
-    
-    protected int markPoint;
-       
-    // constructors
-    
+// CONSTRUCTING A PdfDocument/PdfWriter INSTANCE
+
     /**
      * Constructs a new PDF document.
-     * @throws DocumentException on error
      */
-    
-    public PdfDocument() /* ssteward omit: throws DocumentException*/ {
+    public PdfDocument() {
         super();
         addProducer();
         addCreationDate();
     }
-    
-    // listener methods
-    
+
+    /** The <CODE>PdfWriter</CODE>. */
+    protected PdfWriter writer;
+
     /**
      * Adds a <CODE>PdfWriter</CODE> to the <CODE>PdfDocument</CODE>.
      *
@@ -543,782 +351,66 @@ static class StringCompare implements Comparator {
      *                     what is added to this document to an outputstream.
      * @throws DocumentException on error
      */
-    // ssteward: changed from addWriter(), rearranged
-    public void setWriter(PdfWriter writer) throws DocumentException {
-	if( this.writer!= null ) {
-	    throw new DocumentException("You can only add a writer to a PdfDocument once.");
-	}
-	this.writer= writer;
-    }
-    
-    /**
-     * Sets the pagesize.
-     *
-     * @param pageSize the new pagesize
-     * @return <CODE>true</CODE> if the page size was set
-     */
-    
-    public boolean setPageSize(Rectangle pageSize) {
-        if (writer != null && writer.isPaused()) {
-            return false;
-        }
-        nextPageSize = new Rectangle(pageSize);
-        return true;
-    }
-    
-    /**
-     * Changes the header of this document.
-     *
-     * @param header the new header
-     */
-    /* ssteward: dropped in 1.44
-    public void setHeader(HeaderFooter header) {
-        if (writer != null && writer.isPaused()) {
+    public void addWriter(PdfWriter writer) throws DocumentException {
+        if (this.writer == null) {
+            this.writer = writer;
+            annotationsImp = new PdfAnnotationsImp(writer);
             return;
         }
-        super.setHeader(header);
-    }
-    */
-    
-    /**
-     * Resets the header of this document.
-     */
-    /* ssteward: dropped in 1.44
-    public void resetHeader() {
-        if (writer != null && writer.isPaused()) {
-            return;
-        }
-        super.resetHeader();
-    }
-    */
-    /**
-     * Changes the footer of this document.
-     *
-     * @param	footer		the new footer
-     */
-    /* ssteward: dropped in 1.44
-    public void setFooter(HeaderFooter footer) {
-        if (writer != null && writer.isPaused()) {
-            return;
-        }
-        super.setFooter(footer);
-    }
-    */
-    /**
-     * Resets the footer of this document.
-     */
-    /* ssteward: dropped in 1.44
-    public void resetFooter() {
-        if (writer != null && writer.isPaused()) {
-            return;
-        }
-        super.resetFooter();
-    }
-    */
-    /**
-     * Sets the page number to 0.
-     */
-    
-    public void resetPageCount() {
-        if (writer != null && writer.isPaused()) {
-            return;
-        }
-        super.resetPageCount();
-    }
-    
-    /**
-     * Sets the page number.
-     *
-     * @param	pageN		the new page number
-     */
-    
-    public void setPageCount(int pageN) {
-        if (writer != null && writer.isPaused()) {
-            return;
-        }
-        super.setPageCount(pageN);
-    }
-    
-    /**
-     * Sets the <CODE>Watermark</CODE>.
-     *
-     * @param watermark the watermark to add
-     * @return <CODE>true</CODE> if the element was added, <CODE>false</CODE> if not.
-     */
-    /* ssteward: dropped in 1.44
-    public boolean add(Watermark watermark) {
-        if (writer != null && writer.isPaused()) {
-            return false;
-        }
-        this.watermark = watermark;
-        return true;
-    }
-    */
-    
-    /**
-     * Removes the <CODE>Watermark</CODE>.
-     */
-    /* ssteward: dropped in 1.44
-    public void removeWatermark() {
-        if (writer != null && writer.isPaused()) {
-            return;
-        }
-        this.watermark = null;
-    }
-    */
-    
-    /**
-     * Sets the margins.
-     *
-     * @param	marginLeft		the margin on the left
-     * @param	marginRight		the margin on the right
-     * @param	marginTop		the margin on the top
-     * @param	marginBottom	the margin on the bottom
-     * @return	a <CODE>boolean</CODE>
-     */
-    
-    public boolean setMargins(float marginLeft, float marginRight, float marginTop, float marginBottom) {
-        if (writer != null && writer.isPaused()) {
-            return false;
-        }
-        nextMarginLeft = marginLeft;
-        nextMarginRight = marginRight;
-        nextMarginTop = marginTop;
-        nextMarginBottom = marginBottom;
-        return true;
-    }
-    
-    protected PdfArray rotateAnnotations() throws DocumentException {
-        PdfArray array = new PdfArray();
-        int rotation = pageSize.getRotation() % 360;
-        int currentPage = writer.getCurrentPageNumber();
-        for (int k = 0; k < annotations.size(); ++k) {
-            PdfAnnotation dic = (PdfAnnotation)annotations.get(k);
-            int page = dic.getPlaceInPage();
-            if (page > currentPage) {
-                delayedAnnotations.add(dic);
-                continue;
-            }
-            if (dic.isForm()) {
-                if (!dic.isUsed()) {
-                    HashMap templates = dic.getTemplates();
-                    if (templates != null)
-                        getAcroForm().addFieldTemplates(templates);
-                }
-                PdfFormField field = (PdfFormField)dic;
-                if (field.getParent() == null)
-                    getAcroForm().addDocumentField(field.getIndirectReference());
-            }
-            if (dic.isAnnotation()) {
-                array.add(dic.getIndirectReference());
-                if (!dic.isUsed()) {
-                    PdfRectangle rect = (PdfRectangle)dic.get(PdfName.RECT);
-                    if (rect != null) {
-                        switch (rotation) {
-                            case 90:
-                                dic.put(PdfName.RECT, new PdfRectangle(
-                                pageSize.top() - rect.bottom(),
-                                rect.left(),
-                                pageSize.top() - rect.top(),
-                                rect.right()));
-                                break;
-                            case 180:
-                                dic.put(PdfName.RECT, new PdfRectangle(
-                                pageSize.right() - rect.left(),
-                                pageSize.top() - rect.bottom(),
-                                pageSize.right() - rect.right(),
-                                pageSize.top() - rect.top()));
-                                break;
-                            case 270:
-                                dic.put(PdfName.RECT, new PdfRectangle(
-                                rect.bottom(),
-                                pageSize.right() - rect.left(),
-                                rect.top(),
-                                pageSize.right() - rect.right()));
-                                break;
-                        }
-                    }
-                }
-            }
-            if (!dic.isUsed()) {
-                dic.setUsed();
-                try {
-                    writer.addToBody(dic, dic.getIndirectReference());
-                }
-                catch (IOException e) {
-                    throw new ExceptionConverter(e);
-                }
-            }
-        }
-        return array;
-    }
-    
-    /**
-     * Makes a new page and sends it to the <CODE>PdfWriter</CODE>.
-     *
-     * @return a <CODE>boolean</CODE>
-     * @throws DocumentException on error
-     */
-    
-    public boolean newPage() throws DocumentException {
-        lastElementType = -1;
-        //add by Jin-Hsia Yang
-        isNewpage = true;
-        //end add by Jin-Hsia Yang
-        if (writer.getDirectContent().size() == 0 && writer.getDirectContentUnder().size() == 0 && (pageEmpty || (writer != null && writer.isPaused()))) {
-            return false;
-        }
-        PdfPageEvent pageEvent = writer.getPageEvent();
-        if (pageEvent != null)
-            pageEvent.onEndPage(writer, this);
-        
-        //Added to inform any listeners that we are moving to a new page (added by David Freels)
-        super.newPage();
-        
-        // the following 2 lines were added by Pelikan Stephan
-        imageIndentLeft = 0;
-        imageIndentRight = 0;
-        
-        // we flush the arraylist with recently written lines
-        flushLines();
-        // we assemble the resources of this pages
-        pageResources.addDefaultColorDiff(writer.getDefaultColorspace());        
-        PdfDictionary resources = pageResources.getResources();
-        // we make a new page and add it to the document
-        if (writer.getPDFXConformance() != PdfWriter.PDFXNONE) {
-            if (thisBoxSize.containsKey("art") && thisBoxSize.containsKey("trim"))
-                throw new PdfXConformanceException("Only one of ArtBox or TrimBox can exist in the page.");
-            if (!thisBoxSize.containsKey("art") && !thisBoxSize.containsKey("trim")) {
-                if (thisBoxSize.containsKey("crop"))
-                    thisBoxSize.put("trim", thisBoxSize.get("crop"));
-                else
-                    thisBoxSize.put("trim", new PdfRectangle(pageSize, pageSize.getRotation()));
-            }
-        }
-        PdfPage page;
-        int rotation = pageSize.getRotation();
-        page = new PdfPage(new PdfRectangle(pageSize, rotation), thisBoxSize, resources, rotation);
-        if (writer.isTagged())
-            page.put(PdfName.STRUCTPARENTS, new PdfNumber(writer.getCurrentPageNumber() - 1));
-        // we add the transitions
-        if (this.transition!=null) {
-            page.put(PdfName.TRANS, this.transition.getTransitionDictionary());
-            transition = null;
-        }
-        if (this.duration>0) {
-            page.put(PdfName.DUR,new PdfNumber(this.duration));
-            duration = 0;
-        }
-        // we add the page object additional actions
-        if (pageAA != null) {
-            try {
-                page.put(PdfName.AA, writer.addToBody(pageAA).getIndirectReference());
-            }
-            catch (IOException ioe) {
-                throw new ExceptionConverter(ioe);
-            }
-            pageAA = null;
-        }
-        // we check if the userunit is defined
-        if (writer.getUserunit() > 0f) {
-        	page.put(PdfName.USERUNIT, new PdfNumber(writer.getUserunit()));
-        }
-        // we add the annotations
-        if (annotations.size() > 0) {
-            PdfArray array = rotateAnnotations();
-            if (array.size() != 0)
-                page.put(PdfName.ANNOTS, array);
-        }
-        // we add the thumbs
-        if (thumb != null) {
-            page.put(PdfName.THUMB, thumb);
-            thumb = null;
-        }
-        if (!open || close) {
-            throw new PdfException("The document isn't open.");
-        }
-        if (text.size() > textEmptySize)
-            text.endText();
-        else
-            text = null;
-        PdfIndirectReference pageReference = writer.add(page, new PdfContents(writer.getDirectContentUnder(), graphics, text, writer.getDirectContent(), pageSize));
-        // we initialize the new page
-        initPage();
-        
-        //add by Jin-Hsia Yang
-        isNewpage = false;
-        //end add by Jin-Hsia Yang
-        
-        return true;
-    }
-    
-    // methods to open and close a document
-    
-    /**
-     * Opens the document.
-     * <P>
-     * You have to open the document before you can begin to add content
-     * to the body of the document.
-     */
-    
-    public void open() {
-        if (!open) {
-            super.open();
-            writer.open();
-            rootOutline = new PdfOutline(writer);
-            currentOutline = rootOutline;
-        }
-        try {
-            initPage();
-        }
-        catch(DocumentException de) {
-            throw new ExceptionConverter(de);
-        }
-    }
-    
-    void outlineTree(PdfOutline outline) throws IOException {
-        outline.setIndirectReference(writer.getPdfIndirectReference());
-        if (outline.parent() != null)
-            outline.put(PdfName.PARENT, outline.parent().indirectReference());
-        ArrayList kids = outline.getKids();
-        int size = kids.size();
-        for (int k = 0; k < size; ++k)
-            outlineTree((PdfOutline)kids.get(k));
-        for (int k = 0; k < size; ++k) {
-            if (k > 0)
-                ((PdfOutline)kids.get(k)).put(PdfName.PREV, ((PdfOutline)kids.get(k - 1)).indirectReference());
-            if (k < size - 1)
-                ((PdfOutline)kids.get(k)).put(PdfName.NEXT, ((PdfOutline)kids.get(k + 1)).indirectReference());
-        }
-        if (size > 0) {
-            outline.put(PdfName.FIRST, ((PdfOutline)kids.get(0)).indirectReference());
-            outline.put(PdfName.LAST, ((PdfOutline)kids.get(size - 1)).indirectReference());
-        }
-        for (int k = 0; k < size; ++k) {
-            PdfOutline kid = (PdfOutline)kids.get(k);
-            writer.addToBody(kid, kid.indirectReference());
-        }
-    }
-    
-    void writeOutlines() throws IOException {
-        if (rootOutline.getKids().size() == 0)
-            return;
-        outlineTree(rootOutline);
-        writer.addToBody(rootOutline, rootOutline.indirectReference());
-    }
-    
-    void traverseOutlineCount(PdfOutline outline) {
-        ArrayList kids = outline.getKids();
-        PdfOutline parent = outline.parent();
-        if (kids.size() == 0) {
-            if (parent != null) {
-                parent.setCount(parent.getCount() + 1);
-            }
-        }
-        else {
-            for (int k = 0; k < kids.size(); ++k) {
-                traverseOutlineCount((PdfOutline)kids.get(k));
-            }
-            if (parent != null) {
-                if (outline.isOpen()) {
-                    parent.setCount(outline.getCount() + parent.getCount() + 1);
-                }
-                else {
-                    parent.setCount(parent.getCount() + 1);
-                    outline.setCount(-outline.getCount());
-                }
-            }
-        }
-    }
-    
-    void calculateOutlineCount() {
-        if (rootOutline.getKids().size() == 0)
-            return;
-        traverseOutlineCount(rootOutline);
-    }
-    /**
-     * Closes the document.
-     * <B>
-     * Once all the content has been written in the body, you have to close
-     * the body. After that nothing can be written to the body anymore.
-     */
-    
-    public void close() {
-        if (close) {
-            return;
-        }
-        try {
-            boolean wasImage = false; // (imageWait != null); ssteward: dropped in 1.44
-            newPage();
-            if ( false || wasImage) newPage(); // imageWait != null  ssteward: dropped in 1.44
-            if (annotations.size() > 0)
-                throw new RuntimeException(annotations.size() + " annotations had invalid placement pages.");
-            PdfPageEvent pageEvent = writer.getPageEvent();
-            if (pageEvent != null)
-                pageEvent.onCloseDocument(writer, this);
-            super.close();
-            
-            writer.addLocalDestinations(localDestinations);
-            calculateOutlineCount();
-            writeOutlines();
-        }
-        catch(Exception e) {
-            throw new ExceptionConverter(e);
-        }
-        
-        writer.close();
+        throw new DocumentException(MessageLocalization.getComposedMessage("you.can.only.add.a.writer.to.a.pdfdocument.once"));
     }
 
-    PageResources getPageResources() {
-        return pageResources;
-    }
-    
-    /** Adds a <CODE>PdfPTable</CODE> to the document.
-     * @param ptable the <CODE>PdfPTable</CODE> to be added to the document.
-     * @throws DocumentException on error
+// LISTENER METHODS START
+
+//	[L0] ElementListener interface
+
+    /** This is the PdfContentByte object, containing the text. */
+    protected PdfContentByte text;
+
+    /** This is the PdfContentByte object, containing the borders and other Graphics. */
+    protected PdfContentByte graphics;
+
+    /** This represents the leading of the lines. */
+    protected float leading = 0;
+
+    /**
+     * Getter for the current leading.
+     * @return	the current leading
+     * @since	2.1.2
      */
-    /* ssteward: dropped in 1.44
-    void addPTable(PdfPTable ptable) throws DocumentException {
-        ColumnText ct = new ColumnText(writer.getDirectContent());
-        if (currentHeight > 0) {
-            Paragraph p = new Paragraph();
-            p.setLeading(0);
-            ct.addElement(p);
-        }
-        ct.addElement(ptable);
-        boolean he = ptable.isHeadersInEvent();
-        ptable.setHeadersInEvent(true);
-        int loop = 0;
-        while (true) {
-            ct.setSimpleColumn(indentLeft(), indentBottom(), indentRight(), indentTop() - currentHeight);
-            int status = ct.go();
-            if ((status & ColumnText.NO_MORE_TEXT) != 0) {
-                text.moveText(0, ct.getYLine() - indentTop() + currentHeight);
-                currentHeight = indentTop() - ct.getYLine();
-                break;
-            }
-            if (indentTop() - currentHeight == ct.getYLine())
-                ++loop;
-            else
-                loop = 0;
-            if (loop == 3) {
-                add(new Paragraph("ERROR: Infinite table loop"));
-                break;
-            }
-            newPage();
-        }
-        ptable.setHeadersInEvent(he);
+    public float getLeading() {
+    	return leading;
     }
-    */
     
-	/**
-	 * Gets a PdfTable object
-	 * (contributed by dperezcar@fcc.es)
-	 * @param table a high level table object
-	 * @param supportRowAdditions
-	 * @return returns a PdfTable object
-	 * @see PdfWriter#getPdfTable(Table)
-	 */
-    /* ssteward: dropped in 1.44
-	PdfTable getPdfTable(Table table, boolean supportRowAdditions) {
-        return new PdfTable(table, indentLeft(), indentRight(), indentTop() - currentHeight, supportRowAdditions);
-	}
-    */
-
-	/**
-	 * @see PdfWriter#breakTableIfDoesntFit(PdfTable)
-	 * (contributed by dperezcar@fcc.es)
-	 * @param table				Table to add
-	 * @return true if the table will be broken
-	 * @throws DocumentException
-	 */
-    /* ssteward: dropped in 1.44
-	boolean breakTableIfDoesntFit(PdfTable table) throws DocumentException {
-		table.updateRowAdditions();
-		// Do we have any full page available?
-		if (!table.hasToFitPageTable() && table.bottom() <= indentBottom) {
-			// Then output that page
-			add(table, true);
-			return true;
-		}
-		return false;
-	}
-    */
-    
-	/**
-	 * Adds a new table to 
-	 * @param table				Table to add.  Rendered rows will be deleted after processing.
-	 * @param onlyFirstPage		Render only the first full page
-	 * @throws DocumentException
-	 */
-    /* ssteward: dropped in 1.44	
-    private void add(PdfTable table, boolean onlyFirstPage) throws DocumentException {
-        // before every table, we flush all lines
-        flushLines();
-
-		// initialisation of parameters
-		float pagetop = indentTop();
-		float oldHeight = currentHeight;
-		float cellDisplacement;
-		PdfCell cell;
-		PdfContentByte cellGraphics = new PdfContentByte(writer);
-		boolean tableHasToFit =
-			table.hasToFitPageTable() ? (table.bottom() < indentBottom() && table.height() < (top() - bottom())) : false;
-		if (pageEmpty)
-			tableHasToFit = false;
-		boolean cellsHaveToFit = table.hasToFitPageCells();
-                    
-		// drawing the table
-		ArrayList cells = table.getCells();
-		ArrayList headercells = table.getHeaderCells();
-		// Check if we have removed header cells in a previous call
-		if (headercells.size() > 0 && (cells.size() == 0 || cells.get(0) != headercells.get(0))) {
-			ArrayList allCells = new ArrayList(cells.size()+headercells.size());
-			allCells.addAll(headercells);
-			allCells.addAll(cells);
-			cells = allCells;
-		}
-		while (!cells.isEmpty()) {
-			// initialisation of some extra parameters;
-			float lostTableBottom = 0;
-                        
-			// loop over the cells
-			boolean cellsShown = false;
-			int currentGroupNumber = 0;
-			boolean headerChecked = false;
-			for (ListIterator iterator = cells.listIterator(); iterator.hasNext() && !tableHasToFit;) {
-				cell = (PdfCell) iterator.next();
-				boolean atLeastOneFits = false;
-				if( cellsHaveToFit ) {
-					if( !cell.isHeader() ) {
-						if (cell.getGroupNumber() != currentGroupNumber) {
-							boolean cellsFit = true;
-							currentGroupNumber = cell.getGroupNumber();
-							cellsHaveToFit = table.hasToFitPageCells();
-							int cellCount = 0;
-							while (cell.getGroupNumber() == currentGroupNumber && cellsFit && iterator.hasNext()) {
-								if (cell.bottom() < indentBottom()) {
-									cellsFit = false;
-								}
-								else {
-									atLeastOneFits |= true;
-								}
-								cell = (PdfCell) iterator.next();
-								cellCount++;
-							}
-							if (!atLeastOneFits) {
-								cellsHaveToFit = false;
-							}
-							if (!cellsFit) {
-								break;
-							}
-							for (int i = cellCount; i >= 0; i--) {
-								cell = (PdfCell) iterator.previous();
-							}
-						}
-					}
-					else {
-						if( !headerChecked ) {
-							headerChecked = true;
-							boolean cellsFit = true;
-							int cellCount = 0;
-							float firstTop = cell.top();
-							while (cell.isHeader() && cellsFit && iterator.hasNext()) {
-								if (firstTop - cell.bottom(0) > indentTop() - currentHeight - indentBottom()) {
-									cellsFit = false;
-								}
-								cell = (PdfCell) iterator.next();
-								cellCount++;
-							}
-							currentGroupNumber = cell.getGroupNumber();
-							while (cell.getGroupNumber() == currentGroupNumber && cellsFit && iterator.hasNext()) {
-								if (firstTop - cell.bottom(0) > indentTop() - currentHeight - indentBottom() - 10.0) {
-									cellsFit = false;
-								}
-								cell = (PdfCell) iterator.next();
-								cellCount++;
-							}
-							for (int i = cellCount; i >= 0; i--) {
-								cell = (PdfCell) iterator.previous();
-							}
-							if (!cellsFit) {
-								while( cell.isHeader() ) {
-									iterator.remove();
-									cell = (PdfCell) iterator.next();
-								}
-								break;
-							}
-						}
-					}
-				}
-				lines = cell.getLines(pagetop, indentBottom());
-				// if there are lines to add, add them
-				if (lines != null && lines.size() > 0) {
-					// we paint the borders of the cells
-					cellsShown = true;
-					cellGraphics.rectangle(cell.rectangle(pagetop, indentBottom()));
-					lostTableBottom = Math.max(cell.bottom(), indentBottom());
-                                
-					// we write the text
-					float cellTop = cell.top(pagetop - oldHeight);
-					text.moveText(0, cellTop);
-					cellDisplacement = flushLines() - cellTop;
-					text.moveText(0, cellDisplacement);
-					if (oldHeight + cellDisplacement > currentHeight) {
-						currentHeight = oldHeight + cellDisplacement;
-					}
-				}
-				ArrayList images = cell.getImages(pagetop, indentBottom());
-				for (Iterator i = images.iterator(); i.hasNext();) {
-					cellsShown = true;
-					Image image = (Image) i.next();
-					graphics.addImage(image);
-				}
-				// if a cell is allready added completely, remove it
-				if (cell.mayBeRemoved()) {
-					iterator.remove();
-				}
-			}
-			tableHasToFit = false;
-			// we paint the graphics of the table after looping through all the cells
-			if (cellsShown) {
-				Rectangle tablerec = new Rectangle(table);
-				tablerec.setBorder(table.border());
-				tablerec.setBorderWidth(table.borderWidth());
-				tablerec.setBorderColor(table.borderColor());
-				tablerec.setBackgroundColor(table.backgroundColor());
-				tablerec.setGrayFill(table.grayFill());
-				PdfContentByte under = writer.getDirectContentUnder();
-				under.rectangle(tablerec.rectangle(top(), indentBottom()));
-				under.add(cellGraphics);
-				// bugfix by Gerald Fehringer: now again add the border for the table
-				// since it might have been covered by cell backgrounds
-				tablerec.setGrayFill(0);
-				tablerec.setBackgroundColor(null);
-				under.rectangle(tablerec.rectangle(top(), indentBottom()));
-				// end bugfix
-			}
-			cellGraphics = new PdfContentByte(null);
-			// if the table continues on the next page
-			if (!cells.isEmpty()) {
-				graphics.setLineWidth(table.borderWidth());
-				if (cellsShown && (table.border() & Rectangle.BOTTOM) == Rectangle.BOTTOM) {
-					// Draw the bottom line
-                                
-					// the color is set to the color of the element
-					Color tColor = table.borderColor();
-					if (tColor != null) {
-						graphics.setColorStroke(tColor);
-					}
-					graphics.moveTo(table.left(), Math.max(table.bottom(), indentBottom()));
-					graphics.lineTo(table.right(), Math.max(table.bottom(), indentBottom()));
-					graphics.stroke();
-					if (tColor != null) {
-						graphics.resetRGBColorStroke();
-					}
-				}
-                            
-				// old page
-				pageEmpty = false;
-				float difference = lostTableBottom;
-                            
-				// new page
-				newPage();
-				// G.F.: if something added in page event i.e. currentHeight > 0
-				float heightCorrection = 0;
-				boolean somethingAdded = false;
-				if (currentHeight > 0) {
-					heightCorrection = 6;
-					currentHeight += heightCorrection;
-					somethingAdded = true;
-					newLine();
-					flushLines();
-					indentTop = currentHeight - leading;
-					currentHeight = 0;
-				}
-				else {
-					flushLines();
-				}
-                            
-				// this part repeats the table headers (if any)
-				int size = headercells.size();
-				if (size > 0) {
-					// this is the top of the headersection
-					cell = (PdfCell) headercells.get(0);
-					float oldTop = cell.top(0);
-					// loop over all the cells of the table header
-					for (int i = 0; i < size; i++) {
-						cell = (PdfCell) headercells.get(i);
-						// calculation of the new cellpositions
-						cell.setTop(indentTop() - oldTop + cell.top(0));
-						cell.setBottom(indentTop() - oldTop + cell.bottom(0));
-						pagetop = cell.bottom();
-						// we paint the borders of the cell
-						cellGraphics.rectangle(cell.rectangle(indentTop(), indentBottom()));
-						// we write the text of the cell
-						ArrayList images = cell.getImages(indentTop(), indentBottom());
-						for (Iterator im = images.iterator(); im.hasNext();) {
-							cellsShown = true;
-							Image image = (Image) im.next();
-							graphics.addImage(image);
-						}
-						lines = cell.getLines(indentTop(), indentBottom());
-						float cellTop = cell.top(indentTop());
-						text.moveText(0, cellTop-heightCorrection);
-						cellDisplacement = flushLines() - cellTop+heightCorrection;
-						text.moveText(0, cellDisplacement);
-					}           
-					currentHeight = indentTop() - pagetop + table.cellspacing();
-					text.moveText(0, pagetop - indentTop() - currentHeight);
-				}
-				else {
-					if (somethingAdded) {
-						pagetop = indentTop();
-						text.moveText(0, -table.cellspacing());
-					}
-				}
-				oldHeight = currentHeight - heightCorrection;
-                            
-				// calculating the new positions of the table and the cells
-				size = Math.min(cells.size(), table.columns());
-				int i = 0;
-				while (i < size) {
-					cell = (PdfCell) cells.get(i);
-					if (cell.top(-table.cellspacing()) > lostTableBottom) {
-						float newBottom = pagetop - difference + cell.bottom();
-						float neededHeight = cell.remainingHeight();
-						if (newBottom > pagetop - neededHeight) {
-							difference += newBottom - (pagetop - neededHeight);
-						}
-					}
-					i++;
-				}
-				size = cells.size();
-				table.setTop(indentTop());
-				table.setBottom(pagetop - difference + table.bottom(table.cellspacing()));
-				for (i = 0; i < size; i++) {
-					cell = (PdfCell) cells.get(i);
-					float newBottom = pagetop - difference + cell.bottom();
-					float newTop = pagetop - difference + cell.top(-table.cellspacing());
-					if (newTop > indentTop() - currentHeight) {
-						newTop = indentTop() - currentHeight;
-					}
-					//float newBottom = newTop - cell.height();
-					cell.setTop(newTop );
-					cell.setBottom(newBottom );
-				}
-				if (onlyFirstPage) {
-					break;
-				}
-			}
-		}
-                    
-        float tableHeight = table.top() - table.bottom();
-        currentHeight = oldHeight + tableHeight;
-        text.moveText(0, -tableHeight );
-        pageEmpty = false;
+    /**
+     * Setter for the current leading.
+     * @param	leading the current leading
+     * @since	2.1.6
+     */
+    void setLeading(float leading) {
+    	this.leading = leading;
     }
-    */
+
+    /** This represents the current alignment of the PDF Elements. */
+    protected int alignment = Element.ALIGN_LEFT;
+
+    /** This is the current height of the document. */
+    protected float currentHeight = 0;
+
+    /**
+     * Signals that onParagraph is valid (to avoid that a Chapter/Section title is treated as a Paragraph).
+     * @since 2.1.2
+     */
+    protected boolean isSectionTitle = false;
+
+    /**
+     * Signals that the current leading has to be subtracted from a YMark object when positive.
+     * @since 2.1.2
+     */
+    protected int leadingCount = 0;
+
+    /** The current active <CODE>PdfAction</CODE> when processing an <CODE>Anchor</CODE>. */
+    protected PdfAction anchorAction = null;
 
     /**
      * Signals that an <CODE>Element</CODE> was added to the <CODE>Document</CODE>.
@@ -1327,33 +419,30 @@ static class StringCompare implements Comparator {
      * @return <CODE>true</CODE> if the element was added, <CODE>false</CODE> if not.
      * @throws DocumentException when a document isn't open yet, or has been closed
      */
-    
     public boolean add(Element element) throws DocumentException {
         if (writer != null && writer.isPaused()) {
             return false;
         }
         try {
-            
             switch(element.type()) {
-                
                 // Information (headers)
                 case Element.HEADER:
-                    info.addkey(((Meta)element).getName(), ((Meta)element).content());
+                    info.addkey(((Meta)element).getName(), ((Meta)element).getContent());
                     break;
                 case Element.TITLE:
-                    info.addTitle(((Meta)element).content());
+                    info.addTitle(((Meta)element).getContent());
                     break;
                 case Element.SUBJECT:
-                    info.addSubject(((Meta)element).content());
+                    info.addSubject(((Meta)element).getContent());
                     break;
                 case Element.KEYWORDS:
-                    info.addKeywords(((Meta)element).content());
+                    info.addKeywords(((Meta)element).getContent());
                     break;
                 case Element.AUTHOR:
-                    info.addAuthor(((Meta)element).content());
+                    info.addAuthor(((Meta)element).getContent());
                     break;
                 case Element.CREATOR:
-                    info.addCreator(((Meta)element).content());
+                    info.addCreator(((Meta)element).getContent());
                     break;
                 case Element.PRODUCER:
                     // you can not change the name of the producer
@@ -1363,22 +452,23 @@ static class StringCompare implements Comparator {
                     // you can not set the creation date, only reset it
                     info.addCreationDate();
                     break;
-                    
-                    // content (text)
+
+                // content (text)
                 case Element.CHUNK: {
                     // if there isn't a current line available, we make one
                     if (line == null) {
                         carriageReturn();
                     }
-                    
+
                     // we cast the element to a chunk
-                    PdfChunk chunk = new PdfChunk((Chunk) element, currentAction);
+                    PdfChunk chunk = new PdfChunk((Chunk) element, anchorAction);
                     // we try to add the chunk to the line, until we succeed
                     {
                         PdfChunk overflow;
                         while ((overflow = line.add(chunk)) != null) {
                             carriageReturn();
                             chunk = overflow;
+                            chunk.trimFirstSpace();
                         }
                     }
                     pageEmpty = false;
@@ -1388,16 +478,17 @@ static class StringCompare implements Comparator {
                     break;
                 }
                 case Element.ANCHOR: {
+                	leadingCount++;
                     Anchor anchor = (Anchor) element;
                     String url = anchor.getReference();
-                    leading = anchor.leading();
+                    leading = anchor.getLeading();
                     if (url != null) {
-                        currentAction = new PdfAction(url);
+                        anchorAction = new PdfAction(url);
                     }
-                    
                     // we process the element
                     element.process(this);
-                    currentAction = null;
+                    anchorAction = null;
+                    leadingCount--;
                     break;
                 }
                 case Element.ANNOTATION: {
@@ -1405,129 +496,79 @@ static class StringCompare implements Comparator {
                         carriageReturn();
                     }
                     Annotation annot = (Annotation) element;
-                    PdfAnnotation an = convertAnnotation(writer, annot);
-                    annotations.add(an);
+                    Rectangle rect = new Rectangle(0, 0);
+                    if (line != null)
+                    	rect = new Rectangle(annot.llx(indentRight() - line.widthLeft()), annot.ury(indentTop() - currentHeight - 20), annot.urx(indentRight() - line.widthLeft() + 20), annot.lly(indentTop() - currentHeight));
+                    PdfAnnotation an = PdfAnnotationsImp.convertAnnotation(writer, annot, rect);
+                    annotationsImp.addPlainAnnotation(an);
                     pageEmpty = false;
                     break;
                 }
                 case Element.PHRASE: {
+                	leadingCount++;
                     // we cast the element to a phrase and set the leading of the document
-                    leading = ((Phrase) element).leading();
+                    leading = ((Phrase) element).getLeading();
                     // we process the element
                     element.process(this);
+                    leadingCount--;
                     break;
                 }
                 case Element.PARAGRAPH: {
+                	leadingCount++;
                     // we cast the element to a paragraph
                     Paragraph paragraph = (Paragraph) element;
-                    
-                    float spacingBefore = paragraph.spacingBefore();
-                    if (spacingBefore != 0) {
-                        leading = spacingBefore;
-                        carriageReturn();
-                        if (!pageEmpty) {
-                            /*
-                             * Don't add spacing before a paragraph if it's the first
-                             * on the page
-                             */
-                            Chunk space = new Chunk(" ");
-                            space.process(this);
-                            carriageReturn();
-                        }
-                    }
-                    
+                    addSpacing(paragraph.getSpacingBefore(), leading, paragraph.getFont());
+
                     // we adjust the parameters of the document
-                    alignment = paragraph.alignment();
-                    leading = paragraph.leading();
-                    
+                    alignment = paragraph.getAlignment();
+                    leading = paragraph.getTotalLeading();
                     carriageReturn();
+
                     // we don't want to make orphans/widows
                     if (currentHeight + line.height() + leading > indentTop() - indentBottom()) {
                         newPage();
                     }
-
-                    // Begin added: Bonf (Marc Schneider) 2003-07-29
-                    //carriageReturn();
-                    // End added: Bonf (Marc Schneider) 2003-07-29
-
-                    indentLeft += paragraph.indentationLeft();
-                    indentRight += paragraph.indentationRight();
-                    
-                    // Begin removed: Bonf (Marc Schneider) 2003-07-29
+                    indentation.indentLeft += paragraph.getIndentationLeft();
+                    indentation.indentRight += paragraph.getIndentationRight();
                     carriageReturn();
-                    // End removed: Bonf (Marc Schneider) 2003-07-29
 
-                    
-                    //add by Jin-Hsia Yang
-                    
-                    paraIndent += paragraph.indentationLeft();
-                    //end add by Jin-Hsia Yang
-                    
                     PdfPageEvent pageEvent = writer.getPageEvent();
-                    if (pageEvent != null && isParagraph)
+                    if (pageEvent != null && !isSectionTitle)
                         pageEvent.onParagraph(writer, this, indentTop() - currentHeight);
-                    
+
 		    /* ssteward: dropped in 1.44
                     // if a paragraph has to be kept together, we wrap it in a table object
                     if (paragraph.getKeepTogether()) {
-                        Table table = new Table(1, 1);
-                        table.setOffset(0f);
-                        table.setBorder(Table.NO_BORDER);
-                        table.setWidth(100f);
-                        table.setTableFitsPage(true);
-                        Cell cell = new Cell(paragraph);
+                    	carriageReturn();
+                        PdfPTable table = new PdfPTable(1);
+                        table.setWidthPercentage(100f);
+                        PdfPCell cell = new PdfPCell();
+                        cell.addElement(paragraph);
                         cell.setBorder(Table.NO_BORDER);
-                        //patch by Matt Benson 11/01/2002 - 14:32:00
-                        cell.setHorizontalAlignment(paragraph.alignment());
-                        //end patch by Matt Benson
+                        cell.setPadding(0);
                         table.addCell(cell);
+                        indentation.indentLeft -= paragraph.getIndentationLeft();
+                        indentation.indentRight -= paragraph.getIndentationRight();
                         this.add(table);
-                        break;
+                        indentation.indentLeft += paragraph.getIndentationLeft();
+                        indentation.indentRight += paragraph.getIndentationRight();
                     }
-                    else
+                    else {
 		    */
-                        // we process the paragraph
-                        element.process(this);
-                    
-                    //add by Jin-Hsia Yang and blowagie
-                    paraIndent -= paragraph.indentationLeft();
-                    //end add by Jin-Hsia Yang and blowagie
-                    
-                    // Begin removed: Bonf (Marc Schneider) 2003-07-29
-                    //       carriageReturn();
-                    // End removed: Bonf (Marc Schneider) 2003-07-29
-                    
-                    float spacingAfter = paragraph.spacingAfter();
-                    if (spacingAfter != 0) {
-                        leading = spacingAfter;
+                    	line.setExtraIndent(paragraph.getFirstLineIndent());
+                    	element.process(this);
                         carriageReturn();
-                        if (currentHeight + line.height() + leading < indentTop() - indentBottom()) {
-                            /*
-                             * Only add spacing after a paragraph if the extra
-                             * spacing fits on the page.
-                             */
-                            Chunk space = new Chunk(" ");
-                            space.process(this);
-                            carriageReturn();
-                        }
-                        leading = paragraph.leading();      // restore original leading
-                    }
+                        addSpacing(paragraph.getSpacingAfter(), paragraph.getTotalLeading(), paragraph.getFont());
+                    //}
 
-                    if (pageEvent != null && isParagraph)
+                    if (pageEvent != null && !isSectionTitle)
                         pageEvent.onParagraphEnd(writer, this, indentTop() - currentHeight);
-                    
-                    alignment = Element.ALIGN_LEFT;
-                    indentLeft -= paragraph.indentationLeft();
-                    indentRight -= paragraph.indentationRight();
-                    
-                    // Begin added: Bonf (Marc Schneider) 2003-07-29
-                    carriageReturn();
-                    // End added: Bonf (Marc Schneider) 2003-07-29
 
-                    //add by Jin-Hsia Yang
-                    
-                    //end add by Jin-Hsia Yang
-                    
+                    alignment = Element.ALIGN_LEFT;
+                    indentation.indentLeft -= paragraph.getIndentationLeft();
+                    indentation.indentRight -= paragraph.getIndentationRight();
+                    carriageReturn();
+                    leadingCount--;
                     break;
                 }
 		    /* ssteward: dropped in 1.44
@@ -1536,132 +577,110 @@ static class StringCompare implements Comparator {
                     // Chapters and Sections only differ in their constructor
                     // so we cast both to a Section
                     Section section = (Section) element;
-                    
-                    boolean hasTitle = section.title() != null;
-                    
+                    PdfPageEvent pageEvent = writer.getPageEvent();
+
+                    boolean hasTitle = section.isNotAddedYet()
+                    	&& section.getTitle() != null;
+
                     // if the section is a chapter, we begin a new page
-                    if (section.isChapter()) {
+                    if (section.isTriggerNewPage()) {
                         newPage();
-                    }
-                    // otherwise, we begin a new line
-                    else {
-                        newLine();
                     }
 
                     if (hasTitle) {
-                    float fith = indentTop() - currentHeight;
-                    int rotation = pageSize.getRotation();
-                    if (rotation == 90 || rotation == 180)
-                        fith = pageSize.height() - fith;
-                    PdfDestination destination = new PdfDestination(PdfDestination.FITH, fith);
-                    while (currentOutline.level() >= section.depth()) {
-                        currentOutline = currentOutline.parent();
+                    	float fith = indentTop() - currentHeight;
+                    	int rotation = pageSize.getRotation();
+                    	if (rotation == 90 || rotation == 180)
+                    		fith = pageSize.getHeight() - fith;
+                    	PdfDestination destination = new PdfDestination(PdfDestination.FITH, fith);
+                    	while (currentOutline.level() >= section.getDepth()) {
+                    		currentOutline = currentOutline.parent();
+                    	}
+                    	PdfOutline outline = new PdfOutline(currentOutline, destination, section.getBookmarkTitle(), section.isBookmarkOpen());
+                    	currentOutline = outline;
                     }
-                    PdfOutline outline = new PdfOutline(currentOutline, destination, section.getBookmarkTitle(), section.isBookmarkOpen());
-                    currentOutline = outline;
-                    }
-                    
+
                     // some values are set
                     carriageReturn();
-                    indentLeft += section.indentationLeft();
-                    indentRight += section.indentationRight();
-                    
-                    PdfPageEvent pageEvent = writer.getPageEvent();
-                    if (pageEvent != null)
+                    indentation.sectionIndentLeft += section.getIndentationLeft();
+                    indentation.sectionIndentRight += section.getIndentationRight();
+
+                    if (section.isNotAddedYet() && pageEvent != null)
                         if (element.type() == Element.CHAPTER)
-                            pageEvent.onChapter(writer, this, indentTop() - currentHeight, section.title());
+                            pageEvent.onChapter(writer, this, indentTop() - currentHeight, section.getTitle());
                         else
-                            pageEvent.onSection(writer, this, indentTop() - currentHeight, section.depth(), section.title());
-                    
+                            pageEvent.onSection(writer, this, indentTop() - currentHeight, section.getDepth(), section.getTitle());
+
                     // the title of the section (if any has to be printed)
                     if (hasTitle) {
-                        isParagraph = false;
-                        add(section.title());
-                        isParagraph = true;
+                        isSectionTitle = true;
+                        add(section.getTitle());
+                        isSectionTitle = false;
                     }
-                    indentLeft += section.indentation();
+                    indentation.sectionIndentLeft += section.getIndentation();
                     // we process the section
                     element.process(this);
+                    flushLines();
                     // some parameters are set back to normal again
-                    indentLeft -= section.indentationLeft() + section.indentation();
-                    indentRight -= section.indentationRight();
-                    
-                    if (pageEvent != null)
+                    indentation.sectionIndentLeft -= (section.getIndentationLeft() + section.getIndentation());
+                    indentation.sectionIndentRight -= section.getIndentationRight();
+
+                    if (section.isComplete() && pageEvent != null)
                         if (element.type() == Element.CHAPTER)
                             pageEvent.onChapterEnd(writer, this, indentTop() - currentHeight);
                         else
                             pageEvent.onSectionEnd(writer, this, indentTop() - currentHeight);
-                    
+
                     break;
                 }
 */
                 case Element.LIST: {
                     // we cast the element to a List
                     List list = (List) element;
+                    if (list.isAlignindent()) {
+                    	list.normalizeIndentation();
+                    }
                     // we adjust the document
-                    listIndentLeft += list.indentationLeft();
-                    indentRight += list.indentationRight();
+                    indentation.listIndentLeft += list.getIndentationLeft();
+                    indentation.indentRight += list.getIndentationRight();
                     // we process the items in the list
                     element.process(this);
                     // some parameters are set back to normal again
-                    listIndentLeft -= list.indentationLeft();
-                    indentRight -= list.indentationRight();
+                    indentation.listIndentLeft -= list.getIndentationLeft();
+                    indentation.indentRight -= list.getIndentationRight();
+                    carriageReturn();
                     break;
                 }
                 case Element.LISTITEM: {
+                	leadingCount++;
                     // we cast the element to a ListItem
                     ListItem listItem = (ListItem) element;
-                   
-                    float spacingBefore = listItem.spacingBefore();
-                    if (spacingBefore != 0) {
-                        leading = spacingBefore;
-                        carriageReturn();
-                        if (!pageEmpty) {
-                            /*
-                             * Don't add spacing before a paragraph if it's the first
-                             * on the page
-                             */
-                            Chunk space = new Chunk(" ");
-                            space.process(this);
-                            carriageReturn();
-                        }
-                    }
-                   
+
+                    addSpacing(listItem.getSpacingBefore(), leading, listItem.getFont());
+
                     // we adjust the document
-                    alignment = listItem.alignment();
-                    listIndentLeft += listItem.indentationLeft();
-                    indentRight += listItem.indentationRight();
-                    leading = listItem.leading();
+                    alignment = listItem.getAlignment();
+                    indentation.listIndentLeft += listItem.getIndentationLeft();
+                    indentation.indentRight += listItem.getIndentationRight();
+                    leading = listItem.getTotalLeading();
                     carriageReturn();
+
                     // we prepare the current line to be able to show us the listsymbol
                     line.setListItem(listItem);
                     // we process the item
                     element.process(this);
 
-                    float spacingAfter = listItem.spacingAfter();
-                    if (spacingAfter != 0) {
-                        leading = spacingAfter;
-                        carriageReturn();
-                        if (currentHeight + line.height() + leading < indentTop() - indentBottom()) {
-                            /*
-                             * Only add spacing after a paragraph if the extra
-                             * spacing fits on the page.
-                             */
-                            Chunk space = new Chunk(" ");
-                            space.process(this);
-                            carriageReturn();
-                        }
-                        leading = listItem.leading();      // restore original leading
-                    }
-                   
+                    addSpacing(listItem.getSpacingAfter(), listItem.getTotalLeading(), listItem.getFont());
+
                     // if the last line is justified, it should be aligned to the left
-                    //                          if (line.hasToBeJustified()) {
-                    //                                  line.resetAlignment();
-                    //                          }
+                    if (line.hasToBeJustified()) {
+                    	line.resetAlignment();
+                    }
                     // some parameters are set back to normal again
                     carriageReturn();
-                    listIndentLeft -= listItem.indentationLeft();
-                    indentRight -= listItem.indentationRight();
+                    indentation.listIndentLeft -= listItem.getIndentationLeft();
+                    indentation.indentRight -= listItem.getIndentationRight();
+                    leadingCount--;
                     break;
                 }
                 case Element.RECTANGLE: {
@@ -1679,8 +698,10 @@ static class StringCompare implements Comparator {
                     // before every table, we add a new line and flush all lines
                     ensureNewLine();
                     flushLines();
-                    addPTable(ptable);                    
+
+                    addPTable(ptable);
                     pageEmpty = false;
+                    newLine();
                     break;
                 }
                 case Element.MULTI_COLUMN_TEXT: {
@@ -1694,86 +715,73 @@ static class StringCompare implements Comparator {
                     break;
                 }
                 case Element.TABLE : {
-                    
-		    *//*
-                     * This is a list of people who worked on the Table functionality.
-                     * To see who did what, please check the CVS repository:
-                     *
-                     * Leslie Baski
-                     * Matt Benson
-                     * Francesco De Milato
-                     * David Freels
-                     * Bruno Lowagie
-                     * Veerendra Namineni
-                     * Geert Poels
-                     * Tom Ring
-                     * Paulo Soares
-                     * Gerald Fehringer
-                     * Steve Appling
-                     *//*
-	                    
-					PdfTable table;
-                    if (element instanceof PdfTable) {
-                    	// Already pre-rendered
-                    	table = (PdfTable)element;
-						table.updateRowAdditions();
-                    } else if (element instanceof SimpleTable) {
+                    if (element instanceof SimpleTable) {
                     	PdfPTable ptable = ((SimpleTable)element).createPdfPTable();
                     	if (ptable.size() <= ptable.getHeaderRows())
                     		break; //nothing to do
-            		
+
                     	// before every table, we add a new line and flush all lines
                     	ensureNewLine();
                     	flushLines();
-                    	addPTable(ptable);                    
+                    	addPTable(ptable);
                     	pageEmpty = false;
                     	break;
                     } else if (element instanceof Table) {
-
                     	try {
-                    		PdfPTable ptable = ((Table)element).createPdfPTable();
-                    		if (ptable.size() <= ptable.getHeaderRows())
-                                break; //nothing to do
-                    		
-                            // before every table, we add a new line and flush all lines
-                            ensureNewLine();
-                            flushLines();
-                            addPTable(ptable);                    
-                            pageEmpty = false;
-                            break;
+                       		PdfPTable ptable = ((Table)element).createPdfPTable();
+                       		if (ptable.size() <= ptable.getHeaderRows())
+                       			break; //nothing to do
+                       		// before every table, we add a new line and flush all lines
+                       		ensureNewLine();
+                       		flushLines();
+                       		addPTable(ptable);
+                       		pageEmpty = false;
+                       		break;
                     	}
                     	catch(BadElementException bee) {
                     		// constructing the PdfTable
-                            // Before the table, add a blank line using offset or default leading
-                            float offset = ((Table)element).getOffset();
-                            if (Float.isNaN(offset))
-                                offset = leading;
-                            carriageReturn();
-                            lines.add(new PdfLine(indentLeft(), indentRight(), alignment, offset));
-                            currentHeight += offset;
-    	                    table = getPdfTable((Table)element, false);
+                    		// Before the table, add a blank line using offset or default leading
+                    		float offset = ((Table)element).getOffset();
+                    		if (Float.isNaN(offset))
+                    			offset = leading;
+                    		carriageReturn();
+                    		lines.add(new PdfLine(indentLeft(), indentRight(), alignment, offset));
+                    		currentHeight += offset;
+                    		addPdfTable((Table)element);
                     	}
 					} else {
 						return false;
 					}
-                    add(table, false);
                     break;
                 }
                 case Element.JPEG:
+                case Element.JPEG2000:
+                case Element.JBIG2:
                 case Element.IMGRAW:
                 case Element.IMGTEMPLATE: {
                     //carriageReturn(); suggestion by Marc Campforts
                     add((Image) element);
                     break;
                 }
-                case Element.GRAPHIC: {
-                    Graphic graphic = (Graphic) element;
-                    graphic.processAttributes(indentLeft(), indentBottom(), indentRight(), indentTop(), indentTop() - currentHeight);
-                    graphics.add(graphic);
+                case Element.YMARK: {
+                    DrawInterface zh = (DrawInterface)element;
+                    zh.draw(graphics, indentLeft(), indentBottom(), indentRight(), indentTop(), indentTop() - currentHeight - (leadingCount > 0 ? leading : 0));
                     pageEmpty = false;
                     break;
                 }
     */
+                case Element.MARKED: {
+                	MarkedObject mo;
+                	if (element instanceof MarkedSection) {
+                		mo = ((MarkedSection)element).getTitle();
+                		if (mo != null) {
+                			mo.process(this);
+                		}
+                	}
+                	mo = (MarkedObject)element;
+                	mo.process(this);
+                	break;
+                }
                 default:
                     return false;
             }
@@ -1784,260 +792,418 @@ static class StringCompare implements Comparator {
             throw new DocumentException(e);
         }
     }
-    
-    // methods to add Content
-        
+
+//	[L1] DocListener interface
+
     /**
-     * Adds an image to the document.
-     * @param image the <CODE>Image</CODE> to add
-     * @throws PdfException on error
-     * @throws DocumentException on error
+     * Opens the document.
+     * <P>
+     * You have to open the document before you can begin to add content
+     * to the body of the document.
      */
-    /* ssteward: dropped in 1.44
-    private void add(Image image) throws PdfException, DocumentException {
-        
-        if (image.hasAbsolutePosition()) {
-            graphics.addImage(image);
-            pageEmpty = false;
-            return;
+    public void open() {
+        if (!open) {
+            super.open();
+            writer.open();
+            rootOutline = new PdfOutline(writer);
+            currentOutline = rootOutline;
         }
-        
-        // if there isn't enough room for the image on this page, save it for the next page
-        if (currentHeight != 0 && indentTop() - currentHeight - image.scaledHeight() < indentBottom()) {
-            if (!strictImageSequence && imageWait == null) {
-                imageWait = image;
-                return;
-            }
-            newPage();
-            if (currentHeight != 0 && indentTop() - currentHeight - image.scaledHeight() < indentBottom()) {
-                imageWait = image;
-                return;
-            }
+        try {
+            initPage();
         }
-        pageEmpty = false;
-        // avoid endless loops
-        if (image == imageWait)
-            imageWait = null;
-        boolean textwrap = (image.alignment() & Image.TEXTWRAP) == Image.TEXTWRAP
-        && !((image.alignment() & Image.MIDDLE) == Image.MIDDLE);
-        boolean underlying = (image.alignment() & Image.UNDERLYING) == Image.UNDERLYING;
-        float diff = leading / 2;
-        if (textwrap) {
-            diff += leading;
-        }
-        float lowerleft = indentTop() - currentHeight - image.scaledHeight() -diff;
-        float mt[] = image.matrix();
-        float startPosition = indentLeft() - mt[4];
-        if ((image.alignment() & Image.RIGHT) == Image.RIGHT) startPosition = indentRight() - image.scaledWidth() - mt[4];
-        if ((image.alignment() & Image.MIDDLE) == Image.MIDDLE) startPosition = indentLeft() + ((indentRight() - indentLeft() - image.scaledWidth()) / 2) - mt[4];
-        if (image.hasAbsoluteX()) startPosition = image.absoluteX();
-        graphics.addImage(image, mt[0], mt[1], mt[2], mt[3], startPosition, lowerleft - mt[5]);
-        if (textwrap) {
-            if (imageEnd < 0 || imageEnd < currentHeight + image.scaledHeight() + diff) {
-                imageEnd = currentHeight + image.scaledHeight() + diff;
-            }
-            if ((image.alignment() & Image.RIGHT) == Image.RIGHT) {
-            	// indentation suggested by Pelikan Stephan
-                imageIndentRight += image.scaledWidth() + image.indentationLeft();
-            }
-            else {
-            	// indentation suggested by Pelikan Stephan
-                imageIndentLeft += image.scaledWidth() + image.indentationRight();
-            }
-        }
-        if (!(textwrap || underlying)) {
-            currentHeight += image.scaledHeight() + diff;
-            flushLines();
-            text.moveText(0, - (image.scaledHeight() + diff));
-            newLine();
+        catch(DocumentException de) {
+            throw new ExceptionConverter(de);
         }
     }
-    */
+
+//	[L2] DocListener interface
+
+    /**
+     * Closes the document.
+     * <B>
+     * Once all the content has been written in the body, you have to close
+     * the body. After that nothing can be written to the body anymore.
+     */
+    public void close() {
+        if (close) {
+            return;
+        }
+        try {
+            boolean wasImage = false; // (imageWait != null); ssteward: dropped in 1.44
+            newPage();
+            if ( false || wasImage) newPage(); // imageWait != null  ssteward: dropped in 1.44
+            if (annotationsImp.hasUnusedAnnotations())
+                throw new RuntimeException(MessageLocalization.getComposedMessage("not.all.annotations.could.be.added.to.the.document.the.document.doesn.t.have.enough.pages"));
+            PdfPageEvent pageEvent = writer.getPageEvent();
+            if (pageEvent != null)
+                pageEvent.onCloseDocument(writer, this);
+            super.close();
+
+            writer.addLocalDestinations(localDestinations);
+            calculateOutlineCount();
+            writeOutlines();
+        }
+        catch(Exception e) {
+            throw ExceptionConverter.convertException(e);
+        }
+
+        writer.close();
+    }
+
+//	[L3] DocListener interface
+    protected int textEmptySize;
+
+    // [C9] Metadata for the page
+    /** XMP Metadata for the page. */
+    protected byte[] xmpMetadata = null;
+	/**
+	 * Use this method to set the XMP Metadata.
+	 * @param xmpMetadata The xmpMetadata to set.
+	 */
+	public void setXmpMetadata(byte[] xmpMetadata) {
+		this.xmpMetadata = xmpMetadata;
+	}
+
+    /**
+     * Makes a new page and sends it to the <CODE>PdfWriter</CODE>.
+     *
+     * @return a <CODE>boolean</CODE>
+     */
+    public boolean newPage() {
+        lastElementType = -1;
+        if (isPageEmpty()) {
+        	setNewPageSizeAndMargins();
+            return false;
+        }
+    	if (!open || close) {
+    		throw new RuntimeException(MessageLocalization.getComposedMessage("the.document.is.not.open"));
+    	}
+        PdfPageEvent pageEvent = writer.getPageEvent();
+        if (pageEvent != null)
+            pageEvent.onEndPage(writer, this);
+
+        //Added to inform any listeners that we are moving to a new page (added by David Freels)
+        super.newPage();
+
+        // the following 2 lines were added by Pelikan Stephan
+        indentation.imageIndentLeft = 0;
+        indentation.imageIndentRight = 0;
+
+        try {
+            // we flush the arraylist with recently written lines
+        	flushLines();
+
+        	// we prepare the elements of the page dictionary
+
+        	// [U1] page size and rotation
+        	int rotation = pageSize.getRotation();
+
+        	// [C10]
+        	if (writer.isPdfX()) {
+        		if (thisBoxSize.containsKey("art") && thisBoxSize.containsKey("trim"))
+        			throw new PdfXConformanceException(MessageLocalization.getComposedMessage("only.one.of.artbox.or.trimbox.can.exist.in.the.page"));
+        		if (!thisBoxSize.containsKey("art") && !thisBoxSize.containsKey("trim")) {
+        			if (thisBoxSize.containsKey("crop"))
+        				thisBoxSize.put("trim", thisBoxSize.get("crop"));
+        			else
+        				thisBoxSize.put("trim", new PdfRectangle(pageSize, pageSize.getRotation()));
+        		}
+        	}
+
+        	// [M1]
+        	pageResources.addDefaultColorDiff(writer.getDefaultColorspace());
+            if (writer.isRgbTransparencyBlending()) {
+                PdfDictionary dcs = new PdfDictionary();
+                dcs.put(PdfName.CS, PdfName.DEVICERGB);
+                pageResources.addDefaultColorDiff(dcs);
+            }
+        	PdfDictionary resources = pageResources.getResources();
+
+        	// we create the page dictionary
+
+        	PdfPage page = new PdfPage(new PdfRectangle(pageSize, rotation), thisBoxSize, resources, rotation);
+        	page.put(PdfName.TABS, writer.getTabs());
+
+            // we complete the page dictionary
+
+            // [C9] if there is XMP data to add: add it
+            if (xmpMetadata != null) {
+            	PdfStream xmp = new PdfStream(xmpMetadata);
+            	xmp.put(PdfName.TYPE, PdfName.METADATA);
+            	xmp.put(PdfName.SUBTYPE, PdfName.XML);
+            	PdfEncryption crypto = writer.getEncryption();
+                if (crypto != null && !crypto.isMetadataEncrypted()) {
+                    PdfArray ar = new PdfArray();
+                    ar.add(PdfName.CRYPT);
+                    xmp.put(PdfName.FILTER, ar);
+                }
+            	page.put(PdfName.METADATA, writer.addToBody(xmp).getIndirectReference());
+            }
+
+        	// [U3] page actions: transition, duration, additional actions
+        	if (this.transition!=null) {
+        		page.put(PdfName.TRANS, this.transition.getTransitionDictionary());
+        		transition = null;
+        	}
+        	if (this.duration>0) {
+        		page.put(PdfName.DUR,new PdfNumber(this.duration));
+        		duration = 0;
+        	}
+        	if (pageAA != null) {
+        		page.put(PdfName.AA, writer.addToBody(pageAA).getIndirectReference());
+        		pageAA = null;
+        	}
+
+        	// [U4] we add the thumbs
+        	if (thumb != null) {
+        		page.put(PdfName.THUMB, thumb);
+        		thumb = null;
+        	}
+
+        	// [U8] we check if the userunit is defined
+        	if (writer.getUserunit() > 0f) {
+        		page.put(PdfName.USERUNIT, new PdfNumber(writer.getUserunit()));
+        	}
+
+        	// [C5] and [C8] we add the annotations
+        	if (annotationsImp.hasUnusedAnnotations()) {
+        		PdfArray array = annotationsImp.rotateAnnotations(writer, pageSize);
+        		if (array.size() != 0)
+        			page.put(PdfName.ANNOTS, array);
+        	}
+
+        	// [F12] we add tag info
+        	if (writer.isTagged())
+        		page.put(PdfName.STRUCTPARENTS, new PdfNumber(writer.getCurrentPageNumber() - 1));
+
+            if (text.size() > textEmptySize)
+        		text.endText();
+        	else
+        		text = null;
+        	writer.add(page, new PdfContents(writer.getDirectContentUnder(), graphics, text, writer.getDirectContent(), pageSize));
+        	// we initialize the new page
+        	initPage();
+        }
+        catch(DocumentException de) {
+        	// maybe this never happens, but it's better to check.
+        	throw new ExceptionConverter(de);
+        }
+        catch (IOException ioe) {
+            throw new ExceptionConverter(ioe);
+        }
+        return true;
+    }
+
+//	[L4] DocListener interface
+
+    /**
+     * Sets the pagesize.
+     *
+     * @param pageSize the new pagesize
+     * @return <CODE>true</CODE> if the page size was set
+     */
+    public boolean setPageSize(Rectangle pageSize) {
+        if (writer != null && writer.isPaused()) {
+            return false;
+        }
+        nextPageSize = new Rectangle(pageSize);
+        return true;
+    }
+
+//	[L5] DocListener interface
+
+    /** margin in x direction starting from the left. Will be valid in the next page */
+    protected float nextMarginLeft;
+
+    /** margin in x direction starting from the right. Will be valid in the next page */
+    protected float nextMarginRight;
+
+    /** margin in y direction starting from the top. Will be valid in the next page */
+    protected float nextMarginTop;
+
+    /** margin in y direction starting from the bottom. Will be valid in the next page */
+    protected float nextMarginBottom;
+
+    /**
+     * Sets the margins.
+     *
+     * @param	marginLeft		the margin on the left
+     * @param	marginRight		the margin on the right
+     * @param	marginTop		the margin on the top
+     * @param	marginBottom	the margin on the bottom
+     * @return	a <CODE>boolean</CODE>
+     */
+    public boolean setMargins(float marginLeft, float marginRight, float marginTop, float marginBottom) {
+        if (writer != null && writer.isPaused()) {
+            return false;
+        }
+        nextMarginLeft = marginLeft;
+        nextMarginRight = marginRight;
+        nextMarginTop = marginTop;
+        nextMarginBottom = marginBottom;
+        return true;
+    }
+
+//	[L6] DocListener interface
+
+    /**
+     * @see com.lowagie.text.DocListener#setMarginMirroring(boolean)
+     */
+    public boolean setMarginMirroring(boolean MarginMirroring) {
+        if (writer != null && writer.isPaused()) {
+            return false;
+        }
+        return super.setMarginMirroring(MarginMirroring);
+    }
     
+    /**
+     * @see com.lowagie.text.DocListener#setMarginMirroring(boolean)
+     * @since	2.1.6
+     */
+    public boolean setMarginMirroringTopBottom(boolean MarginMirroringTopBottom) {
+        if (writer != null && writer.isPaused()) {
+            return false;
+        }
+        return super.setMarginMirroringTopBottom(MarginMirroringTopBottom);
+    }
+
+//	[L7] DocListener interface
+
+    /**
+     * Sets the page number.
+     *
+     * @param	pageN		the new page number
+     */
+    public void setPageCount(int pageN) {
+        if (writer != null && writer.isPaused()) {
+            return;
+        }
+        super.setPageCount(pageN);
+    }
+
+//	[L8] DocListener interface
+
+    /**
+     * Sets the page number to 0.
+     */
+    public void resetPageCount() {
+        if (writer != null && writer.isPaused()) {
+            return;
+        }
+        super.resetPageCount();
+    }
+
+//	[L9] DocListener interface
+
+    /**
+     * Changes the header of this document.
+     *
+     * @param header the new header
+     */
+    /* ssteward: dropped in 1.44
+    public void setHeader(HeaderFooter header) {
+        if (writer != null && writer.isPaused()) {
+            return;
+        }
+        super.setHeader(header);
+    }
+    */
+
+//	[L10] DocListener interface
+
+    /**
+     * Resets the header of this document.
+     */
+    /* ssteward: dropped in 1.44
+    public void resetHeader() {
+        if (writer != null && writer.isPaused()) {
+            return;
+        }
+        super.resetHeader();
+    }
+    */
+
+//	[L11] DocListener interface
+
+    /**
+     * Changes the footer of this document.
+     *
+     * @param	footer		the new footer
+     */
+    /* ssteward: dropped in 1.44
+    public void setFooter(HeaderFooter footer) {
+        if (writer != null && writer.isPaused()) {
+            return;
+        }
+        super.setFooter(footer);
+    }
+    */
+
+//	[L12] DocListener interface
+
+    /**
+     * Resets the footer of this document.
+     */
+    /* ssteward: dropped in 1.44
+    public void resetFooter() {
+        if (writer != null && writer.isPaused()) {
+            return;
+        }
+        super.resetFooter();
+    }
+    */
+
+// DOCLISTENER METHODS END
+
+    /** Signals that OnOpenDocument should be called. */
+    protected boolean firstPageEvent = true;
+
     /**
      * Initializes a page.
      * <P>
      * If the footer/header is set, it is printed.
      * @throws DocumentException on error
      */
-    
-    private void initPage() throws DocumentException {
-        
-        // initialisation of some page objects
-        markPoint = 0;
-        annotations = delayedAnnotations;
-        delayedAnnotations = new ArrayList();
-        pageResources = new PageResources();
-        writer.resetContent();
-        
+    protected void initPage() throws DocumentException {
         // the pagenumber is incremented
         pageN++;
-        
-        // graphics and text are initialized
-        float oldleading = leading;
-        int oldAlignment = alignment;
-        
-        if (marginMirroring && (getPageNumber() & 1) == 0) {
-            marginRight = nextMarginLeft;
-            marginLeft = nextMarginRight;
-        }
-        else {
-            marginLeft = nextMarginLeft;
-            marginRight = nextMarginRight;
-        }
-        marginTop = nextMarginTop;
-        marginBottom = nextMarginBottom;
-        imageEnd = -1;
-        imageIndentRight = 0;
-        imageIndentLeft = 0;
+
+        // initialization of some page objects
+        annotationsImp.resetAnnotations();
+        pageResources = new PageResources();
+
+        writer.resetContent();
         graphics = new PdfContentByte(writer);
         text = new PdfContentByte(writer);
-        text.beginText();
-        text.moveText(left(), top());
-        textEmptySize = text.size();
         text.reset();
         text.beginText();
-        leading = 16;
-        indentBottom = 0;
-        indentTop = 0;
+        textEmptySize = text.size();
+
+    	markPoint = 0;
+        setNewPageSizeAndMargins();
+        imageEnd = -1;
+        indentation.imageIndentRight = 0;
+        indentation.imageIndentLeft = 0;
+        indentation.indentBottom = 0;
+        indentation.indentTop = 0;
         currentHeight = 0;
-        
+
         // backgroundcolors, etc...
-        pageSize = nextPageSize;
         thisBoxSize = new HashMap(boxSize);
-        if (pageSize.backgroundColor() != null
+        if (pageSize.getBackgroundColor() != null
         || pageSize.hasBorders()
-        || pageSize.borderColor() != null
-        || pageSize.grayFill() > 0) {
+        || pageSize.getBorderColor() != null) {
             add(pageSize);
         }
-        
-        // if there is a watermark, the watermark is added
-	/*
-        if (watermark != null) {
-            float mt[] = watermark.matrix();
-            graphics.addImage(watermark, mt[0], mt[1], mt[2], mt[3], watermark.offsetX() - mt[4], watermark.offsetY() - mt[5]);
-        }
-	*/
-        
+
+        float oldleading = leading;
+        int oldAlignment = alignment;
         // if there is a footer, the footer is added
-	/* ssteward: dropped in 1.44
-        if (footer != null) {
-			*//*
-				Added by Edgar Leonardo Prieto Perilla
-			*//*
-			// Avoid footer identation
-			float tmpIndentLeft = indentLeft;
-			float tmpIndentRight = indentRight;
-                        // Begin added: Bonf (Marc Schneider) 2003-07-29
-                        float tmpListIndentLeft = listIndentLeft;
-                        float tmpImageIndentLeft = imageIndentLeft;
-                        float tmpImageIndentRight = imageIndentRight;
-                        // End added: Bonf (Marc Schneider) 2003-07-29
-
-			indentLeft = indentRight = 0;
-                        // Begin added: Bonf (Marc Schneider) 2003-07-29
-                        listIndentLeft = 0;
-                        imageIndentLeft = 0;
-                        imageIndentRight = 0;
-                        // End added: Bonf (Marc Schneider) 2003-07-29
-			*//*
-				End Added by Edgar Leonardo Prieto Perilla
-			*//*
-
-			footer.setPageNumber(pageN);
-            leading = footer.paragraph().leading();
-            add(footer.paragraph());
-            // adding the footer limits the height
-            indentBottom = currentHeight;
-            text.moveText(left(), indentBottom());
-            flushLines();
-            text.moveText(-left(), -bottom());
-            footer.setTop(bottom(currentHeight));
-            footer.setBottom(bottom() - (0.75f * leading));
-            footer.setLeft(left());
-            footer.setRight(right());
-            graphics.rectangle(footer);
-            indentBottom = currentHeight + leading * 2;
-            currentHeight = 0;
-
-			*//*
-				Added by Edgar Leonardo Prieto Perilla
-			*//*
-			indentLeft = tmpIndentLeft;
-			indentRight = tmpIndentRight;
-                        // Begin added: Bonf (Marc Schneider) 2003-07-29
-                        listIndentLeft = tmpListIndentLeft;
-                        imageIndentLeft = tmpImageIndentLeft;
-                        imageIndentRight = tmpImageIndentRight;
-                        // End added: Bonf (Marc Schneider) 2003-07-29
-			*//*
-				End Added by Edgar Leonardo Prieto Perilla
-			*//*
-        }
-	*/
-        
+        // doFooter(); ssteward: dropped in 1.44
         // we move to the left/top position of the page
         text.moveText(left(), top());
-        
-	/* ssteward: dropped in 1.44
-        // if there is a header, the header = added
-        if (header != null) {
-			*//*
-				Added by Edgar Leonardo Prieto Perilla
-			*//*
-			// Avoid header identation
-			float tmpIndentLeft = indentLeft;
-			float tmpIndentRight = indentRight;
-                        // Begin added: Bonf (Marc Schneider) 2003-07-29
-                        float tmpListIndentLeft = listIndentLeft;
-                        float tmpImageIndentLeft = imageIndentLeft;
-                        float tmpImageIndentRight = imageIndentRight;
-                        // End added: Bonf (Marc Schneider) 2003-07-29
-
-			indentLeft = indentRight = 0;
-                        //  Added: Bonf
-                        listIndentLeft = 0;
-                        imageIndentLeft = 0;
-                        imageIndentRight = 0;
-                        // End added: Bonf
-			*//*
-				End Added by Edgar Leonardo Prieto Perilla
-			*//*
-			
-			header.setPageNumber(pageN);
-            leading = header.paragraph().leading();
-            text.moveText(0, leading);
-            add(header.paragraph());
-            newLine();
-            indentTop = currentHeight - leading;
-            header.setTop(top() + leading);
-            header.setBottom(indentTop() + leading * 2 / 3);
-            header.setLeft(left());
-            header.setRight(right());
-            graphics.rectangle(header);
-            flushLines();
-            currentHeight = 0;
-
-			*//*
-				Added by Edgar Leonardo Prieto Perilla
-			*//*
-			// Restore identation
-			indentLeft = tmpIndentLeft;
-			indentRight = tmpIndentRight;
-                        // Begin added: Bonf (Marc Schneider) 2003-07-29
-                        listIndentLeft = tmpListIndentLeft;
-                        imageIndentLeft = tmpImageIndentLeft;
-                        imageIndentRight = tmpImageIndentRight;
-                        // End added: Bonf (Marc Schneider) 2003-07-29
-			*//*
-				End Added by Edgar Leonardo Prieto Perilla
-			*//*
-        }
-	*/
-        
+        // doHeader(); ssteward: dropped in 1.44
         pageEmpty = true;
-        
         // if there is an image waiting to be drawn, draw it
 	/* ssteward: dropped in 1.44
         try {
@@ -2050,10 +1216,10 @@ static class StringCompare implements Comparator {
             throw new ExceptionConverter(e);
         }
 	*/
-        
         leading = oldleading;
         alignment = oldAlignment;
         carriageReturn();
+
         PdfPageEvent pageEvent = writer.getPageEvent();
         if (pageEvent != null) {
             if (firstPageEvent) {
@@ -2063,14 +1229,31 @@ static class StringCompare implements Comparator {
         }
         firstPageEvent = false;
     }
-    
+
+    /** The line that is currently being written. */
+    protected PdfLine line = null;
+    /** The lines that are written until now. */
+    protected ArrayList lines = new ArrayList();
+
+    /**
+     * Adds the current line to the list of lines and also adds an empty line.
+     * @throws DocumentException on error
+     */
+    protected void newLine() throws DocumentException {
+        lastElementType = -1;
+        carriageReturn();
+        if (lines != null && !lines.isEmpty()) {
+            lines.add(line);
+            currentHeight += line.height();
+        }
+        line = new PdfLine(indentLeft(), indentRight(), alignment, leading);
+    }
+
     /**
      * If the current line is not empty or null, it is added to the arraylist
      * of lines and a new empty line is added.
-     * @throws DocumentException on error
      */
-    
-    private void carriageReturn() throws DocumentException {
+    protected void carriageReturn() {
         // the arraylist with lines may not be null
         if (lines == null) {
             lines = new ArrayList();
@@ -2079,7 +1262,7 @@ static class StringCompare implements Comparator {
         if (line != null) {
             // we check if the end of the page is reached (bugfix by Francois Gravel)
             if (currentHeight + line.height() + leading < indentTop() - indentBottom()) {
-                // if so nonempty lines are added and the heigt is augmented
+                // if so nonempty lines are added and the height is augmented
                 if (line.size() > 0) {
                     currentHeight += line.height();
                     lines.add(line);
@@ -2093,28 +1276,46 @@ static class StringCompare implements Comparator {
         }
         if (imageEnd > -1 && currentHeight > imageEnd) {
             imageEnd = -1;
-            imageIndentRight = 0;
-            imageIndentLeft = 0;
+            indentation.imageIndentRight = 0;
+            indentation.imageIndentLeft = 0;
         }
         // a new current line is constructed
         line = new PdfLine(indentLeft(), indentRight(), alignment, leading);
     }
-    
+
     /**
-     * Adds the current line to the list of lines and also adds an empty line.
-     * @throws DocumentException on error
+     * Gets the current vertical page position.
+     * @param ensureNewLine Tells whether a new line shall be enforced. This may cause side effects
+     *   for elements that do not terminate the lines they've started because those lines will get
+     *   terminated.
+     * @return The current vertical page position.
      */
-    
-    private void newLine() throws DocumentException {
-        lastElementType = -1;
-        carriageReturn();
-        if (lines != null && lines.size() > 0) {
-            lines.add(line);
-            currentHeight += line.height();
+    public float getVerticalPosition(boolean ensureNewLine) {
+        // ensuring that a new line has been started.
+        if (ensureNewLine) {
+          ensureNewLine();
         }
-        line = new PdfLine(indentLeft(), indentRight(), alignment, leading);
+        return top() -  currentHeight - indentation.indentTop;
     }
-    
+
+    /** Holds the type of the last element, that has been added to the document. */
+    protected int lastElementType = -1;
+
+    /**
+     * Ensures that a new line has been started.
+     */
+    protected void ensureNewLine() {
+      try {
+        if ((lastElementType == Element.PHRASE) ||
+            (lastElementType == Element.CHUNK)) {
+          newLine();
+          flushLines();
+        }
+      } catch (DocumentException ex) {
+        throw new ExceptionConverter(ex);
+        }
+    }
+
     /**
      * Writes all the lines to the text-object.
      *
@@ -2126,20 +1327,10 @@ static class StringCompare implements Comparator {
         if (lines == null) {
             return 0;
         }
-        
-        //add by Jin-Hsia Yang
-        boolean newline=false;
-        //end add by Jin-Hsia Yang
-        
         // checks if a new Line has to be made.
         if (line != null && line.size() > 0) {
             lines.add(line);
             line = new PdfLine(indentLeft(), indentRight(), alignment, leading);
-            
-            //add by Jin-Hsia Yang
-            newline=true;
-            //end add by Jin-Hsia Yang
-            
         }
 
         // checks if the ArrayList with the lines is empty
@@ -2152,7 +1343,6 @@ static class StringCompare implements Comparator {
         PdfFont currentFont = null;
         float displacement = 0;
         PdfLine l;
-        PdfChunk chunk;
         Float lastBaseFactor = new Float(0);
         currentValues[1] = lastBaseFactor;
         // looping over all the lines
@@ -2160,16 +1350,10 @@ static class StringCompare implements Comparator {
 
             // this is a line in the loop
             l = (PdfLine) i.next();
-            
-            if(isNewpage && newline) { // fix Ken@PDI
-                newline=false;
-                text.moveText(l.indentLeft() - indentLeft() + listIndentLeft + paraIndent,-l.height());
-            }
-            else {
-                text.moveText(l.indentLeft() - indentLeft() + listIndentLeft, -l.height());
-            }
-            
-            // is the line preceeded by a symbol?
+
+            float moveTextX = l.indentLeft() - indentLeft() + indentation.indentLeft + indentation.listIndentLeft + indentation.sectionIndentLeft;
+            text.moveText(moveTextX, -l.height());
+            // is the line preceded by a symbol?
             if (l.listSymbol() != null) {
                 ColumnText.showTextAligned(graphics, Element.ALIGN_LEFT, new Phrase(l.listSymbol()), text.getXTLM() - l.listIndent(), text.getYTLM(), 0);
             }
@@ -2180,204 +1364,16 @@ static class StringCompare implements Comparator {
 
             currentFont = (PdfFont)currentValues[0];
             displacement += l.height();
-            if (indentLeft() - listIndentLeft != l.indentLeft()) {
-                text.moveText(indentLeft() - l.indentLeft() - listIndentLeft, 0);
-            }
-            
+            text.moveText(-moveTextX, 0);
+
         }
         lines = new ArrayList();
         return displacement;
     }
-    
-    // methods to retrieve information
-    
-    /**
-     * Gets the <CODE>PdfInfo</CODE>-object.
-     *
-     * @return	<CODE>PdfInfo</COPE>
-     */
-    
-    PdfInfo getInfo() {
-        return info;
-    }
-    
-    /**
-     * Gets the <CODE>PdfCatalog</CODE>-object.
-     *
-     * @param pages an indirect reference to this document pages
-     * @return <CODE>PdfCatalog</CODE>
-     */
-    
-    PdfCatalog getCatalog(PdfIndirectReference pages) throws DocumentException {
-        PdfCatalog catalog;
-        if (rootOutline.getKids().size() > 0) {
-            catalog = new PdfCatalog(pages, rootOutline.indirectReference(), writer);
-        }
-        else
-            catalog = new PdfCatalog(pages, writer);
-        if (openActionName != null) {
-            PdfAction action = getLocalGotoAction(openActionName);
-            catalog.setOpenAction(action);
-        }
-        else if (openActionAction != null)
-            catalog.setOpenAction(openActionAction);
-        
-        if (additionalActions != null)   {
-            catalog.setAdditionalActions(additionalActions);
-        }
-        
-        if (pageLabels != null)
-            catalog.setPageLabels(pageLabels);
-        catalog.addNames(localDestinations, documentJavaScript, writer);
-        // ssteward: debug; catalog.setViewerPreferences(viewerPreferences);
-        if (getAcroForm().isValid()) {
-            try {
-                catalog.setAcroForm(writer.addToBody(acroForm).getIndirectReference());
-            }
-            catch (IOException e) {
-                throw new ExceptionConverter(e);
-            }
-        }
-        return catalog;
-    }
-    
-    // methods concerning the layout
-    
-    /**
-     * Returns the bottomvalue of a <CODE>Table</CODE> if it were added to this document.
-     *
-     * @param	table	the table that may or may not be added to this document
-     * @return	a bottom value
-     */
-    /* ssteward: dropped in 1.44
-    float bottom(Table table) {
-        // where will the table begin?
-        float h = (currentHeight > 0) ? indentTop() - currentHeight - 2f * leading : indentTop();
-        // constructing a PdfTable
-        PdfTable tmp = getPdfTable(table, false);
-        return tmp.bottom();
-    }
-    */
-    
-    /**
-     * Checks if a <CODE>PdfPTable</CODE> fits the current page of the <CODE>PdfDocument</CODE>.
-     *
-     * @param	table	the table that has to be checked
-     * @param	margin	a certain margin
-     * @return	<CODE>true</CODE> if the <CODE>PdfPTable</CODE> fits the page, <CODE>false</CODE> otherwise.
-     */
-    /* ssteward: dropped in 1.44
-    boolean fitsPage(PdfPTable table, float margin) {
-            if (!table.isLockedWidth()) {
-                float totalWidth = (indentRight() - indentLeft()) * table.getWidthPercentage() / 100;
-                table.setTotalWidth(totalWidth);
-            }
-        // ensuring that a new line has been started.
-        ensureNewLine();
-            return table.getTotalHeight() <= indentTop() - currentHeight - indentBottom() - margin;
-        }
-    */
-    
-    
-    /**
-     * Gets the current vertical page position.
-     * @param ensureNewLine Tells whether a new line shall be enforced. This may cause side effects 
-     *   for elements that do not terminate the lines they've started because those lines will get
-     *   terminated. 
-     * @return The current vertical page position.
-     */
-    public float getVerticalPosition(boolean ensureNewLine) {
-        // ensuring that a new line has been started.
-        if (ensureNewLine) {
-          ensureNewLine();
-        }
-        return top() -  currentHeight - indentTop;
-    }
-    
-    /**
-     * Ensures that a new line has been started. 
-     */
-    private void ensureNewLine() {
-      try {
-        if ((lastElementType == Element.PHRASE) || 
-            (lastElementType == Element.CHUNK)) {
-          newLine();
-          flushLines();
-        }
-      } catch (DocumentException ex) {
-        throw new ExceptionConverter(ex);
-        }
-    }
-    
-    /**
-     * Gets the indentation on the left side.
-     *
-     * @return	a margin
-     */
-    
-    private float indentLeft() {
-        return left(indentLeft + listIndentLeft + imageIndentLeft);
-    }
-    
-    /**
-     * Gets the indentation on the right side.
-     *
-     * @return	a margin
-     */
-    
-    private float indentRight() {
-        return right(indentRight + imageIndentRight);
-    }
-    
-    /**
-     * Gets the indentation on the top side.
-     *
-     * @return	a margin
-     */
-    
-    private float indentTop() {
-        return top(indentTop);
-    }
-    
-    /**
-     * Gets the indentation on the bottom side.
-     *
-     * @return	a margin
-     */
-    
-    float indentBottom() {
-        return bottom(indentBottom);
-    }
-    
-    /**
-     * Adds a named outline to the document .
-     * @param outline the outline to be added
-     * @param name the name of this local destination
-     */
-    void addOutline(PdfOutline outline, String name) {
-        localDestination(name, outline.getPdfDestination());
-    }
-    
-    /**
-     * Gets the AcroForm object.
-     * @return the PdfAcroform object of the PdfDocument
-     */
-    public PdfAcroForm getAcroForm() {
-	if( acroForm== null ) {
-		acroForm= new PdfAcroForm( writer );
-	}
-        return acroForm;
-    }
-    
-    /**
-     * Gets the root outline. All the outlines must be created with a parent.
-     * The first level is created with this outline.
-     * @return the root outline
-     */
-    public PdfOutline getRootOutline() {
-        return rootOutline;
-    }
-        
+
+    /** The characters to be applied the hanging punctuation. */
+    static final String hangingPunctuation = ".,;:'";
+
     /**
      * Writes a text line to the document. It takes care of all the attributes.
      * <P>
@@ -2402,12 +1398,17 @@ static class StringCompare implements Comparator {
         float lastHScale = Float.NaN;
         float baseWordSpacing = 0;
         float baseCharacterSpacing = 0;
-        
+        float glueWidth = 0;
+
         numberOfSpaces = line.numberOfSpaces();
-        lineLen = line.toString().length();
+        lineLen = line.GetLineLengthUtf32();
         // does the line need to be justified?
         isJustified = line.hasToBeJustified() && (numberOfSpaces != 0 || lineLen > 1);
-        if (isJustified) {
+        int separatorCount = line.getSeparatorCount();
+        if (separatorCount > 0) {
+        	glueWidth = line.widthLeft() / separatorCount;
+        }
+        else if (isJustified) {
             if (line.isNewlineSplit() && line.widthLeft() >= (lastBaseFactor * (ratio * numberOfSpaces + lineLen - 1))) {
                 if (line.isRTL()) {
                     text.moveText(line.widthLeft() - lastBaseFactor * (ratio * numberOfSpaces + lineLen - 1), 0);
@@ -2433,29 +1434,60 @@ static class StringCompare implements Comparator {
                 lastBaseFactor = baseFactor;
             }
         }
-        
+
         int lastChunkStroke = line.getLastStrokeChunk();
         int chunkStrokeIdx = 0;
         float xMarker = text.getXTLM();
         float baseXMarker = xMarker;
         float yMarker = text.getYTLM();
         boolean adjustMatrix = false;
-        
+        float tabPosition = 0;
+
         // looping over all the chunks in 1 line
         for (Iterator j = line.iterator(); j.hasNext(); ) {
             chunk = (PdfChunk) j.next();
             Color color = chunk.color();
             hScale = 1;
-            
+
             if (chunkStrokeIdx <= lastChunkStroke) {
                 float width;
                 if (isJustified) {
                     width = chunk.getWidthCorrected(baseCharacterSpacing, baseWordSpacing);
                 }
-                else
+                else {
                     width = chunk.width();
+                }
                 if (chunk.isStroked()) {
                     PdfChunk nextChunk = line.getChunk(chunkStrokeIdx + 1);
+                    if (chunk.isSeparator()) {
+                    	width = glueWidth;
+                    	Object[] sep = (Object[])chunk.getAttribute(Chunk.SEPARATOR);
+                        DrawInterface di = (DrawInterface)sep[0];
+                        Boolean vertical = (Boolean)sep[1];
+                        float fontSize = chunk.font().size();
+                        float ascender = chunk.font().getFont().getFontDescriptor(BaseFont.ASCENT, fontSize);
+                        float descender = chunk.font().getFont().getFontDescriptor(BaseFont.DESCENT, fontSize);
+                        if (vertical.booleanValue()) {
+                        	di.draw(graphics, baseXMarker, yMarker + descender, baseXMarker + line.getOriginalWidth(), ascender - descender, yMarker);
+                        }
+                        else {
+                        	di.draw(graphics, xMarker, yMarker + descender, xMarker + width, ascender - descender, yMarker);
+                        }
+                    }
+                    if (chunk.isTab()) {
+                    	Object[] tab = (Object[])chunk.getAttribute(Chunk.TAB);
+                        DrawInterface di = (DrawInterface)tab[0];
+                        tabPosition = ((Float)tab[1]).floatValue() + ((Float)tab[3]).floatValue();
+                        float fontSize = chunk.font().size();
+                        float ascender = chunk.font().getFont().getFontDescriptor(BaseFont.ASCENT, fontSize);
+                        float descender = chunk.font().getFont().getFontDescriptor(BaseFont.DESCENT, fontSize);
+                        if (tabPosition > xMarker) {
+                        	di.draw(graphics, xMarker, yMarker + descender, tabPosition, ascender - descender, yMarker);
+                        }
+                        float tmp = xMarker;
+                    	xMarker = tabPosition;
+                    	tabPosition = tmp;
+                    }
                     if (chunk.isAttribute(Chunk.BACKGROUND)) {
                         float subtract = lastBaseFactor;
                         if (nextChunk != null && nextChunk.isAttribute(Chunk.BACKGROUND))
@@ -2483,7 +1515,6 @@ static class StringCompare implements Comparator {
                             subtract += hangingCorrection;
                         Object unders[][] = (Object[][])chunk.getAttribute(Chunk.UNDERLINE);
                         Color scolor = null;
-                        int cap = 0;
                         for (int k = 0; k < unders.length; ++k) {
                             Object obj[] = unders[k];
                             scolor = (Color)obj[0];
@@ -2572,7 +1603,7 @@ static class StringCompare implements Comparator {
                     float params[] = (float[])chunk.getAttribute(Chunk.SKEW);
                     Float hs = (Float)chunk.getAttribute(Chunk.HSCALE);
                     if (params != null || hs != null) {
-                        float a = 1, b = 0, c = 0;
+                        float b = 0, c = 0;
                         if (params != null) {
                             b = params[0];
                             c = params[1];
@@ -2581,6 +1612,10 @@ static class StringCompare implements Comparator {
                             hScale = hs.floatValue();
                         text.setTextMatrix(hScale, b, c, 1, xMarker, yMarker);
                     }
+                    if (chunk.isAttribute(Chunk.CHAR_SPACING)) {
+                    	Float cs = (Float) chunk.getAttribute(Chunk.CHAR_SPACING);
+						text.setCharacterSpacing(cs.floatValue());
+					}
 		    /* ssteward: dropped in 1.44 
                     if (chunk.isImage()) {
                         Image image = chunk.getImage();
@@ -2588,7 +1623,7 @@ static class StringCompare implements Comparator {
                         matrix[Image.CX] = xMarker + chunk.getImageOffsetX() - matrix[Image.CX];
                         matrix[Image.CY] = yMarker + chunk.getImageOffsetY() - matrix[Image.CY];
                         graphics.addImage(image, matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]);
-                        text.moveText(xMarker + lastBaseFactor + image.scaledWidth() - text.getXTLM(), 0);
+                        text.moveText(xMarker + lastBaseFactor + image.getScaledWidth() - text.getXTLM(), 0);
                     }
 		    */
                 }
@@ -2632,18 +1667,28 @@ static class StringCompare implements Comparator {
                 adjustMatrix = true;
             }
 	    */
+            else if (chunk.isHorizontalSeparator()) {
+            	PdfTextArray array = new PdfTextArray();
+            	array.add(-glueWidth * 1000f / chunk.font.size() / hScale);
+            	text.showText(array);
+            }
+            else if (chunk.isTab()) {
+            	PdfTextArray array = new PdfTextArray();
+            	array.add((tabPosition - xMarker) * 1000f / chunk.font.size() / hScale);
+            	text.showText(array);
+            }
             // If it is a CJK chunk or Unicode TTF we will have to simulate the
             // space adjustment.
             else if (isJustified && numberOfSpaces > 0 && chunk.isSpecialEncoding()) {
                 if (hScale != lastHScale) {
                     lastHScale = hScale;
                     text.setWordSpacing(baseWordSpacing / hScale);
-                    text.setCharacterSpacing(baseCharacterSpacing / hScale);
+                    text.setCharacterSpacing(baseCharacterSpacing / hScale + text.getCharacterSpacing());
                 }
                 String s = chunk.toString();
                 int idx = s.indexOf(' ');
                 if (idx < 0)
-                    text.showText(chunk.toString());
+                    text.showText(s);
                 else {
                     float spaceCorrection = - baseWordSpacing * 1000f / chunk.font.size() / hScale;
                     PdfTextArray textArray = new PdfTextArray(s.substring(0, idx));
@@ -2662,11 +1707,11 @@ static class StringCompare implements Comparator {
                 if (isJustified && hScale != lastHScale) {
                     lastHScale = hScale;
                     text.setWordSpacing(baseWordSpacing / hScale);
-                    text.setCharacterSpacing(baseCharacterSpacing / hScale);
+                    text.setCharacterSpacing(baseCharacterSpacing / hScale + text.getCharacterSpacing());
                 }
                 text.showText(chunk.toString());
             }
-            
+
             if (rise != 0)
                 text.setTextRise(0);
             if (color != null)
@@ -2676,10 +1721,13 @@ static class StringCompare implements Comparator {
             if (strokeColor != null)
                 text.resetRGBColorStroke();
             if (strokeWidth != 1)
-                text.setLineWidth(1);            
+                text.setLineWidth(1);
             if (chunk.isAttribute(Chunk.SKEW) || chunk.isAttribute(Chunk.HSCALE)) {
                 adjustMatrix = true;
                 text.setTextMatrix(xMarker, yMarker);
+            }
+            if (chunk.isAttribute(Chunk.CHAR_SPACING)) {
+				text.setCharacterSpacing(baseCharacterSpacing);
             }
         }
         if (isJustified) {
@@ -2693,7 +1741,306 @@ static class StringCompare implements Comparator {
         currentValues[0] = currentFont;
         currentValues[1] = new Float(lastBaseFactor);
     }
-    
+
+    protected Indentation indentation = new Indentation();
+
+    /**
+     * @since	2.0.8 (PdfDocument was package-private before)
+     */
+    public static class Indentation {
+
+        /** This represents the current indentation of the PDF Elements on the left side. */
+        float indentLeft = 0;
+
+        /** Indentation to the left caused by a section. */
+        float sectionIndentLeft = 0;
+
+        /** This represents the current indentation of the PDF Elements on the left side. */
+        float listIndentLeft = 0;
+
+        /** This is the indentation caused by an image on the left. */
+        float imageIndentLeft = 0;
+
+        /** This represents the current indentation of the PDF Elements on the right side. */
+        float indentRight = 0;
+
+        /** Indentation to the right caused by a section. */
+        float sectionIndentRight = 0;
+
+        /** This is the indentation caused by an image on the right. */
+        float imageIndentRight = 0;
+
+        /** This represents the current indentation of the PDF Elements on the top side. */
+        float indentTop = 0;
+
+        /** This represents the current indentation of the PDF Elements on the bottom side. */
+        float indentBottom = 0;
+    }
+
+    /**
+     * Gets the indentation on the left side.
+     *
+     * @return	a margin
+     */
+
+    protected float indentLeft() {
+        return left(indentation.indentLeft + indentation.listIndentLeft + indentation.imageIndentLeft + indentation.sectionIndentLeft);
+    }
+
+    /**
+     * Gets the indentation on the right side.
+     *
+     * @return	a margin
+     */
+
+    protected float indentRight() {
+        return right(indentation.indentRight + indentation.sectionIndentRight + indentation.imageIndentRight);
+    }
+
+    /**
+     * Gets the indentation on the top side.
+     *
+     * @return	a margin
+     */
+
+    protected float indentTop() {
+        return top(indentation.indentTop);
+    }
+
+    /**
+     * Gets the indentation on the bottom side.
+     *
+     * @return	a margin
+     */
+
+    float indentBottom() {
+        return bottom(indentation.indentBottom);
+    }
+
+    /**
+     * Adds extra space.
+     * This method should probably be rewritten.
+     */
+    protected void addSpacing(float extraspace, float oldleading, Font f) {
+    	if (extraspace == 0) return;
+    	if (pageEmpty) return;
+    	if (currentHeight + line.height() + leading > indentTop() - indentBottom()) return;
+        leading = extraspace;
+        carriageReturn();
+        if (f.isUnderlined() || f.isStrikethru()) {
+            f = new Font(f);
+            int style = f.getStyle();
+            style &= ~Font.UNDERLINE;
+            style &= ~Font.STRIKETHRU;
+            f.setStyle(style);
+        }
+        Chunk space = new Chunk(" ", f);
+        space.process(this);
+        carriageReturn();
+        leading = oldleading;
+    }
+
+//	Info Dictionary and Catalog
+
+    /** some meta information about the Document. */
+    protected PdfInfo info = new PdfInfo();
+
+    /**
+     * Gets the <CODE>PdfInfo</CODE>-object.
+     *
+     * @return	<CODE>PdfInfo</COPE>
+     */
+
+    PdfInfo getInfo() {
+        return info;
+    }
+
+    /**
+     * Gets the <CODE>PdfCatalog</CODE>-object.
+     *
+     * @param pages an indirect reference to this document pages
+     * @return <CODE>PdfCatalog</CODE>
+     */
+
+    PdfCatalog getCatalog(PdfIndirectReference pages) {
+        PdfCatalog catalog = new PdfCatalog(pages, writer);
+
+        // [C1] outlines
+        if (rootOutline.getKids().size() > 0) {
+            catalog.put(PdfName.PAGEMODE, PdfName.USEOUTLINES);
+            catalog.put(PdfName.OUTLINES, rootOutline.indirectReference());
+        }
+
+        // [C2] version
+        writer.getPdfVersion().addToCatalog(catalog);
+
+        // [C3] preferences
+        viewerPreferences.addToCatalog(catalog);
+
+        // [C4] pagelabels
+        if (pageLabels != null) {
+            catalog.put(PdfName.PAGELABELS, pageLabels.getDictionary(writer));
+        }
+
+        // [C5] named objects
+        catalog.addNames(localDestinations, getDocumentLevelJS(), documentFileAttachment, writer);
+
+        // [C6] actions
+        if (openActionName != null) {
+            PdfAction action = getLocalGotoAction(openActionName);
+            catalog.setOpenAction(action);
+        }
+        else if (openActionAction != null)
+            catalog.setOpenAction(openActionAction);
+        if (additionalActions != null)   {
+            catalog.setAdditionalActions(additionalActions);
+        }
+
+        // [C7] portable collections
+        if (collection != null) {
+        	catalog.put(PdfName.COLLECTION, collection);
+        }
+
+        // [C8] AcroForm
+        if (annotationsImp.hasValidAcroForm()) {
+            try {
+                catalog.put(PdfName.ACROFORM, writer.addToBody(annotationsImp.getAcroForm()).getIndirectReference());
+            }
+            catch (IOException e) {
+                throw new ExceptionConverter(e);
+            }
+        }
+
+        return catalog;
+    }
+
+//	[C1] outlines
+
+    /** This is the root outline of the document. */
+    protected PdfOutline rootOutline;
+
+    /** This is the current <CODE>PdfOutline</CODE> in the hierarchy of outlines. */
+    protected PdfOutline currentOutline;
+
+    /**
+     * Adds a named outline to the document .
+     * @param outline the outline to be added
+     * @param name the name of this local destination
+     */
+    void addOutline(PdfOutline outline, String name) {
+        localDestination(name, outline.getPdfDestination());
+    }
+
+    /**
+     * Gets the root outline. All the outlines must be created with a parent.
+     * The first level is created with this outline.
+     * @return the root outline
+     */
+    public PdfOutline getRootOutline() {
+        return rootOutline;
+    }
+
+
+    /**
+     * Updates the count in the outlines.
+     */
+    void calculateOutlineCount() {
+        if (rootOutline.getKids().size() == 0)
+            return;
+        traverseOutlineCount(rootOutline);
+    }
+
+    /**
+     * Recursive method to update the count in the outlines.
+     */
+    void traverseOutlineCount(PdfOutline outline) {
+        ArrayList kids = outline.getKids();
+        PdfOutline parent = outline.parent();
+        if (kids.isEmpty()) {
+            if (parent != null) {
+                parent.setCount(parent.getCount() + 1);
+            }
+        }
+        else {
+            for (int k = 0; k < kids.size(); ++k) {
+                traverseOutlineCount((PdfOutline)kids.get(k));
+            }
+            if (parent != null) {
+                if (outline.isOpen()) {
+                    parent.setCount(outline.getCount() + parent.getCount() + 1);
+                }
+                else {
+                    parent.setCount(parent.getCount() + 1);
+                    outline.setCount(-outline.getCount());
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes the outline tree to the body of the PDF document.
+     */
+    void writeOutlines() throws IOException {
+        if (rootOutline.getKids().size() == 0)
+            return;
+        outlineTree(rootOutline);
+        writer.addToBody(rootOutline, rootOutline.indirectReference());
+    }
+
+    /**
+     * Recursive method used to write outlines.
+     */
+    void outlineTree(PdfOutline outline) throws IOException {
+        outline.setIndirectReference(writer.getPdfIndirectReference());
+        if (outline.parent() != null)
+            outline.put(PdfName.PARENT, outline.parent().indirectReference());
+        ArrayList kids = outline.getKids();
+        int size = kids.size();
+        for (int k = 0; k < size; ++k)
+            outlineTree((PdfOutline)kids.get(k));
+        for (int k = 0; k < size; ++k) {
+            if (k > 0)
+                ((PdfOutline)kids.get(k)).put(PdfName.PREV, ((PdfOutline)kids.get(k - 1)).indirectReference());
+            if (k < size - 1)
+                ((PdfOutline)kids.get(k)).put(PdfName.NEXT, ((PdfOutline)kids.get(k + 1)).indirectReference());
+        }
+        if (size > 0) {
+            outline.put(PdfName.FIRST, ((PdfOutline)kids.get(0)).indirectReference());
+            outline.put(PdfName.LAST, ((PdfOutline)kids.get(size - 1)).indirectReference());
+        }
+        for (int k = 0; k < size; ++k) {
+            PdfOutline kid = (PdfOutline)kids.get(k);
+            writer.addToBody(kid, kid.indirectReference());
+        }
+    }
+
+//  [C3] PdfViewerPreferences interface
+
+	/** Contains the Viewer preferences of this PDF document. */
+    protected PdfViewerPreferencesImp viewerPreferences = new PdfViewerPreferencesImp();
+    /** @see com.lowagie.text.pdf.interfaces.PdfViewerPreferences#setViewerPreferences(int) */
+    void setViewerPreferences(int preferences) {
+        this.viewerPreferences.setViewerPreferences(preferences);
+    }
+
+    /** @see com.lowagie.text.pdf.interfaces.PdfViewerPreferences#addViewerPreference(com.lowagie.text.pdf.PdfName, com.lowagie.text.pdf.PdfObject) */
+    void addViewerPreference(PdfName key, PdfObject value) {
+    	this.viewerPreferences.addViewerPreference(key, value);
+    }
+
+//	[C4] Page labels
+
+    protected PdfPageLabels pageLabels;
+    /**
+     * Sets the page labels
+     * @param pageLabels the page labels
+     */
+    void setPageLabels(PdfPageLabels pageLabels) {
+        this.pageLabels = pageLabels;
+    }
+
+//	[C5] named objects: local destinations, javascript, embedded files
+
     /**
      * Implements a link to other part of the document. The jump will
      * be made to a local destination with the same name, that must exist.
@@ -2705,9 +2052,52 @@ static class StringCompare implements Comparator {
      */
     void localGoto(String name, float llx, float lly, float urx, float ury) {
         PdfAction action = getLocalGotoAction(name);
-        annotations.add(new PdfAnnotation(writer, llx, lly, urx, ury, action));
+        annotationsImp.addPlainAnnotation(new PdfAnnotation(writer, llx, lly, urx, ury, action));
     }
-    
+
+    /**
+     * Implements a link to another document.
+     * @param filename the filename for the remote document
+     * @param name the name to jump to
+     * @param llx the lower left x corner of the activation area
+     * @param lly the lower left y corner of the activation area
+     * @param urx the upper right x corner of the activation area
+     * @param ury the upper right y corner of the activation area
+     */
+    void remoteGoto(String filename, String name, float llx, float lly, float urx, float ury) {
+        annotationsImp.addPlainAnnotation(new PdfAnnotation(writer, llx, lly, urx, ury, new PdfAction(filename, name)));
+    }
+
+    /**
+     * Implements a link to another document.
+     * @param filename the filename for the remote document
+     * @param page the page to jump to
+     * @param llx the lower left x corner of the activation area
+     * @param lly the lower left y corner of the activation area
+     * @param urx the upper right x corner of the activation area
+     * @param ury the upper right y corner of the activation area
+     */
+    void remoteGoto(String filename, int page, float llx, float lly, float urx, float ury) {
+        addAnnotation(new PdfAnnotation(writer, llx, lly, urx, ury, new PdfAction(filename, page)));
+    }
+
+    /** Implements an action in an area.
+     * @param action the <CODE>PdfAction</CODE>
+     * @param llx the lower left x corner of the activation area
+     * @param lly the lower left y corner of the activation area
+     * @param urx the upper right x corner of the activation area
+     * @param ury the upper right y corner of the activation area
+     */
+    void setAction(PdfAction action, float llx, float lly, float urx, float ury) {
+        addAnnotation(new PdfAnnotation(writer, llx, lly, urx, ury, action));
+    }
+
+    /**
+     * Stores the destinations keyed by name. Value is
+     * <CODE>Object[]{PdfAction,PdfIndirectReference,PdfDestintion}</CODE>.
+     */
+    protected TreeMap localDestinations = new TreeMap();
+
     PdfAction getLocalGotoAction(String name) {
         PdfAction action;
         Object obj[] = (Object[])localDestinations.get(name);
@@ -2726,7 +2116,7 @@ static class StringCompare implements Comparator {
         }
         return action;
     }
-    
+
     /**
      * The local destination to where a local goto with the same
      * name will jump to.
@@ -2744,66 +2134,86 @@ static class StringCompare implements Comparator {
             return false;
         obj[2] = destination;
         localDestinations.put(name, obj);
-        destination.addPage(writer.getCurrentPage());
+        if (!destination.hasPage())
+        	destination.addPage(writer.getCurrentPage());
         return true;
     }
-    
+
     /**
-     * Implements a link to another document.
-     * @param filename the filename for the remote document
-     * @param name the name to jump to
-     * @param llx the lower left x corner of the activation area
-     * @param lly the lower left y corner of the activation area
-     * @param urx the upper right x corner of the activation area
-     * @param ury the upper right y corner of the activation area
+     * Stores a list of document level JavaScript actions.
      */
-    void remoteGoto(String filename, String name, float llx, float lly, float urx, float ury) {
-        annotations.add(new PdfAnnotation(writer, llx, lly, urx, ury, new PdfAction(filename, name)));
+    int jsCounter;
+    protected HashMap documentLevelJS = new HashMap();
+    protected static final DecimalFormat SIXTEEN_DIGITS = new DecimalFormat("0000000000000000");
+    void addJavaScript(PdfAction js) {
+        if (js.get(PdfName.JS) == null)
+            throw new RuntimeException(MessageLocalization.getComposedMessage("only.javascript.actions.are.allowed"));
+        try {
+            documentLevelJS.put(SIXTEEN_DIGITS.format(jsCounter++), writer.addToBody(js).getIndirectReference());
+        }
+        catch (IOException e) {
+            throw new ExceptionConverter(e);
+        }
     }
-    
-    /**
-     * Implements a link to another document.
-     * @param filename the filename for the remote document
-     * @param page the page to jump to
-     * @param llx the lower left x corner of the activation area
-     * @param lly the lower left y corner of the activation area
-     * @param urx the upper right x corner of the activation area
-     * @param ury the upper right y corner of the activation area
-     */
-    void remoteGoto(String filename, int page, float llx, float lly, float urx, float ury) {
-        writer.addAnnotation(new PdfAnnotation(writer, llx, lly, urx, ury, new PdfAction(filename, page)));
+    void addJavaScript(String name, PdfAction js) {
+        if (js.get(PdfName.JS) == null)
+            throw new RuntimeException(MessageLocalization.getComposedMessage("only.javascript.actions.are.allowed"));
+        try {
+            documentLevelJS.put(name, writer.addToBody(js).getIndirectReference());
+        }
+        catch (IOException e) {
+            throw new ExceptionConverter(e);
+        }
     }
-    
-    /** Sets the viewer preferences as the sum of several constants.
-     * @param preferences the viewer preferences
-     * @see PdfWriter#setViewerPreferences
-     */
-    
-    public void setViewerPreferences(int preferences) {
-        viewerPreferences |= preferences;
+
+    HashMap getDocumentLevelJS() {
+    	return documentLevelJS;
     }
-    
-    /** Implements an action in an area.
-     * @param action the <CODE>PdfAction</CODE>
-     * @param llx the lower left x corner of the activation area
-     * @param lly the lower left y corner of the activation area
-     * @param urx the upper right x corner of the activation area
-     * @param ury the upper right y corner of the activation area
-     */
-    void setAction(PdfAction action, float llx, float lly, float urx, float ury) {
-        writer.addAnnotation(new PdfAnnotation(writer, llx, lly, urx, ury, action));
+
+    protected HashMap documentFileAttachment = new HashMap();
+
+    void addFileAttachment(String description, PdfFileSpecification fs) throws IOException {
+        if (description == null) {
+        	PdfString desc = (PdfString)fs.get(PdfName.DESC);
+        	if (desc == null) {
+        		description = "";
+        	}
+        	else {
+        		description = PdfEncodings.convertToString(desc.getBytes(), null);
+        	}
+        }
+        fs.addDescription(description, true);
+        if (description.length() == 0)
+            description = "Unnamed";
+        String fn = PdfEncodings.convertToString(new PdfString(description, PdfObject.TEXT_UNICODE).getBytes(), null);
+        int k = 0;
+        while (documentFileAttachment.containsKey(fn)) {
+            ++k;
+            fn = PdfEncodings.convertToString(new PdfString(description + " " + k, PdfObject.TEXT_UNICODE).getBytes(), null);
+        }
+        documentFileAttachment.put(fn, fs.getReference());
     }
-    
+
+    HashMap getDocumentFileAttachment() {
+        return documentFileAttachment;
+    }
+
+//	[C6] document level actions
+
+    protected String openActionName;
+
     void setOpenAction(String name) {
         openActionName = name;
         openActionAction = null;
     }
-    
+
+    protected PdfAction openActionAction;
     void setOpenAction(PdfAction action) {
         openActionAction = action;
         openActionName = null;
     }
-    
+
+    protected PdfDictionary additionalActions;
     void addAdditionalAction(PdfName actionType, PdfAction action)  {
         if (additionalActions == null)  {
             additionalActions = new PdfDictionary();
@@ -2815,62 +2225,130 @@ static class StringCompare implements Comparator {
         if (additionalActions.size() == 0)
             additionalActions = null;
     }
-    
-    void setPageLabels(PdfPageLabels pageLabels) {
-        this.pageLabels = pageLabels;
-    }
-    
-    void addJavaScript(PdfAction js) {
-        if (js.get(PdfName.JS) == null)
-            throw new RuntimeException("Only JavaScript actions are allowed.");
-        try {
-            documentJavaScript.add(writer.addToBody(js).getIndirectReference());
-        }
-        catch (IOException e) {
-            throw new ExceptionConverter(e);
-        }
+
+//	[C7] portable collections
+
+    protected PdfCollection collection;
+
+    /**
+     * Sets the collection dictionary.
+     * @param collection a dictionary of type PdfCollection
+     */
+	public void setCollection(PdfCollection collection) {
+		this.collection = collection;
+	}
+
+//	[C8] AcroForm
+
+	PdfAnnotationsImp annotationsImp;
+
+    /**
+     * Gets the AcroForm object.
+     * @return the PdfAcroform object of the PdfDocument
+     */
+    PdfAcroForm getAcroForm() {
+        return annotationsImp.getAcroForm();
     }
 
     void setSigFlags(int f) {
-        getAcroForm().setSigFlags(f);
+        annotationsImp.setSigFlags(f);
     }
 
     void addCalculationOrder(PdfFormField formField) {
-        getAcroForm().addCalculationOrder(formField);
+        annotationsImp.addCalculationOrder(formField);
     }
-    
+
+    void addAnnotation(PdfAnnotation annot) {
+        pageEmpty = false;
+        annotationsImp.addAnnotation(annot);
+    }
+
+//	[F12] tagged PDF
+
+    protected int markPoint;
+
+	int getMarkPoint() {
+	    return markPoint;
+	}
+
+	void incMarkPoint() {
+	    ++markPoint;
+	}
+
+//	[U1] page sizes
+
+    /** This is the size of the next page. */
+    protected Rectangle nextPageSize = null;
+
+    /** This is the size of the several boxes of the current Page. */
+    protected HashMap thisBoxSize = new HashMap();
+
+    /** This is the size of the several boxes that will be used in
+     * the next page. */
+    protected HashMap boxSize = new HashMap();
+
     void setCropBoxSize(Rectangle crop) {
         setBoxSize("crop", crop);
     }
-    
+
     void setBoxSize(String boxName, Rectangle size) {
         if (size == null)
             boxSize.remove(boxName);
         else
             boxSize.put(boxName, new PdfRectangle(size));
     }
-    
-    
-    void addFormFieldRaw(PdfFormField field) {
-        annotations.add(field);
-        ArrayList kids = field.getKids();
-        if (kids != null) {
-            for (int k = 0; k < kids.size(); ++k)
-                addFormFieldRaw((PdfFormField)kids.get(k));
+
+    protected void setNewPageSizeAndMargins() {
+        pageSize = nextPageSize;
+    	if (marginMirroring && (getPageNumber() & 1) == 0) {
+            marginRight = nextMarginLeft;
+            marginLeft = nextMarginRight;
         }
-    }
-    
-    void addAnnotation(PdfAnnotation annot) {
-        pageEmpty = false;
-        if (annot.isForm()) {
-            PdfFormField field = (PdfFormField)annot;
-            if (field.getParent() == null)
-                addFormFieldRaw(field);
+        else {
+            marginLeft = nextMarginLeft;
+            marginRight = nextMarginRight;
         }
-        else
-            annotations.add(annot);
+    	if (marginMirroringTopBottom && (getPageNumber() & 1) == 0) {
+    		marginTop = nextMarginBottom;
+    		marginBottom = nextMarginTop;
+    	}
+    	else {
+    		marginTop = nextMarginTop;
+    		marginBottom = nextMarginBottom;
+    	}
     }
-    
+
+    /**
+     * Gives the size of a trim, art, crop or bleed box, or null if not defined.
+     * @param boxName crop, trim, art or bleed
+     */
+    Rectangle getBoxSize(String boxName) {
+    	PdfRectangle r = (PdfRectangle)thisBoxSize.get(boxName);
+    	if (r != null) return r.getRectangle();
+    	return null;
+    }
+
+//	[U2] empty pages
+
+    /** This checks if the page is empty. */
+    private boolean pageEmpty = true;
+
+    void setPageEmpty(boolean pageEmpty) {
+        this.pageEmpty = pageEmpty;
+    }
+
+    boolean isPageEmpty() {
+        return writer == null || (writer.getDirectContent().size() == 0 && writer.getDirectContentUnder().size() == 0 && (pageEmpty || writer.isPaused()));
+    }
+
+//	[U3] page actions
+
+    /** The duration of the page */
+    protected int duration=-1; // negative values will indicate no duration
+
+    /** The page transition */
+    protected PdfTransition transition=null;
+
     /**
      * Sets the display duration for the page (for presentations)
      * @param seconds   the number of seconds to display the page
@@ -2881,7 +2359,7 @@ static class StringCompare implements Comparator {
         else
             this.duration=-1;
     }
-    
+
     /**
      * Sets the transition for the page
      * @param transition   the PdfTransition object
@@ -2890,13 +2368,37 @@ static class StringCompare implements Comparator {
         this.transition=transition;
     }
 
+    protected PdfDictionary pageAA = null;
     void setPageAction(PdfName actionType, PdfAction action) {
         if (pageAA == null) {
             pageAA = new PdfDictionary();
         }
         pageAA.put(actionType, action);
     }
-    
+
+//	[U8] thumbnail images
+
+    protected PdfIndirectReference thumb;
+    /* ssteward: dropped in 1.44
+    void setThumbnail(Image image) throws PdfException, DocumentException {
+        thumb = writer.getImageReference(writer.addDirectImageSimple(image));
+    }
+    */
+
+//	[M0] Page resources contain references to fonts, extgstate, images,...
+
+    /** This are the page resources of the current Page. */
+    protected PageResources pageResources;
+
+    PageResources getPageResources() {
+        return pageResources;
+    }
+
+//	[M3] Images
+
+    /** Holds value of property strictImageSequence. */
+    protected boolean strictImageSequence = false;
+
     /** Getter for property strictImageSequence.
      * @return Value of property strictImageSequence.
      *
@@ -2904,7 +2406,7 @@ static class StringCompare implements Comparator {
     boolean isStrictImageSequence() {
         return this.strictImageSequence;
     }
-    
+
     /** Setter for property strictImageSequence.
      * @param strictImageSequence New value of property strictImageSequence.
      *
@@ -2912,17 +2414,15 @@ static class StringCompare implements Comparator {
     void setStrictImageSequence(boolean strictImageSequence) {
         this.strictImageSequence = strictImageSequence;
     }
- 
-    void setPageEmpty(boolean pageEmpty) {
-        this.pageEmpty = pageEmpty;
-    }
+
+    /** This is the position where the image ends. */
+    protected float imageEnd = -1;
+
 	/**
 	 * Method added by Pelikan Stephan
-	 * @see com.lowagie.text.DocListener#clearTextWrap()
 	 */
     /* ssteward: dropped in 1.44
-	public void clearTextWrap() throws DocumentException {
-		super.clearTextWrap();
+	public void clearTextWrap() {
 		float tmpHeight = imageEnd - currentHeight;
 		if (line != null) {
 			tmpHeight += line.height();
@@ -2933,82 +2433,750 @@ static class StringCompare implements Comparator {
 		}
 	}
     */
-    
-    ArrayList getDocumentJavaScript() {
-        return documentJavaScript;
-    }
+
+    /** This is the image that could not be shown on a previous page. */
+    // protected Image imageWait = null;     ssteward: dropped in 1.44
 
     /**
-     * @see com.lowagie.text.DocListener#setMarginMirroring(boolean)
+     * Adds an image to the document.
+     * @param image the <CODE>Image</CODE> to add
+     * @throws PdfException on error
+     * @throws DocumentException on error
      */
-    public boolean setMarginMirroring(boolean MarginMirroring) {
-        if (writer != null && writer.isPaused()) {
+
+    /* ssteward: dropped in 1.44
+    protected void add(Image image) throws PdfException, DocumentException {
+
+        if (image.hasAbsoluteY()) {
+            graphics.addImage(image);
+            pageEmpty = false;
+            return;
+        }
+
+        // if there isn't enough room for the image on this page, save it for the next page
+        if (currentHeight != 0 && indentTop() - currentHeight - image.getScaledHeight() < indentBottom()) {
+            if (!strictImageSequence && imageWait == null) {
+                imageWait = image;
+                return;
+            }
+            newPage();
+            if (currentHeight != 0 && indentTop() - currentHeight - image.getScaledHeight() < indentBottom()) {
+                imageWait = image;
+                return;
+            }
+        }
+        pageEmpty = false;
+        // avoid endless loops
+        if (image == imageWait)
+            imageWait = null;
+        boolean textwrap = (image.getAlignment() & Image.TEXTWRAP) == Image.TEXTWRAP
+        && !((image.getAlignment() & Image.MIDDLE) == Image.MIDDLE);
+        boolean underlying = (image.getAlignment() & Image.UNDERLYING) == Image.UNDERLYING;
+        float diff = leading / 2;
+        if (textwrap) {
+            diff += leading;
+        }
+        float lowerleft = indentTop() - currentHeight - image.getScaledHeight() -diff;
+        float mt[] = image.matrix();
+        float startPosition = indentLeft() - mt[4];
+        if ((image.getAlignment() & Image.RIGHT) == Image.RIGHT) startPosition = indentRight() - image.getScaledWidth() - mt[4];
+        if ((image.getAlignment() & Image.MIDDLE) == Image.MIDDLE) startPosition = indentLeft() + ((indentRight() - indentLeft() - image.getScaledWidth()) / 2) - mt[4];
+        if (image.hasAbsoluteX()) startPosition = image.getAbsoluteX();
+        if (textwrap) {
+            if (imageEnd < 0 || imageEnd < currentHeight + image.getScaledHeight() + diff) {
+                imageEnd = currentHeight + image.getScaledHeight() + diff;
+            }
+            if ((image.getAlignment() & Image.RIGHT) == Image.RIGHT) {
+            	// indentation suggested by Pelikan Stephan
+            	indentation.imageIndentRight += image.getScaledWidth() + image.getIndentationLeft();
+            }
+            else {
+            	// indentation suggested by Pelikan Stephan
+            	indentation.imageIndentLeft += image.getScaledWidth() + image.getIndentationRight();
+            }
+        }
+        else {
+        	if ((image.getAlignment() & Image.RIGHT) == Image.RIGHT) startPosition -= image.getIndentationRight();
+        	else if ((image.getAlignment() & Image.MIDDLE) == Image.MIDDLE) startPosition += image.getIndentationLeft() - image.getIndentationRight();
+        	else startPosition += image.getIndentationLeft();
+        }
+        graphics.addImage(image, mt[0], mt[1], mt[2], mt[3], startPosition, lowerleft - mt[5]);
+        if (!(textwrap || underlying)) {
+            currentHeight += image.getScaledHeight() + diff;
+            flushLines();
+            text.moveText(0, - (image.getScaledHeight() + diff));
+            newLine();
+        }
+    }
+    */
+
+//	[M4] Adding a PdfPTable
+
+    /** Adds a <CODE>PdfPTable</CODE> to the document.
+     * @param ptable the <CODE>PdfPTable</CODE> to be added to the document.
+     * @throws DocumentException on error
+     */
+    /* ssteward: dropped in 1.44
+    void addPTable(PdfPTable ptable) throws DocumentException {
+        ColumnText ct = new ColumnText(writer.getDirectContent());
+        // if the table prefers to be on a single page, and it wouldn't
+        //fit on the current page, start a new page.
+        if (ptable.getKeepTogether() && !fitsPage(ptable, 0f) && currentHeight > 0)  {
+        	newPage();
+        }
+        // add dummy paragraph if we aren't at the top of a page, so that
+        // spacingBefore will be taken into account by ColumnText
+        if (currentHeight > 0) {
+	        Paragraph p = new Paragraph();
+	        p.setLeading(0);
+	        ct.addElement(p);
+        }
+        ct.addElement(ptable);
+        boolean he = ptable.isHeadersInEvent();
+        ptable.setHeadersInEvent(true);
+        int loop = 0;
+        while (true) {
+            ct.setSimpleColumn(indentLeft(), indentBottom(), indentRight(), indentTop() - currentHeight);
+            int status = ct.go();
+            if ((status & ColumnText.NO_MORE_TEXT) != 0) {
+                text.moveText(0, ct.getYLine() - indentTop() + currentHeight);
+                currentHeight = indentTop() - ct.getYLine();
+                break;
+            }
+            if (indentTop() - currentHeight == ct.getYLine())
+                ++loop;
+            else
+                loop = 0;
+            if (loop == 3) {
+                add(new Paragraph("ERROR: Infinite table loop"));
+                break;
+            }
+            newPage();
+        }
+        ptable.setHeadersInEvent(he);
+    }
+    */
+
+    /**
+     * Checks if a <CODE>PdfPTable</CODE> fits the current page of the <CODE>PdfDocument</CODE>.
+     *
+     * @param	table	the table that has to be checked
+     * @param	margin	a certain margin
+     * @return	<CODE>true</CODE> if the <CODE>PdfPTable</CODE> fits the page, <CODE>false</CODE> otherwise.
+     */
+
+    /* ssteward: dropped in 1.44
+    boolean fitsPage(PdfPTable table, float margin) {
+    	if (!table.isLockedWidth()) {
+    		float totalWidth = (indentRight() - indentLeft()) * table.getWidthPercentage() / 100;
+    		table.setTotalWidth(totalWidth);
+    	}
+        // ensuring that a new line has been started.
+        ensureNewLine();
+        return table.getTotalHeight() + ((currentHeight > 0) ? table.spacingBefore() : 0f)
+        	<= indentTop() - currentHeight - indentBottom() - margin;
+    }
+    */
+
+//	[M4'] Adding a Table
+
+	/**
+	 * This is a helper class for adding a Table to a document.
+	 * @since	2.0.8 (PdfDocument was package-private before)
+	 */
+    /* ssteward: dropped in 1.44
+    protected static class RenderingContext {
+        float pagetop = -1;
+        float oldHeight = -1;
+
+        PdfContentByte cellGraphics = null;
+
+        float lostTableBottom;
+
+        float maxCellBottom;
+        float maxCellHeight;
+
+        Map rowspanMap;
+        Map pageMap = new HashMap();
+        public PdfTable table;
+
+        public int consumeRowspan(PdfCell c) {
+            if (c.rowspan() == 1) {
+                return 1;
+            }
+
+            Integer i = (Integer) rowspanMap.get(c);
+            if (i == null) {
+                i = new Integer(c.rowspan());
+            }
+
+            i = new Integer(i.intValue() - 1);
+            rowspanMap.put(c, i);
+
+            if (i.intValue() < 1) {
+                return 1;
+            }
+            return i.intValue();
+        }
+
+        public int currentRowspan(PdfCell c) {
+            Integer i = (Integer) rowspanMap.get(c);
+            if (i == null) {
+                return c.rowspan();
+            } else {
+                return i.intValue();
+            }
+        }
+
+        public int cellRendered(PdfCell cell, int pageNumber) {
+            Integer i = (Integer) pageMap.get(cell);
+            if (i == null) {
+                i = new Integer(1);
+            } else {
+                i = new Integer(i.intValue() + 1);
+            }
+            pageMap.put(cell, i);
+
+            Integer pageInteger = new Integer(pageNumber);
+            Set set = (Set) pageMap.get(pageInteger);
+
+            if (set == null) {
+                set = new HashSet();
+                pageMap.put(pageInteger, set);
+            }
+
+            set.add(cell);
+
+            return i.intValue();
+        }
+
+        public int numCellRendered(PdfCell cell) {
+            Integer i = (Integer) pageMap.get(cell);
+            if (i == null) {
+                i = new Integer(0);
+            }
+            return i.intValue();
+        }
+
+        public boolean isCellRenderedOnPage(PdfCell cell, int pageNumber) {
+            Integer pageInteger = new Integer(pageNumber);
+            Set set = (Set) pageMap.get(pageInteger);
+
+            if (set != null) {
+                return set.contains(cell);
+            }
+
             return false;
         }
-        return super.setMarginMirroring(MarginMirroring);
-    }
-    /* ssteward: dropped in 1.44
-    void setThumbnail(Image image) throws PdfException, DocumentException {
-        thumb = writer.getImageReference(writer.addDirectImageSimple(image));
-    }
+    };
     */
-    static PdfAnnotation convertAnnotation(PdfWriter writer, Annotation annot) throws IOException {
-         switch(annot.annotationType()) {
-            case Annotation.URL_NET:
-                return new PdfAnnotation(writer, annot.llx(), annot.lly(), annot.urx(), annot.ury(), new PdfAction((URL) annot.attributes().get(Annotation.URL)));
-            case Annotation.URL_AS_STRING:
-                return new PdfAnnotation(writer, annot.llx(), annot.lly(), annot.urx(), annot.ury(), new PdfAction((String) annot.attributes().get(Annotation.FILE)));
-            case Annotation.FILE_DEST:
-                return new PdfAnnotation(writer, annot.llx(), annot.lly(), annot.urx(), annot.ury(), new PdfAction((String) annot.attributes().get(Annotation.FILE), (String) annot.attributes().get(Annotation.DESTINATION)));
-            case Annotation.SCREEN:
-                boolean sparams[] = (boolean[])annot.attributes().get(Annotation.PARAMETERS);
-                String fname = (String) annot.attributes().get(Annotation.FILE);
-                String mimetype = (String) annot.attributes().get(Annotation.MIMETYPE);
-                PdfFileSpecification fs;
-                if (sparams[0])
-                    fs = PdfFileSpecification.fileEmbedded(writer, fname, fname, null);
-                else
-                    fs = PdfFileSpecification.fileExtern(writer, fname);
-                PdfAnnotation ann = PdfAnnotation.createScreen(writer, new Rectangle(annot.llx(), annot.lly(), annot.urx(), annot.ury()),
-                        fname, fs, mimetype, sparams[1]);
-                return ann;
-            case Annotation.FILE_PAGE:
-                return new PdfAnnotation(writer, annot.llx(), annot.lly(), annot.urx(), annot.ury(), new PdfAction((String) annot.attributes().get(Annotation.FILE), ((Integer) annot.attributes().get(Annotation.PAGE)).intValue()));
-            case Annotation.NAMED_DEST:
-                return new PdfAnnotation(writer, annot.llx(), annot.lly(), annot.urx(), annot.ury(), new PdfAction(((Integer) annot.attributes().get(Annotation.NAMED)).intValue()));
-            case Annotation.LAUNCH:
-                return new PdfAnnotation(writer, annot.llx(), annot.lly(), annot.urx(), annot.ury(), new PdfAction((String) annot.attributes().get(Annotation.APPLICATION),(String) annot.attributes().get(Annotation.PARAMETERS),(String) annot.attributes().get(Annotation.OPERATION),(String) annot.attributes().get(Annotation.DEFAULTDIR)));
-            default:
-                PdfDocument doc = writer.getPdfDocument();
-                if (doc.line == null)
-                    return null;
-                PdfAnnotation an = new PdfAnnotation(writer, annot.llx(doc.indentRight() - doc.line.widthLeft()), annot.lly(doc.indentTop() - doc.currentHeight), annot.urx(doc.indentRight() - doc.line.widthLeft() + 20), annot.ury(doc.indentTop() - doc.currentHeight - 20), new PdfString(annot.title()), new PdfString(annot.content()));
-                return an;
+
+	/**
+	 * Adds a new table to the document.
+	 * @param t				Table to add.  Rendered rows will be deleted after processing.
+	 * @throws DocumentException
+	 * @since	iText 2.0.8
+	 */
+    /* ssteward: dropped in 1.44
+    private void addPdfTable(Table t) throws DocumentException {
+        // before every table, we flush all lines
+        flushLines();
+
+    	PdfTable table = new PdfTable(t, indentLeft(), indentRight(), indentTop() - currentHeight);
+        RenderingContext ctx = new RenderingContext();
+        ctx.pagetop = indentTop();
+        ctx.oldHeight = currentHeight;
+        ctx.cellGraphics = new PdfContentByte(writer);
+        ctx.rowspanMap = new HashMap();
+        ctx.table = table;
+
+		// initialization of parameters
+		PdfCell cell;
+
+		// drawing the table
+		ArrayList headercells = table.getHeaderCells();
+        ArrayList cells = table.getCells();
+        ArrayList rows = extractRows(cells, ctx);
+        boolean isContinue = false;
+		while (!cells.isEmpty()) {
+			// initialization of some extra parameters;
+			ctx.lostTableBottom = 0;
+
+			// loop over the cells
+			boolean cellsShown = false;
+
+            // draw the cells (line by line)
+            Iterator iterator = rows.iterator();
+
+            boolean atLeastOneFits = false;
+            while (iterator.hasNext()) {
+                ArrayList row = (ArrayList) iterator.next();
+                analyzeRow(rows, ctx);
+                renderCells(ctx, row, table.hasToFitPageCells() & atLeastOneFits);
+
+                if (!mayBeRemoved(row)) {
+                    break;
+                }
+                consumeRowspan(row, ctx);
+                iterator.remove();
+                atLeastOneFits = true;
+            }
+
+//          compose cells array list for subsequent code
+            cells.clear();
+            Set opt = new HashSet();
+            iterator = rows.iterator();
+            while (iterator.hasNext()) {
+                ArrayList row = (ArrayList) iterator.next();
+
+                Iterator cellIterator = row.iterator();
+                while (cellIterator.hasNext()) {
+                    cell = (PdfCell) cellIterator.next();
+
+                    if (!opt.contains(cell)) {
+                        cells.add(cell);
+                        opt.add(cell);
+                    }
+                }
+            }
+
+			// we paint the graphics of the table after looping through all the cells
+			Rectangle tablerec = new Rectangle(table);
+			tablerec.setBorder(table.getBorder());
+			tablerec.setBorderWidth(table.getBorderWidth());
+			tablerec.setBorderColor(table.getBorderColor());
+			tablerec.setBackgroundColor(table.getBackgroundColor());
+			PdfContentByte under = writer.getDirectContentUnder();
+			under.rectangle(tablerec.rectangle(top(), indentBottom()));
+			under.add(ctx.cellGraphics);
+			// bugfix by Gerald Fehringer: now again add the border for the table
+			// since it might have been covered by cell backgrounds
+			tablerec.setBackgroundColor(null);
+			tablerec = tablerec.rectangle(top(), indentBottom());
+			tablerec.setBorder(table.getBorder());
+			under.rectangle(tablerec);
+			// end bugfix
+
+            ctx.cellGraphics = new PdfContentByte(null);
+			// if the table continues on the next page
+
+			if (!rows.isEmpty()) {
+				isContinue = true;
+				graphics.setLineWidth(table.getBorderWidth());
+				if (cellsShown && (table.getBorder() & Rectangle.BOTTOM) == Rectangle.BOTTOM) {
+					// Draw the bottom line
+
+					// the color is set to the color of the element
+					Color tColor = table.getBorderColor();
+					if (tColor != null) {
+						graphics.setColorStroke(tColor);
+					}
+					graphics.moveTo(table.getLeft(), Math.max(table.getBottom(), indentBottom()));
+					graphics.lineTo(table.getRight(), Math.max(table.getBottom(), indentBottom()));
+					graphics.stroke();
+					if (tColor != null) {
+						graphics.resetRGBColorStroke();
+					}
+				}
+
+				// old page
+				pageEmpty = false;
+                float difference = ctx.lostTableBottom;
+
+				// new page
+				newPage();
+
+				// G.F.: if something added in page event i.e. currentHeight > 0
+				float heightCorrection = 0;
+				boolean somethingAdded = false;
+				if (currentHeight > 0) {
+					heightCorrection = 6;
+					currentHeight += heightCorrection;
+					somethingAdded = true;
+					newLine();
+					flushLines();
+					indentation.indentTop = currentHeight - leading;
+					currentHeight = 0;
+				}
+				else {
+                    flushLines();
+				}
+
+				// this part repeats the table headers (if any)
+				int size = headercells.size();
+				if (size > 0) {
+					// this is the top of the headersection
+					cell = (PdfCell) headercells.get(0);
+					float oldTop = cell.getTop(0);
+					// loop over all the cells of the table header
+					for (int i = 0; i < size; i++) {
+						cell = (PdfCell) headercells.get(i);
+						// calculation of the new cellpositions
+						cell.setTop(indentTop() - oldTop + cell.getTop(0));
+						cell.setBottom(indentTop() - oldTop + cell.getBottom(0));
+						ctx.pagetop = cell.getBottom();
+						// we paint the borders of the cell
+						ctx.cellGraphics.rectangle(cell.rectangle(indentTop(), indentBottom()));
+						// we write the text of the cell
+						ArrayList images = cell.getImages(indentTop(), indentBottom());
+						for (Iterator im = images.iterator(); im.hasNext();) {
+							cellsShown = true;
+							Image image = (Image) im.next();
+							graphics.addImage(image);
+						}
+						lines = cell.getLines(indentTop(), indentBottom());
+						float cellTop = cell.getTop(indentTop());
+						text.moveText(0, cellTop-heightCorrection);
+						float cellDisplacement = flushLines() - cellTop+heightCorrection;
+						text.moveText(0, cellDisplacement);
+					}
+
+					currentHeight = indentTop() - ctx.pagetop + table.cellspacing();
+					text.moveText(0, ctx.pagetop - indentTop() - currentHeight);
+				}
+				else {
+					if (somethingAdded) {
+						ctx.pagetop = indentTop();
+						text.moveText(0, -table.cellspacing());
+					}
+				}
+				ctx.oldHeight = currentHeight - heightCorrection;
+
+				// calculating the new positions of the table and the cells
+				size = Math.min(cells.size(), table.columns());
+				int i = 0;
+				while (i < size) {
+					cell = (PdfCell) cells.get(i);
+					if (cell.getTop(-table.cellspacing()) > ctx.lostTableBottom) {
+						float newBottom = ctx.pagetop - difference + cell.getBottom();
+						float neededHeight = cell.remainingHeight();
+						if (newBottom > ctx.pagetop - neededHeight) {
+							difference += newBottom - (ctx.pagetop - neededHeight);
+						}
+					}
+					i++;
+				}
+				size = cells.size();
+				table.setTop(indentTop());
+				table.setBottom(ctx.pagetop - difference + table.getBottom(table.cellspacing()));
+				for (i = 0; i < size; i++) {
+					cell = (PdfCell) cells.get(i);
+					float newBottom = ctx.pagetop - difference + cell.getBottom();
+					float newTop = ctx.pagetop - difference + cell.getTop(-table.cellspacing());
+					if (newTop > indentTop() - currentHeight) {
+						newTop = indentTop() - currentHeight;
+					}
+
+					cell.setTop(newTop );
+					cell.setBottom(newBottom );
+				}
+			}
+		}
+
+        float tableHeight = table.getTop() - table.getBottom();
+        // bugfix by Adauto Martins when have more than two tables and more than one page
+        // If continuation of table in other page (bug report #1460051)
+        if (isContinue) {
+        	currentHeight = tableHeight;
+        	text.moveText(0, -(tableHeight - (ctx.oldHeight * 2)));
+        } else {
+        	currentHeight = ctx.oldHeight + tableHeight;
+        	text.moveText(0, -tableHeight);
+        }
+        // end bugfix
+        pageEmpty = false;
+    }
+
+    protected void analyzeRow(ArrayList rows, RenderingContext ctx) {
+        ctx.maxCellBottom = indentBottom();
+
+        // determine whether row(index) is in a rowspan
+        int rowIndex = 0;
+
+        ArrayList row = (ArrayList) rows.get(rowIndex);
+        int maxRowspan = 1;
+        Iterator iterator = row.iterator();
+        while (iterator.hasNext()) {
+            PdfCell cell = (PdfCell) iterator.next();
+            maxRowspan = Math.max(ctx.currentRowspan(cell), maxRowspan);
+        }
+        rowIndex += maxRowspan;
+
+        boolean useTop = true;
+        if (rowIndex == rows.size()) {
+            rowIndex = rows.size() - 1;
+            useTop = false;
+        }
+
+        if (rowIndex < 0 || rowIndex >= rows.size()) return;
+
+        row = (ArrayList) rows.get(rowIndex);
+        iterator = row.iterator();
+        while (iterator.hasNext()) {
+            PdfCell cell = (PdfCell) iterator.next();
+            Rectangle cellRect = cell.rectangle(ctx.pagetop, indentBottom());
+            if (useTop) {
+                ctx.maxCellBottom = Math.max(ctx.maxCellBottom, cellRect.getTop());
+            } else {
+                if (ctx.currentRowspan(cell) == 1) {
+                    ctx.maxCellBottom = Math.max(ctx.maxCellBottom, cellRect.getBottom());
+                }
+            }
         }
     }
-    
-    /**
-     * @return an XmpMetadata byte array
-     */
-    /* ssteward omit:
-    public byte[] createXmpMetadata() {
-    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	try {
-    		XmpWriter xmp = new XmpWriter(baos, getInfo());
-    		xmp.close();
-    	}
-    	catch(IOException ioe) {
-    		ioe.printStackTrace();
-    	}
-    	return baos.toByteArray();
+
+    protected boolean mayBeRemoved(ArrayList row) {
+        Iterator iterator = row.iterator();
+        boolean mayBeRemoved = true;
+        while (iterator.hasNext()) {
+            PdfCell cell = (PdfCell) iterator.next();
+
+            mayBeRemoved &= cell.mayBeRemoved();
+        }
+        return mayBeRemoved;
+    }
+
+    protected void consumeRowspan(ArrayList row, RenderingContext ctx) {
+        Iterator iterator = row.iterator();
+        while (iterator.hasNext()) {
+            PdfCell c = (PdfCell) iterator.next();
+            ctx.consumeRowspan(c);
+        }
+    }
+
+    protected ArrayList extractRows(ArrayList cells, RenderingContext ctx) {
+        PdfCell cell;
+        PdfCell previousCell = null;
+        ArrayList rows = new ArrayList();
+        java.util.List rowCells = new ArrayList();
+
+        Iterator iterator = cells.iterator();
+        while (iterator.hasNext()) {
+            cell = (PdfCell) iterator.next();
+
+            boolean isAdded = false;
+
+            boolean isEndOfRow = !iterator.hasNext();
+            boolean isCurrentCellPartOfRow = !iterator.hasNext();
+
+            if (previousCell != null) {
+                if (cell.getLeft() <= previousCell.getLeft()) {
+                    isEndOfRow = true;
+                    isCurrentCellPartOfRow = false;
+                }
+            }
+
+            if (isCurrentCellPartOfRow) {
+                rowCells.add(cell);
+                isAdded = true;
+            }
+
+            if (isEndOfRow) {
+                if (!rowCells.isEmpty()) {
+                    // add to rowlist
+                    rows.add(rowCells);
+                }
+
+                // start a new list for next line
+                rowCells = new ArrayList();
+            }
+
+            if (!isAdded) {
+                rowCells.add(cell);
+            }
+
+            previousCell = cell;
+        }
+
+        if (!rowCells.isEmpty()) {
+            rows.add(rowCells);
+        }
+
+        // fill row information with rowspan cells to get complete "scan lines"
+        for (int i = rows.size() - 1; i >= 0; i--) {
+            ArrayList row = (ArrayList) rows.get(i);
+            // iterator through row
+            for (int j = 0; j < row.size(); j++) {
+                PdfCell c = (PdfCell) row.get(j);
+                int rowspan = c.rowspan();
+                // fill in missing rowspan cells to complete "scan line"
+                for (int k = 1; k < rowspan && rows.size() < i+k; k++) {
+                    ArrayList spannedRow = ((ArrayList) rows.get(i + k));
+                    if (spannedRow.size() > j)
+                    	spannedRow.add(j, c);
+                }
+            }
+        }
+
+        return rows;
+    }
+
+    protected void renderCells(RenderingContext ctx, java.util.List cells, boolean hasToFit) throws DocumentException {
+        PdfCell cell;
+        Iterator iterator;
+        if (hasToFit) {
+            iterator = cells.iterator();
+            while (iterator.hasNext()) {
+            	cell = (PdfCell) iterator.next();
+            	if (!cell.isHeader()) {
+            		if (cell.getBottom() < indentBottom()) return;
+            	}
+            }
+        }
+        iterator = cells.iterator();
+
+        while (iterator.hasNext()) {
+            cell = (PdfCell) iterator.next();
+            if (!ctx.isCellRenderedOnPage(cell, getPageNumber())) {
+
+                float correction = 0;
+                if (ctx.numCellRendered(cell) >= 1) {
+                    correction = 1.0f;
+                }
+
+                lines = cell.getLines(ctx.pagetop, indentBottom() - correction);
+
+                // if there is still text to render we render it
+                if (lines != null && !lines.isEmpty()) {
+                    // we write the text
+                    float cellTop = cell.getTop(ctx.pagetop - ctx.oldHeight);
+                    text.moveText(0, cellTop);
+                    float cellDisplacement = flushLines() - cellTop;
+
+                    text.moveText(0, cellDisplacement);
+                    if (ctx.oldHeight + cellDisplacement > currentHeight) {
+                        currentHeight = ctx.oldHeight + cellDisplacement;
+                    }
+
+                    ctx.cellRendered(cell, getPageNumber());
+                }
+                float indentBottom = Math.max(cell.getBottom(), indentBottom());
+                Rectangle tableRect = ctx.table.rectangle(ctx.pagetop, indentBottom());
+                indentBottom = Math.max(tableRect.getBottom(), indentBottom);
+
+                // we paint the borders of the cells
+                Rectangle cellRect = cell.rectangle(tableRect.getTop(), indentBottom);
+ 				//cellRect.setBottom(cellRect.bottom());
+                if (cellRect.getHeight() > 0) {
+                    ctx.lostTableBottom = indentBottom;
+                    ctx.cellGraphics.rectangle(cellRect);
+                }
+
+                // and additional graphics
+                ArrayList images = cell.getImages(ctx.pagetop, indentBottom());
+                for (Iterator i = images.iterator(); i.hasNext();) {
+                    Image image = (Image) i.next();
+                    graphics.addImage(image);
+                }
+
+            }
+        }
     }
     */
-    
-    int getMarkPoint() {
-        return markPoint;
+
+    /**
+     * Returns the bottomvalue of a <CODE>Table</CODE> if it were added to this document.
+     *
+     * @param	table	the table that may or may not be added to this document
+     * @return	a bottom value
+     */
+    /* ssteward: dropped in 1.44
+    float bottom(Table table) {
+        // constructing a PdfTable
+        PdfTable tmp = new PdfTable(table, indentLeft(), indentRight(), indentTop() - currentHeight);
+        return tmp.getBottom();
     }
-    
-    void incMarkPoint() {
-        ++markPoint;
+    */
+
+//	[M5] header/footer
+    /* ssteward: dropped in 1.44 
+    protected void doFooter() throws DocumentException {
+    	if (footer == null) return;
+		// Begin added by Edgar Leonardo Prieto Perilla
+    	// Avoid footer indentation
+    	float tmpIndentLeft = indentation.indentLeft;
+    	float tmpIndentRight = indentation.indentRight;
+    	// Begin added: Bonf (Marc Schneider) 2003-07-29
+        float tmpListIndentLeft = indentation.listIndentLeft;
+        float tmpImageIndentLeft = indentation.imageIndentLeft;
+        float tmpImageIndentRight = indentation.imageIndentRight;
+        // End added: Bonf (Marc Schneider) 2003-07-29
+
+        indentation.indentLeft = indentation.indentRight = 0;
+        // Begin added: Bonf (Marc Schneider) 2003-07-29
+        indentation.listIndentLeft = 0;
+        indentation.imageIndentLeft = 0;
+        indentation.imageIndentRight = 0;
+        // End added: Bonf (Marc Schneider) 2003-07-29
+        // End Added by Edgar Leonardo Prieto Perilla
+        footer.setPageNumber(pageN);
+        leading = footer.paragraph().getTotalLeading();
+        add(footer.paragraph());
+        // adding the footer limits the height
+        indentation.indentBottom = currentHeight;
+        text.moveText(left(), indentBottom());
+        flushLines();
+        text.moveText(-left(), -bottom());
+        footer.setTop(bottom(currentHeight));
+        footer.setBottom(bottom() - (0.75f * leading));
+        footer.setLeft(left());
+        footer.setRight(right());
+        graphics.rectangle(footer);
+        indentation.indentBottom = currentHeight + leading * 2;
+        currentHeight = 0;
+        // Begin added by Edgar Leonardo Prieto Perilla
+        indentation.indentLeft = tmpIndentLeft;
+        indentation.indentRight = tmpIndentRight;
+        // Begin added: Bonf (Marc Schneider) 2003-07-29
+        indentation.listIndentLeft = tmpListIndentLeft;
+        indentation.imageIndentLeft = tmpImageIndentLeft;
+        indentation.imageIndentRight = tmpImageIndentRight;
+        // End added: Bonf (Marc Schneider) 2003-07-29
+        // End added by Edgar Leonardo Prieto Perilla
     }
+
+    protected void doHeader() throws DocumentException {
+        // if there is a header, the header = added
+        if (header == null) return;
+		// Begin added by Edgar Leonardo Prieto Perilla
+		// Avoid header indentation
+		float tmpIndentLeft = indentation.indentLeft;
+		float tmpIndentRight = indentation.indentRight;
+        // Begin added: Bonf (Marc Schneider) 2003-07-29
+        float tmpListIndentLeft = indentation.listIndentLeft;
+        float tmpImageIndentLeft = indentation.imageIndentLeft;
+        float tmpImageIndentRight = indentation.imageIndentRight;
+        // End added: Bonf (Marc Schneider) 2003-07-29
+        indentation.indentLeft = indentation.indentRight = 0;
+        //  Added: Bonf
+        indentation.listIndentLeft = 0;
+        indentation.imageIndentLeft = 0;
+        indentation.imageIndentRight = 0;
+        // End added: Bonf
+        // Begin added by Edgar Leonardo Prieto Perilla
+		header.setPageNumber(pageN);
+        leading = header.paragraph().getTotalLeading();
+        text.moveText(0, leading);
+        add(header.paragraph());
+        newLine();
+        indentation.indentTop = currentHeight - leading;
+        header.setTop(top() + leading);
+        header.setBottom(indentTop() + leading * 2 / 3);
+        header.setLeft(left());
+        header.setRight(right());
+        graphics.rectangle(header);
+        flushLines();
+        currentHeight = 0;
+        // Begin added by Edgar Leonardo Prieto Perilla
+        // Restore indentation
+		indentation.indentLeft = tmpIndentLeft;
+		indentation.indentRight = tmpIndentRight;
+        // Begin added: Bonf (Marc Schneider) 2003-07-29
+        indentation.listIndentLeft = tmpListIndentLeft;
+        indentation.imageIndentLeft = tmpImageIndentLeft;
+        indentation.imageIndentRight = tmpImageIndentRight;
+        // End added: Bonf (Marc Schneider) 2003-07-29
+		// End Added by Edgar Leonardo Prieto Perilla
+    }
+    */
 }

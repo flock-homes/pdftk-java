@@ -22,12 +22,15 @@ Changes are listed in individual file headers.
 * com/lowagie/text/LargeElement.java
 * com/lowagie/text/List.java
 * com/lowagie/text/ListItem.java
+* com/lowagie/text/MarkedObject.java
+* com/lowagie/text/MarkedSection.java
 * com/lowagie/text/Meta.java
 * com/lowagie/text/PageSize.java
 * com/lowagie/text/Paragraph.java
 * com/lowagie/text/Phrase.java
 * com/lowagie/text/Rectangle.java
 * com/lowagie/text/RtfElementInterface.java
+* com/lowagie/text/Section.java
 * com/lowagie/text/SpecialSymbol.java
 * com/lowagie/text/SplitCharacter.java
 * com/lowagie/text/TextElementArray.java
@@ -41,6 +44,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/exceptions/UnsupportedPdfException.java
 
 * com/lowagie/text/factories/RomanAlphabetFactory.java
+* com/lowagie/text/factories/RomanNumberFactory.java
 
 * com/lowagie/text/html/Markup.java
 * com/lowagie/text/html/WebColors.java
@@ -78,6 +82,8 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfChunk.java
 * com/lowagie/text/pdf/PdfContentParser.java
 * com/lowagie/text/pdf/PdfDictionary.java
+* com/lowagie/text/pdf/PdfDocument.java
+* com/lowagie/text/pdf/PdfEFStream.java
 * com/lowagie/text/pdf/PdfEncodings.java
 * com/lowagie/text/pdf/PdfException.java
 * com/lowagie/text/pdf/PdfFont.java
@@ -92,8 +98,10 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfNumber.java
 * com/lowagie/text/pdf/PdfNumberTree.java
 * com/lowagie/text/pdf/PdfObject.java
+* com/lowagie/text/pdf/PdfPageLabels.java
 * com/lowagie/text/pdf/PdfPattern.java
 * com/lowagie/text/pdf/PdfPatternPainter.java
+* com/lowagie/text/pdf/PdfRectangle.java
 * com/lowagie/text/pdf/PdfShading.java
 * com/lowagie/text/pdf/PdfShadingPattern.java
 * com/lowagie/text/pdf/PdfStream.java
@@ -216,9 +224,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfDate.java
 * com/lowagie/text/pdf/PdfDestination.java
   * Added class instance for Windows nonsense.
-* com/lowagie/text/pdf/PdfDocument.java
-  * **Multiple changes**
-  * Unmarked changes in `getAcroForm`.
 * com/lowagie/text/pdf/PdfEncryptionStream.java
 * com/lowagie/text/pdf/PdfFileSpecification.java
   * Changes in `PdfFileSpecification` and `fileEmbedded`.
@@ -244,10 +249,8 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfPageElement.java
 * com/lowagie/text/pdf/PdfPageEvent.java
 * com/lowagie/text/pdf/PdfPageEventHelper.java
-* com/lowagie/text/pdf/PdfPageLabels.java
 * com/lowagie/text/pdf/PdfPages.java
 * com/lowagie/text/pdf/PdfReaderInstance.java
-* com/lowagie/text/pdf/PdfRectangle.java
 * com/lowagie/text/pdf/PdfRendition.java
 * com/lowagie/text/pdf/PdfResources.java
 * com/lowagie/text/pdf/PdfSigGenericPKCS.java

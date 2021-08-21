@@ -353,7 +353,7 @@ public class Document implements DocListener {
 	 *         if not.
  */
     
-    public boolean newPage() throws DocumentException {
+    public boolean newPage() {
         if (!open || close) {
             return false;
         }

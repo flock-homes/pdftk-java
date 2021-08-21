@@ -101,15 +101,39 @@ public class PdfContentByte {
         
         /** The current text leading. */
         protected float leading = 0;
+
+        /** The current horizontal scaling */
+        protected float scale = 100;
+
+        /** The current character spacing */
+        protected float charSpace = 0;
+
+        /** The current word spacing */
+        protected float wordSpace = 0;
+
+        GraphicState() {
     }
     
-    /** The alignement is center */
+        GraphicState(GraphicState cp) {
+            fontDetails = cp.fontDetails;
+            colorDetails = cp.colorDetails;
+            size = cp.size;
+            xTLM = cp.xTLM;
+            yTLM = cp.yTLM;
+            leading = cp.leading;
+            scale = cp.scale;
+            charSpace = cp.charSpace;
+            wordSpace = cp.wordSpace;
+        }
+    }
+
+    /** The alignment is center */
     public static final int ALIGN_CENTER = Element.ALIGN_CENTER;
     
-    /** The alignement is left */
+    /** The alignment is left */
     public static final int ALIGN_LEFT = Element.ALIGN_LEFT;
     
-    /** The alignement is right */
+    /** The alignment is right */
     public static final int ALIGN_RIGHT = Element.ALIGN_RIGHT;
 
     /** A possible line cap value */
@@ -267,6 +291,15 @@ public class PdfContentByte {
      */
     public float getLeading() {
         return state.leading;
+    }
+
+    /**
+     * Gets the current character spacing.
+     *
+     * @return the current character spacing
+     */
+    public float getCharacterSpacing() {
+        return state.charSpace;
     }
     
     /**

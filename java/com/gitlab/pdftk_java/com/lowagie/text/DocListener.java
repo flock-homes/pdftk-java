@@ -75,7 +75,7 @@ public interface DocListener extends ElementListener {
      * @return	<CODE>true</CODE> if the page was added, <CODE>false</CODE> if not.
  */
     
-    public boolean newPage() throws DocumentException; // [L3]
+    public boolean newPage(); // [L3]
     
 /**
      * Sets the pagesize.

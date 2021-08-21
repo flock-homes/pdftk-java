@@ -53,10 +53,16 @@
 
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
+
+import com.gitlab.pdftk_java.com.lowagie.text.pdf.collection.PdfCollectionItem;
 /** Specifies a file or an URL. The file can be extern or embedded.
  *
  * @author Paulo Soares (psoares@consiste.pt)
@@ -107,7 +113,25 @@ public class PdfFileSpecification extends PdfDictionary {
      * @return the file specification
      */    
     public static PdfFileSpecification fileEmbedded(PdfWriter writer, String filePath, String fileDisplay, byte fileStore[]) throws IOException {
-        return fileEmbedded(writer, filePath, fileDisplay, fileStore, true);
+        return fileEmbedded(writer, filePath, fileDisplay, fileStore, PdfStream.BEST_COMPRESSION);
+    }
+    
+    /**
+     * Creates a file specification with the file embedded. The file may
+     * come from the file system or from a byte array. The data is flate compressed.
+     * @param writer the <CODE>PdfWriter</CODE>
+     * @param filePath the file path
+     * @param fileDisplay the file information that is presented to the user
+     * @param fileStore the byte array with the file. If it is not <CODE>null</CODE>
+     * it takes precedence over <CODE>filePath</CODE>
+     * @param compressionLevel	the compression level to be used for compressing the file
+     * it takes precedence over <CODE>filePath</CODE>
+     * @throws IOException on error
+     * @return the file specification
+     * @since	2.1.3
+     */    
+    public static PdfFileSpecification fileEmbedded(PdfWriter writer, String filePath, String fileDisplay, byte fileStore[], int compressionLevel) throws IOException {
+        return fileEmbedded(writer, filePath, fileDisplay, fileStore, null, null, compressionLevel);
     }
     
     
@@ -125,22 +149,56 @@ public class PdfFileSpecification extends PdfDictionary {
      * @return the file specification
      */    
     public static PdfFileSpecification fileEmbedded(PdfWriter writer, String filePath, String fileDisplay, byte fileStore[], boolean compress) throws IOException {
+        return fileEmbedded(writer, filePath, fileDisplay, fileStore, null, null, compress ? PdfStream.BEST_COMPRESSION : PdfStream.NO_COMPRESSION);
+    }
+    
+    /**
+     * Creates a file specification with the file embedded. The file may
+     * come from the file system or from a byte array.
+     * @param writer the <CODE>PdfWriter</CODE>
+     * @param filePath the file path
+     * @param fileDisplay the file information that is presented to the user
+     * @param fileStore the byte array with the file. If it is not <CODE>null</CODE>
+     * it takes precedence over <CODE>filePath</CODE>
+     * @param compress sets the compression on the data. Multimedia content will benefit little
+     * from compression
+     * @param mimeType the optional mimeType
+     * @param fileParameter the optional extra file parameters such as the creation or modification date
+     * @throws IOException on error
+     * @return the file specification
+     */    
+    public static PdfFileSpecification fileEmbedded(PdfWriter writer, String filePath, String fileDisplay, byte fileStore[], boolean compress, String mimeType, PdfDictionary fileParameter) throws IOException {
+    	return fileEmbedded(writer, filePath, fileDisplay, fileStore, mimeType, fileParameter, compress ? PdfStream.BEST_COMPRESSION : PdfStream.NO_COMPRESSION);
+    }
+    
+    /**
+     * Creates a file specification with the file embedded. The file may
+     * come from the file system or from a byte array.
+     * @param writer the <CODE>PdfWriter</CODE>
+     * @param filePath the file path
+     * @param fileDisplay the file information that is presented to the user
+     * @param fileStore the byte array with the file. If it is not <CODE>null</CODE>
+     * it takes precedence over <CODE>filePath</CODE>
+     * @param mimeType the optional mimeType
+     * @param fileParameter the optional extra file parameters such as the creation or modification date
+     * @param compressionLevel the level of compression
+     * @throws IOException on error
+     * @return the file specification
+     * @since	2.1.3
+     */    
+    public static PdfFileSpecification fileEmbedded(PdfWriter writer, String filePath, String fileDisplay, byte fileStore[], String mimeType, PdfDictionary fileParameter, int compressionLevel) throws IOException {
         PdfFileSpecification fs = new PdfFileSpecification();
         fs.writer = writer;
-
-	PdfString fileDisplayPdf= new PdfString( fileDisplay, PdfObject.TEXT_PDFDOCENCODING );
-	PdfString fileDisplayPdfUnicode= new PdfString( fileDisplay, PdfObject.TEXT_UNICODE );
-        fs.put(PdfName.F, fileDisplayPdf);
-	fs.put(PdfName.UF, fileDisplayPdfUnicode); // introduced in PDF 1.7
-
-        PdfStream stream;
+        fs.put(PdfName.F, new PdfString(fileDisplay));
+        fs.setUnicodeFileName(fileDisplay, false);
+        PdfEFStream stream;
         InputStream in = null;
         PdfIndirectReference ref;
-        PdfIndirectReference refFileLength;
+        PdfIndirectReference refFileLength = null;
         PdfDate modDate = new PdfDate();
         try {
-            refFileLength = writer.getPdfIndirectReference();
             if (fileStore == null) {
+            refFileLength = writer.getPdfIndirectReference();
                 File file = new File(filePath);
                 if (file.canRead()) {
                     in = new FileInputStream(filePath);
@@ -152,30 +210,42 @@ public class PdfFileSpecification extends PdfDictionary {
                     else {
                         in = BaseFont.getResourceStream(filePath);
                         if (in == null)
-                            throw new IOException(filePath + " not found as file or resource.");
+                            throw new IOException(MessageLocalization.getComposedMessage("1.not.found.as.file.or.resource", filePath));
                     }
                 }
-                stream = new PdfStream(in, writer);
+                stream = new PdfEFStream(in, writer);
+
                 Calendar calendar = new GregorianCalendar();
                 calendar.setTimeInMillis(file.lastModified());
                 modDate = new PdfDate(calendar);
             }
             else {
-                stream = new PdfStream(fileStore);
+                stream = new PdfEFStream(fileStore);
             }
             stream.put(PdfName.TYPE, PdfName.EMBEDDEDFILE);
-            stream.put(PdfName.SUBTYPE, new PdfName("application/octet-stream"));
-            if (compress)
-                stream.flateCompress();
-            stream.put(PdfName.PARAMS, refFileLength);
+            stream.flateCompress(compressionLevel);
+            PdfDictionary param = new PdfDictionary();
+            if (fileParameter != null) {
+                param.merge(fileParameter);
+            }
+
+            if (fileStore != null) {
+                param.put(PdfName.SIZE, new PdfNumber(stream.getRawLength()));
+                stream.put(PdfName.PARAMS, param);
+            }
+            else
+                stream.put(PdfName.PARAMS, refFileLength);
+
+            if (mimeType == null) mimeType = "application/octet-stream";
+            stream.put(PdfName.SUBTYPE, new PdfName(mimeType));
+
             ref = writer.addToBody(stream).getIndirectReference();
             if (fileStore == null) {
                 stream.writeLength();
+                param.put(PdfName.SIZE, new PdfNumber(stream.getRawLength()));
             }
-            PdfDictionary params = new PdfDictionary();
-            params.put(PdfName.SIZE, new PdfNumber(stream.getRawLength()));
-            params.put(PdfName.MODDATE, modDate);
-            writer.addToBody(params, refFileLength);
+            param.put(PdfName.MODDATE, modDate);
+            writer.addToBody(param, refFileLength);
         }
         finally {
             if (in != null)
@@ -183,6 +253,7 @@ public class PdfFileSpecification extends PdfDictionary {
         }
         PdfDictionary f = new PdfDictionary();
         f.put(PdfName.F, ref);
+        f.put(PdfName.UF, ref);
         fs.put(PdfName.EF, f);
         return fs;
     }
@@ -197,6 +268,7 @@ public class PdfFileSpecification extends PdfDictionary {
         PdfFileSpecification fs = new PdfFileSpecification();
         fs.writer = writer;
         fs.put(PdfName.F, new PdfString(filePath));
+        fs.setUnicodeFileName(filePath, false);
         return fs;
     }
     
@@ -215,7 +287,7 @@ public class PdfFileSpecification extends PdfDictionary {
     
     /**
      * Sets the file name (the key /F) string as an hex representation
-     * to support multi byte file names. The name must heve th slash and
+     * to support multi byte file names. The name must have the slash and
      * backslash escaped according to the file specification rules
      * @param fileName the file name as a byte array
      */    
@@ -225,4 +297,41 @@ public class PdfFileSpecification extends PdfDictionary {
         put(PdfName.F, new PdfString(fileName).setHexWriting(true));
     }
     */
+    
+    /**
+     * Adds the unicode file name (the key /UF). This entry was introduced
+     * in PDF 1.7. The filename must have the slash and backslash escaped
+     * according to the file specification rules.
+     * @param filename	the filename
+     * @param unicode	if true, the filename is UTF-16BE encoded; otherwise PDFDocEncoding is used;
+    */
+    public void setUnicodeFileName(String filename, boolean unicode) {
+        put(PdfName.UF, new PdfString(filename, unicode ? PdfObject.TEXT_UNICODE : PdfObject.TEXT_PDFDOCENCODING));
+    }
+    
+    /**
+     * Sets a flag that indicates whether an external file referenced by the file
+     * specification is volatile. If the value is true, applications should never
+     * cache a copy of the file.
+     * @param volatile_file	if true, the external file should not be cached
+     */
+    public void setVolatile(boolean volatile_file) {
+    	put(PdfName.V, new PdfBoolean(volatile_file));
+    }
+    
+    /**
+     * Adds a description for the file that is specified here.
+     * @param description	some text
+     * @param unicode		if true, the text is added as a unicode string
+     */
+    public void addDescription(String description, boolean unicode) {
+        put(PdfName.DESC, new PdfString(description, unicode ? PdfObject.TEXT_UNICODE : PdfObject.TEXT_PDFDOCENCODING));
+    }
+    
+    /**
+     * Adds the Collection item dictionary.
+     */
+    public void addCollectionItem(PdfCollectionItem ci) {
+    	put(PdfName.CI, ci);
+    }
 }

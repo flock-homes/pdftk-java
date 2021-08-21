@@ -158,7 +158,7 @@ public class PdfCopy extends PdfWriter {
     public PdfCopy(Document document, OutputStream os) throws DocumentException {
         super(new PdfDocument(), os);
         document.addDocListener(getPdfDocument());
-        getPdfDocument().setWriter(this); // ssteward: okay
+        getPdfDocument().addWriter(this); // ssteward: okay
         indirectMap = new HashMap();
 
 		// ssteward: pdftk 1.10
