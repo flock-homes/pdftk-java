@@ -22,6 +22,7 @@
 
 package com.gitlab.pdftk_java;
 
+import com.gitlab.pdftk_java.com.lowagie.text.exceptions.BadPasswordException;
 import com.gitlab.pdftk_java.com.lowagie.text.exceptions.InvalidPdfException;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
 import java.io.IOException;
@@ -133,7 +134,7 @@ class InputPdf {
     } catch (IOException ioe_p) { // file open error
       String message = ioe_p.getMessage();
       if (message == null) message = "";
-      if (message.equals("Bad password")) {
+      if (ioe_p instanceof BadPasswordException) {
         m_authorized_b = false;
       } else if (message.indexOf("not found as file or resource") != -1) {
         System.err.println("Error: Unable to find file.");

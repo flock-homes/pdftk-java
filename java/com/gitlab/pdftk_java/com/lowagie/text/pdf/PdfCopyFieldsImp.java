@@ -1,8 +1,14 @@
 /*
- * $Id: PdfCopyFieldsImp.java,v 1.10 2005/05/17 11:21:46 blowagie Exp $
- * $Name:  $
+ * $Id: PdfCopyFieldsImp.java 4065 2009-09-16 23:09:11Z psoares33 $
  * Copyright 2004 by Paulo Soares.
  *
+ * The contents of this file are subject to the Mozilla Public License Version 1.1
+ * (the "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the License.
  *
  * The Original Code is 'iText, a free JAVA-PDF library'.
  *
@@ -15,55 +21,51 @@
  * Contributor(s): all the names of the contributors are added in the source code
  * where applicable.
  *
+ * Alternatively, the contents of this file may be used under the terms of the
+ * LGPL license (the "GNU LIBRARY GENERAL PUBLIC LICENSE"), in which case the
+ * provisions of LGPL are applicable instead of those above.  If you wish to
+ * allow use of your version of this file only under the terms of the LGPL
+ * License and not to allow others to use your version of this file under
+ * the MPL, indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by the LGPL.
+ * If you do not delete the provisions above, a recipient may use your version
+ * of this file under either the MPL or the GNU LIBRARY GENERAL PUBLIC LICENSE.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of the MPL as stated above or under the terms of the GNU
+ * Library General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or any later version.
  *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- * 
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA  02110-1301, USA.
- *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Library general Public License for more
+ * details.
  *
  * If you didn't download this code from the following link, you should check if
  * you aren't using an obsolete version:
  * http://www.lowagie.com/iText/
  */
+
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+// pdftk-java notes: methods commented out for no apparent reason. Reverted.
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 
-import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
-import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
-import com.gitlab.pdftk_java.com.lowagie.text.Document;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
+
+import com.gitlab.pdftk_java.com.lowagie.text.Document;
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
+import com.gitlab.pdftk_java.com.lowagie.text.exceptions.BadPasswordException;
 
 /**
  *
@@ -84,30 +86,29 @@ class PdfCopyFieldsImp extends PdfWriter {
     ArrayList pageDics = new ArrayList();
     PdfDictionary resources = new PdfDictionary();
     PdfDictionary form;
-    protected List newBookmarks;
     boolean closing = false;
     Document nd;
     private HashMap tabOrder;
     private ArrayList calculationOrder = new ArrayList();
     private ArrayList calculationOrderRefs;
+    private boolean hasSignature;
     
-    PdfCopyFieldsImp(OutputStream os) throws DocumentException, IOException {
+    PdfCopyFieldsImp(OutputStream os) throws DocumentException {
         this(os, '\0');
     }
     
-    PdfCopyFieldsImp(OutputStream os, char pdfVersion) throws DocumentException, IOException {
+    PdfCopyFieldsImp(OutputStream os, char pdfVersion) throws DocumentException {
         super(new PdfDocument(), os);
-        getPdfDocument().addWriter(this); // ssteward: okay
+        pdf.addWriter(this);
         if (pdfVersion != 0)
             super.setPdfVersion(pdfVersion);
         nd = new Document();
-        nd.addDocListener(getPdfDocument());
+        nd.addDocListener(pdf);
     }
     
-    /* ssteward omit until PdfReader(reader) reviewed
-    void addDocument(PdfReader reader, List pagesToKeep) throws DocumentException {
+    void addDocument(PdfReader reader, List pagesToKeep) throws DocumentException, IOException {
         if (!readers2intrefs.containsKey(reader) && reader.isTampered())
-            throw new DocumentException("The document was reused.");
+            throw new DocumentException(MessageLocalization.getComposedMessage("the.document.was.reused"));
         reader = new PdfReader(reader);        
         reader.selectPages(pagesToKeep);
         if (reader.getNumberOfPages() == 0)
@@ -116,14 +117,16 @@ class PdfCopyFieldsImp extends PdfWriter {
         addDocument(reader);
     }
     
-    void addDocument(PdfReader reader) throws DocumentException {
+    void addDocument(PdfReader reader) throws DocumentException, IOException {
+        if (!reader.isOpenedWithFullPermissions())
+            throw new BadPasswordException(MessageLocalization.getComposedMessage("pdfreader.not.opened.with.owner.password"));
         openDoc();
         if (readers2intrefs.containsKey(reader)) {
             reader = new PdfReader(reader);
         }
         else {
             if (reader.isTampered())
-                throw new DocumentException("The document was reused.");
+                throw new DocumentException(MessageLocalization.getComposedMessage("the.document.was.reused"));
             reader.consolidateNamedDestinations();
             reader.setTampered(true);
         }
@@ -141,8 +144,7 @@ class PdfCopyFieldsImp extends PdfWriter {
         fields.add(reader.getAcroFields());
         updateCalculationOrder(reader);
     }
-    */
-    /* ssteward omit:
+    
     private static String getCOName(PdfReader reader, PRIndirectReference ref) {
         String name = "";
         while (ref != null) {
@@ -150,7 +152,7 @@ class PdfCopyFieldsImp extends PdfWriter {
             if (obj == null || obj.type() != PdfObject.DICTIONARY)
                 break;
             PdfDictionary dic = (PdfDictionary)obj;
-            PdfString t = (PdfString)PdfReader.getPdfObject(dic.get(PdfName.T));
+            PdfString t = dic.getAsString(PdfName.T);
             if (t != null) {
                 name = t.toUnicodeString()+ "." + name;
             }
@@ -160,21 +162,21 @@ class PdfCopyFieldsImp extends PdfWriter {
             name = name.substring(0, name.length() - 1);
         return name;
     }
-    */
     
-    /* ssteward omit:
-    private void updateCalculationOrder(PdfReader reader) {
+    /**
+     * @since	2.1.5; before 2.1.5 the method was private
+     */
+    protected void updateCalculationOrder(PdfReader reader) {
         PdfDictionary catalog = reader.getCatalog();
-        PdfDictionary acro = (PdfDictionary)PdfReader.getPdfObject(catalog.get(PdfName.ACROFORM));
+        PdfDictionary acro = catalog.getAsDict(PdfName.ACROFORM);
         if (acro == null)
             return;
-        PdfArray co = (PdfArray)PdfReader.getPdfObject(acro.get(PdfName.CO));
+        PdfArray co = acro.getAsArray(PdfName.CO);
         if (co == null || co.size() == 0)
             return;
         AcroFields af = reader.getAcroFields();
-        ArrayList coa = co.getArrayList();
-        for (int k = 0; k < coa.size(); ++k) {
-            PdfObject obj = (PdfObject)coa.get(k);
+        for (int k = 0; k < co.size(); ++k) {
+            PdfObject obj = co.getPdfObject(k);
             if (obj == null || !obj.isIndirect())
                 continue;
             String name = getCOName(reader, (PRIndirectReference)obj);
@@ -186,7 +188,6 @@ class PdfCopyFieldsImp extends PdfWriter {
             calculationOrder.add(name);
         }
     }
-    */
     
     void propagate(PdfObject obj, PdfIndirectReference refo, boolean restricted) throws IOException {
         if (obj == null)
@@ -217,9 +218,8 @@ class PdfCopyFieldsImp extends PdfWriter {
                 break;
             }
             case PdfObject.ARRAY: {
-                ArrayList list = ((PdfArray)obj).getArrayList();
                 //PdfArray arr = new PdfArray();
-                for (Iterator it = list.iterator(); it.hasNext();) {
+                for (Iterator it = ((PdfArray)obj).listIterator(); it.hasNext();) {
                     PdfObject ob = (PdfObject)it.next();
                     if (ob != null && ob.isIndirect()) {
                         PRIndirectReference ind = (PRIndirectReference)ob;
@@ -234,7 +234,7 @@ class PdfCopyFieldsImp extends PdfWriter {
                 break;
             }
             case PdfObject.INDIRECT: {
-                throw new RuntimeException("Reference pointing to reference.");
+                throw new RuntimeException(MessageLocalization.getComposedMessage("reference.pointing.to.reference"));
             }
         }
     }
@@ -257,23 +257,24 @@ class PdfCopyFieldsImp extends PdfWriter {
             for (int k = size; k >= 0; --k) {
                 if (((Integer)t.get(k)).intValue() <= v) {
                     t.add(k + 1, new Integer(v));
-                    annots.getArrayList().add(k + 1, ind);
+                    annots.add(k + 1, ind);
                     size = -2;
                     break;
                 }
             }
             if (size != -2) {
                 t.add(0, new Integer(v));
-                annots.getArrayList().add(0, ind);
+                annots.add(0, ind);
             }
         }
     }
     
     protected PdfArray branchForm(HashMap level, PdfIndirectReference parent, String fname) throws IOException {
         PdfArray arr = new PdfArray();
-        for (Iterator it = level.keySet().iterator(); it.hasNext();) {
-            String name = (String)it.next();
-            Object obj = level.get(name);
+        for (Iterator it = level.entrySet().iterator(); it.hasNext();) {
+            Map.Entry entry = (Map.Entry) it.next();
+            String name = (String) entry.getKey();
+            Object obj = entry.getValue();
             PdfIndirectReference ind = getPdfIndirectReference();
             PdfDictionary dic = new PdfDictionary();
             if (parent != null)
@@ -295,7 +296,7 @@ class PdfCopyFieldsImp extends PdfWriter {
                     dic.mergeDifferent((PdfDictionary)list.get(2));
                     int page = ((Integer)list.get(1)).intValue();
                     PdfDictionary pageDic = (PdfDictionary)pageDics.get(page - 1);
-                    PdfArray annots = (PdfArray)PdfReader.getPdfObject(pageDic.get(PdfName.ANNOTS));
+                    PdfArray annots = pageDic.getAsArray(PdfName.ANNOTS);
                     if (annots == null) {
                         annots = new PdfArray();
                         pageDic.put(PdfName.ANNOTS, annots);
@@ -309,7 +310,7 @@ class PdfCopyFieldsImp extends PdfWriter {
                     for (int k = 1; k < list.size(); k += 2) {
                         int page = ((Integer)list.get(k)).intValue();
                         PdfDictionary pageDic = (PdfDictionary)pageDics.get(page - 1);
-                        PdfArray annots = (PdfArray)PdfReader.getPdfObject(pageDic.get(PdfName.ANNOTS));
+                        PdfArray annots = pageDic.getAsArray(PdfName.ANNOTS);
                         if (annots == null) {
                             annots = new PdfArray();
                             pageDic.put(PdfName.ANNOTS, annots);
@@ -335,7 +336,7 @@ class PdfCopyFieldsImp extends PdfWriter {
     }
     
     protected void createAcroForms() throws IOException {
-        if (fieldTree.size() == 0)
+        if (fieldTree.isEmpty())
             return;
         form = new PdfDictionary();
         form.put(PdfName.DR, resources);
@@ -344,6 +345,8 @@ class PdfCopyFieldsImp extends PdfWriter {
         tabOrder = new HashMap();
         calculationOrderRefs = new ArrayList(calculationOrder);
         form.put(PdfName.FIELDS, branchForm(fieldTree, null, ""));
+        if (hasSignature)
+            form.put(PdfName.SIGFLAGS, new PdfNumber(3));
         PdfArray co = new PdfArray();
         for (int k = 0; k < calculationOrderRefs.size(); ++k) {
             Object obj = calculationOrderRefs.get(k);
@@ -368,7 +371,10 @@ class PdfCopyFieldsImp extends PdfWriter {
         }
     }
     
-    protected void closeIt() throws DocumentException, IOException {
+    /**
+     * Creates the new PDF by merging the fields and forms.
+     */
+    protected void closeIt() throws IOException {
         for (int k = 0; k < readers.size(); ++k) {
             ((PdfReader)readers.get(k)).removeFields();
         }
@@ -391,12 +397,13 @@ class PdfCopyFieldsImp extends PdfWriter {
                     propagate(dic, pageRef, false);
                 }
         }
-        for (Iterator it = readers2intrefs.keySet().iterator(); it.hasNext();) {
-            PdfReader reader = (PdfReader)it.next();
+        for (Iterator it = readers2intrefs.entrySet().iterator(); it.hasNext();) {
+            Map.Entry entry = (Map.Entry) it.next();
+            PdfReader reader = (PdfReader) entry.getKey();
             try {
                 file = reader.getSafeFile();
                 file.reOpen();
-                IntHashtable t = (IntHashtable)readers2intrefs.get(reader);
+                IntHashtable t = (IntHashtable) entry.getValue();
                 int keys[] = t.toOrderedKeys();
                 for (int k = 0; k < keys.length; ++k) {
                     PRIndirectReference ref = new PRIndirectReference(reader, keys[k]);
@@ -413,23 +420,25 @@ class PdfCopyFieldsImp extends PdfWriter {
                 }
             }
         }
-        getPdfDocument().close();
+        pdf.close();
     }
     
     void addPageOffsetToField(HashMap fd, int pageOffset) {
         if (pageOffset == 0)
             return;
         for (Iterator it = fd.values().iterator(); it.hasNext();) {
-            ArrayList page = ((AcroFields.Item)it.next()).page;
-            for (int k = 0; k < page.size(); ++k)
-                page.set(k, new Integer(((Integer)page.get(k)).intValue() + pageOffset));
+            AcroFields.Item item = (AcroFields.Item)it.next();
+            for (int k = 0; k < item.size(); ++k) {
+                int p = item.getPage(k).intValue();
+                item.forcePage(k, p + pageOffset);
+            }
         }
     }
 
     void createWidgets(ArrayList list, AcroFields.Item item) {
-        for (int k = 0; k < item.merged.size(); ++k) {
-            list.add(item.page.get(k));
-            PdfDictionary merged = (PdfDictionary)item.merged.get(k);
+        for (int k = 0; k < item.size(); ++k) {
+            list.add(item.getPage(k));
+            PdfDictionary merged = item.getMerged(k);
             PdfObject dr = merged.get(PdfName.DR);
             if (dr != null)
                 PdfFormField.mergeResources(resources, (PdfDictionary)PdfReader.getPdfObject(dr));
@@ -439,7 +448,7 @@ class PdfCopyFieldsImp extends PdfWriter {
                 if (widgetKeys.containsKey(key))
                     widget.put(key, merged.get(key));
             }
-            widget.put(iTextTag, new PdfNumber(((Integer)item.tabOrder.get(k)).intValue() + 1));
+            widget.put(iTextTag, new PdfNumber(item.getTabOrder(k).intValue() + 1));
             list.add(widget);
         }
     }
@@ -467,9 +476,11 @@ class PdfCopyFieldsImp extends PdfWriter {
             else {
                 if (obj instanceof HashMap)
                     return;
-                PdfDictionary merged = (PdfDictionary)item.merged.get(0);
+                PdfDictionary merged = item.getMerged(0);
                 if (obj == null) {
                     PdfDictionary field = new PdfDictionary();
+                    if (PdfName.SIG.equals(merged.get(PdfName.FT)))
+                        hasSignature = true;
                     for (Iterator it = merged.getKeys().iterator(); it.hasNext();) {
                         PdfName key = (PdfName)it.next();
                         if (fieldKeys.containsKey(key))
@@ -513,9 +524,10 @@ class PdfCopyFieldsImp extends PdfWriter {
     }
     
     void mergeWithMaster(HashMap fd) {
-        for (Iterator it = fd.keySet().iterator(); it.hasNext();) {
-            String name = (String)it.next();
-            mergeField(name, (AcroFields.Item)fd.get(name));
+        for (Iterator it = fd.entrySet().iterator(); it.hasNext();) {
+            Map.Entry entry = (Map.Entry) it.next();
+            String name = (String) entry.getKey();
+            mergeField(name, (AcroFields.Item) entry.getValue());
         }
     }
     
@@ -533,23 +545,13 @@ class PdfCopyFieldsImp extends PdfWriter {
         return (PdfIndirectReference)pageRefs.get(page - 1);
     }
     
-    protected PdfDictionary getCatalog(PdfIndirectReference rootObj) throws DocumentException {
+    protected PdfDictionary getCatalog(PdfIndirectReference rootObj) {
         try {
-            PdfDictionary cat = this.getPdfDocument().getCatalog(rootObj); // ssteward
+            PdfDictionary cat = pdf.getCatalog(rootObj);
             if (form != null) {
                 PdfIndirectReference ref = addToBody(form).getIndirectReference();
                 cat.put(PdfName.ACROFORM, ref);
             }
-            if (newBookmarks == null || newBookmarks.size() == 0)
-                return cat;
-            PdfDictionary top = new PdfDictionary();
-            PdfIndirectReference topRef = getPdfIndirectReference();
-            Object kids[] = SimpleBookmark.iterateOutlines(this, topRef, newBookmarks, false);
-            top.put(PdfName.FIRST, (PdfIndirectReference)kids[0]);
-            top.put(PdfName.LAST, (PdfIndirectReference)kids[1]);
-            top.put(PdfName.COUNT, new PdfNumber(((Integer)kids[2]).intValue()));
-            addToBody(top, topRef);
-            cat.put(PdfName.OUTLINES, topRef);            
             return cat;
         }
         catch (IOException e) {
@@ -571,37 +573,53 @@ class PdfCopyFieldsImp extends PdfWriter {
         return n;
     }
     
+    
+    /**
+     * Sets a reference to "visited" in the copy process.
+     * @param	ref	the reference that needs to be set to "visited"
+     * @return	true if the reference was set to visited
+     */
+    protected boolean setVisited(PRIndirectReference ref) {
+        IntHashtable refs = (IntHashtable)visited.get(ref.getReader());
+        if (refs != null)
+        	return (refs.put(ref.getNumber(), 1) != 0);
+        else
+        	return false;
+    }
+    
+    /**
+     * Checks if a reference has already been "visited" in the copy process.
+     * @param	ref	the reference that needs to be checked
+     * @return	true if the reference was already visited
+     */
+    protected boolean isVisited(PRIndirectReference ref) {
+        IntHashtable refs = (IntHashtable)visited.get(ref.getReader());
+        if (refs != null)
+        	return refs.containsKey(ref.getNumber());
+        else
+        	return false;
+    }
+    
     protected boolean isVisited(PdfReader reader, int number, int generation) {
         IntHashtable refs = (IntHashtable)readers2intrefs.get(reader);
         return refs.containsKey(number);
     }
     
-    protected boolean isVisited(PRIndirectReference ref) {
-        IntHashtable refs = (IntHashtable)visited.get(ref.getReader());
-        return refs.containsKey(ref.getNumber());
-    }
-    
-    protected boolean setVisited(PRIndirectReference ref) {
-        IntHashtable refs = (IntHashtable)visited.get(ref.getReader());
-        return (refs.put(ref.getNumber(), 1) != 0);
-    }
-    
+    /**
+     * Checks if a reference refers to a page object.
+     * @param	ref	the reference that needs to be checked
+     * @return	true is the reference refers to a page object.
+     */
     protected boolean isPage(PRIndirectReference ref) {
         IntHashtable refs = (IntHashtable)pages2intrefs.get(ref.getReader());
-        return refs.containsKey(ref.getNumber());
+        if (refs != null)
+        	return refs.containsKey(ref.getNumber());
+        else
+        	return false;
     }
 
     RandomAccessFileOrArray getReaderFile(PdfReader reader) {
             return file;
-    }
-
-    /**
-     * Sets the bookmarks. The list structure is defined in
-     * <CODE>SimpleBookmark#</CODE>.
-     * @param outlines the bookmarks or <CODE>null</CODE> to remove any
-     */    
-    public void setOutlines(List outlines) {
-        newBookmarks = outlines;
     }
 
     public void openDoc() {

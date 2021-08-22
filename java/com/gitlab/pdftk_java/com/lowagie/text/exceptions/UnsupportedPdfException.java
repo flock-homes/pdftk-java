@@ -47,6 +47,9 @@
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified no
+
 package com.gitlab.pdftk_java.com.lowagie.text.exceptions;
 /**
  * Typed exception used when opening an existing PDF document.

@@ -54,9 +54,15 @@
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed Image)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
-// import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
 import java.io.IOException;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
+
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+// import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
 
 /** Represents an imported page.
  *
@@ -70,8 +76,9 @@ public class PdfImportedPage extends com.gitlab.pdftk_java.com.lowagie.text.pdf.
     PdfImportedPage(PdfReaderInstance readerInstance, PdfWriter writer, int pageNumber) {
         this.readerInstance = readerInstance;
         this.pageNumber = pageNumber;
-        thisReference = writer.getPdfIndirectReference();
+        this.writer = writer;
         bBox = readerInstance.getReader().getPageSize(pageNumber);
+        setMatrix(1, 0, 0, 1, -bBox.getLeft(), -bBox.getBottom());
         type = TYPE_IMPORTED;
     }
 
@@ -123,8 +130,15 @@ public class PdfImportedPage extends com.gitlab.pdftk_java.com.lowagie.text.pdf.
         return null;
     }
     
-    PdfStream getFormXObject() throws IOException {
-         return readerInstance.getFormXObject(pageNumber);
+    /**
+     * Gets the stream representing this page.
+     *
+     * @param	compressionLevel	the compressionLevel
+     * @return the stream representing this page
+     * @since	2.1.3	(replacing the method without param compressionLevel)
+     */
+    PdfStream getFormXObject(int compressionLevel) throws IOException {
+         return readerInstance.getFormXObject(pageNumber, compressionLevel);
     }
     
     public void setColorFill(PdfSpotColor sp, float tint) {
@@ -146,8 +160,17 @@ public class PdfImportedPage extends com.gitlab.pdftk_java.com.lowagie.text.pdf.
         throwError();
     }
     
+    /**
+     * Always throws an error. This operation is not allowed.
+     * @param group New value of property group.
+     * @since	2.1.6
+     */ 
+    public void setGroup(PdfTransparencyGroup group) {
+        throwError();
+    }
+    
     void throwError() {
-        throw new RuntimeException("Content can not be added to a PdfImportedPage.");
+        throw new RuntimeException(MessageLocalization.getComposedMessage("content.can.not.be.added.to.a.pdfimportedpage"));
     }
     
     PdfReaderInstance getPdfReaderInstance() {

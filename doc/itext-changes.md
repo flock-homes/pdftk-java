@@ -80,7 +80,11 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfArray.java
 * com/lowagie/text/pdf/PdfBoolean.java
 * com/lowagie/text/pdf/PdfChunk.java
+* com/lowagie/text/pdf/PdfContentByte.java
 * com/lowagie/text/pdf/PdfContentParser.java
+* com/lowagie/text/pdf/PdfContents.java
+* com/lowagie/text/pdf/PdfCopy.java
+* com/lowagie/text/pdf/PdfCopyFieldsImp.java
 * com/lowagie/text/pdf/PdfDictionary.java
 * com/lowagie/text/pdf/PdfDocument.java
 * com/lowagie/text/pdf/PdfEFStream.java
@@ -89,6 +93,7 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfFont.java
 * com/lowagie/text/pdf/PdfFormField.java
 * com/lowagie/text/pdf/PdfFormXObject.java
+* com/lowagie/text/pdf/PdfImportedPage.java
 * com/lowagie/text/pdf/PdfIndirectObject.java
 * com/lowagie/text/pdf/PdfIndirectReference.java
 * com/lowagie/text/pdf/PdfLine.java
@@ -101,6 +106,8 @@ Changes are listed in individual file headers.
 * com/lowagie/text/pdf/PdfPageLabels.java
 * com/lowagie/text/pdf/PdfPattern.java
 * com/lowagie/text/pdf/PdfPatternPainter.java
+* com/lowagie/text/pdf/PdfReader.java
+* com/lowagie/text/pdf/PdfReaderInstance.java
 * com/lowagie/text/pdf/PdfRectangle.java
 * com/lowagie/text/pdf/PdfShading.java
 * com/lowagie/text/pdf/PdfShadingPattern.java
@@ -183,9 +190,6 @@ Changes are listed in individual file headers.
   * Changes in `setupAllKeys`.
   * Legacy code left at the end of the file.
 * com/lowagie/text/pdf/PdfLayer.java
-* com/lowagie/text/pdf/PdfReader.java
-  * **Multiple changes**
-    * Marked as `ssteward`, `4.2.0`, and unmarked.
 * com/lowagie/text/pdf/StandardDecryption.java
 
 ## Based on itext-paulo-155
@@ -212,14 +216,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfBorderArray.java
 * com/lowagie/text/pdf/PdfBorderDictionary.java
 * com/lowagie/text/pdf/PdfColor.java
-* com/lowagie/text/pdf/PdfContentByte.java
-  * Cosmetic type casts
-  * Commented out methods
-* com/lowagie/text/pdf/PdfContents.java
-* com/lowagie/text/pdf/PdfCopy.java
-  * **Multiple changes**
-* com/lowagie/text/pdf/PdfCopyFieldsImp.java
-  * Commented out methods
 * com/lowagie/text/pdf/PdfDashPattern.java
 * com/lowagie/text/pdf/PdfDate.java
 * com/lowagie/text/pdf/PdfDestination.java
@@ -231,8 +227,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfFunction.java
   * Cosmetic rename
 * com/lowagie/text/pdf/PdfGState.java
-* com/lowagie/text/pdf/PdfImportedPage.java
-  * Commented out methods
 * com/lowagie/text/pdf/PdfLayerMembership.java
 * com/lowagie/text/pdf/PdfLister.java
 * com/lowagie/text/pdf/PdfLiteral.java
@@ -250,7 +244,6 @@ Dropped code has to do with images, watermarks, headers, footers, tables.
 * com/lowagie/text/pdf/PdfPageEvent.java
 * com/lowagie/text/pdf/PdfPageEventHelper.java
 * com/lowagie/text/pdf/PdfPages.java
-* com/lowagie/text/pdf/PdfReaderInstance.java
 * com/lowagie/text/pdf/PdfRendition.java
 * com/lowagie/text/pdf/PdfResources.java
 * com/lowagie/text/pdf/PdfSigGenericPKCS.java

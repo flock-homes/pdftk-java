@@ -54,20 +54,25 @@
  * http://www.lowagie.com/iText/
  */
 
+// pdftk-java iText base version 4.2.0
+// pdftk-java modified yes (removed Image)
+
 package com.gitlab.pdftk_java.com.lowagie.text.pdf;
 import java.awt.Color;
+import java.awt.geom.AffineTransform;
+import java.awt.print.PrinterJob;
 import java.util.ArrayList;
 import java.util.HashMap;
-// import java.util.Iterator;
-import java.awt.geom.AffineTransform;
-// import java.awt.print.PrinterJob;
+import java.util.Iterator;
+import com.gitlab.pdftk_java.com.lowagie.text.error_messages.MessageLocalization;
 
-// import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
+import com.gitlab.pdftk_java.com.lowagie.text.Annotation;
+import com.gitlab.pdftk_java.com.lowagie.text.DocumentException;
 import com.gitlab.pdftk_java.com.lowagie.text.Element;
+import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
 // import com.gitlab.pdftk_java.com.lowagie.text.Image; ssteward: dropped in 1.44
 import com.gitlab.pdftk_java.com.lowagie.text.Rectangle;
-// import com.gitlab.pdftk_java.com.lowagie.text.Annotation;
-import com.gitlab.pdftk_java.com.lowagie.text.ExceptionConverter;
+import com.gitlab.pdftk_java.com.lowagie.text.exceptions.IllegalPdfSyntaxException;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.internal.PdfAnnotationsImp;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.internal.PdfXConformanceImp;
 
@@ -167,7 +172,7 @@ public class PdfContentByte {
     /** A possible text rendering value */
     public static final int TEXT_RENDER_MODE_CLIP = 7;
     
-    // private static final float[] unitRect = {0, 0, 0, 1, 1, 0, 1, 1};
+    private static final float[] unitRect = {0, 0, 0, 1, 1, 0, 1, 1};
     // membervariables
     
     /** This is the actual content */
@@ -191,6 +196,9 @@ public class PdfContentByte {
     /** The separator between commands.
      */
     protected int separator = '\n';
+    
+    private int mcDepth = 0;
+    private boolean inText = false;
     
     private static HashMap abrev = new HashMap();
     
@@ -249,6 +257,7 @@ public class PdfContentByte {
      */
     
     public byte[] toPdf(PdfWriter writer) {
+    	sanityCheck();
         return content.toByteArray();
     }
     
@@ -262,7 +271,7 @@ public class PdfContentByte {
     
     public void add(PdfContentByte other) {
         if (other.writer != null && writer != other.writer)
-            throw new RuntimeException("Inconsistent writers. Are you mixing two documents?");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("inconsistent.writers.are.you.mixing.two.documents"));
         content.append(other.content);
     }
     
@@ -300,6 +309,24 @@ public class PdfContentByte {
      */
     public float getCharacterSpacing() {
         return state.charSpace;
+    }
+
+    /**
+     * Gets the current word spacing.
+     *
+     * @return the current word spacing
+     */
+    public float getWordSpacing() {
+        return state.wordSpace;
+    }
+
+    /**
+     * Gets the current character spacing.
+     *
+     * @return the current character spacing
+     */
+    public float getHorizontalScaling() {
+        return state.scale;
     }
     
     /**
@@ -422,7 +449,7 @@ public class PdfContentByte {
      * Changes the <VAR>line width</VAR>.
      * <P>
      * The line width specifies the thickness of the line used to stroke a path and is measured
-     * in used space units.<BR>
+     * in user space units.<BR>
      *
      * @param		w			a width
      */
@@ -767,95 +794,150 @@ public class PdfContentByte {
         content.append(x).append(' ').append(y).append(' ').append(w).append(' ').append(h).append(" re").append_i(separator);
     }
     
+    private boolean compareColors(Color c1, Color c2) {
+        if (c1 == null && c2 == null)
+            return true;
+        if (c1 == null || c2 == null)
+            return false;
+        if (c1 instanceof ExtendedColor)
+            return c1.equals(c2);
+        return c2.equals(c1);
+    }
 
-    // Contribution by Barry Richards and Prabhakar Chaganti
     /**
      * Adds a variable width border to the current path.
-     * Only use if {@link com.gitlab.pdftk_java.com.lowagie.text.Rectangle#isUseVariableBorders() Rectangle.isUseVariableBorders}
+     * Only use if {@link com.lowagie.text.Rectangle#isUseVariableBorders() Rectangle.isUseVariableBorders}
      * = true.
      * @param		rect		a <CODE>Rectangle</CODE>
      */
     public void variableRectangle(Rectangle rect) {
-        float limit = 0f;
-        float startX = rect.left();
-        float startY = rect.bottom();
+        float t = rect.getTop();
+        float b = rect.getBottom();
+        float r = rect.getRight();
+        float l = rect.getLeft();
+        float wt = rect.getBorderWidthTop();
+        float wb = rect.getBorderWidthBottom();
+        float wr = rect.getBorderWidthRight();
+        float wl = rect.getBorderWidthLeft();
+        Color ct = rect.getBorderColorTop();
+        Color cb = rect.getBorderColorBottom();
+        Color cr = rect.getBorderColorRight();
+        Color cl = rect.getBorderColorLeft();
+        saveState();
+        setLineCap(PdfContentByte.LINE_CAP_BUTT);
+        setLineJoin(PdfContentByte.LINE_JOIN_MITER);
+        float clw = 0;
+        boolean cdef = false;
+        Color ccol = null;
+        boolean cdefi = false;
+        Color cfil = null;
+        // draw top
+        if (wt > 0) {
+            setLineWidth(clw = wt);
+            cdef = true;
+            if (ct == null)
+                resetRGBColorStroke();
+            else
+                setColorStroke(ct);
+            ccol = ct;
+            moveTo(l, t - wt / 2f);
+            lineTo(r, t - wt / 2f);
+            stroke();
+        }
         
-        // start at the origin
-        // draw bottom
-        if (rect.getBorderWidthBottom() > limit) {
-            moveTo(startX, startY);
-            if (rect.getBorderColorBottom() == null)
-                resetRGBColorFill();
+        // Draw bottom
+        if (wb > 0) {
+            if (wb != clw)
+                setLineWidth(clw = wb);
+            if (!cdef || !compareColors(ccol, cb)) {
+                cdef = true;
+                if (cb == null)
+                    resetRGBColorStroke();
             else
-                setColorFill(rect.getBorderColorBottom());
-            // DRAW BOTTOM EDGE.
-            lineTo(startX + rect.width(), startY);
-            // DRAW RIGHT EDGE.
-            lineTo((startX + rect.width()) - rect.getBorderWidthRight(), startY + rect.getBorderWidthBottom());
-            //DRAW TOP EDGE.
-            lineTo((startX + rect.getBorderWidthLeft()), startY + rect.getBorderWidthBottom());
-            lineTo(startX, startY);
-            fill();
+                    setColorStroke(cb);
+                ccol = cb;
+            }
+            moveTo(r, b + wb / 2f);
+            lineTo(l, b + wb / 2f);
+            stroke();
         }
 
-        // Draw left
-        if (rect.getBorderWidthLeft() > limit) {
-            moveTo(startX, startY);
-            if (rect.getBorderColorLeft() == null)
+        // Draw right
+        if (wr > 0) {
+            if (wr != clw)
+                setLineWidth(clw = wr);
+            if (!cdef || !compareColors(ccol, cr)) {
+                cdef = true;
+                if (cr == null)
+                    resetRGBColorStroke();
+                else
+                    setColorStroke(cr);
+                ccol = cr;
+            }
+            boolean bt = compareColors(ct, cr);
+            boolean bb = compareColors(cb, cr);
+            moveTo(r - wr / 2f, bt ? t : t - wt);
+            lineTo(r - wr / 2f, bb ? b : b + wb);
+            stroke();
+            if (!bt || !bb) {
+                cdefi = true;
+                if (cr == null)
                 resetRGBColorFill();
             else
-                setColorFill(rect.getBorderColorLeft());
-            // DRAW BOTTOM EDGE.
-            lineTo(startX, startY + rect.height());
-            // DRAW RIGHT EDGE.
-            lineTo(startX + rect.getBorderWidthLeft(), (startY + rect.height()) - rect.getBorderWidthTop());
-            //DRAW TOP EDGE.
-            lineTo(startX + rect.getBorderWidthLeft(), startY + rect.getBorderWidthBottom());
-
-            lineTo(startX, startY);
+                    setColorFill(cr);
+                cfil = cr;
+                if (!bt) {
+                    moveTo(r, t);
+                    lineTo(r, t - wt);
+                    lineTo(r - wr, t - wt);
             fill();
+                }
+                if (!bb) {
+                    moveTo(r, b);
+                    lineTo(r, b + wb);
+                    lineTo(r - wr, b + wb);
+                    fill();
+                }
+            }
         }
 
-
-        startX = startX + rect.width();
-        startY = startY + rect.height();
-
-        // Draw top
-        if (rect.getBorderWidthTop() > limit) {
-            moveTo(startX, startY);
-            if (rect.getBorderColorTop() == null)
+        // Draw Left
+        if (wl > 0) {
+            if (wl != clw)
+                setLineWidth(wl);
+            if (!cdef || !compareColors(ccol, cl)) {
+                if (cl == null)
+                    resetRGBColorStroke();
+            else
+                    setColorStroke(cl);
+        }
+            boolean bt = compareColors(ct, cl);
+            boolean bb = compareColors(cb, cl);
+            moveTo(l + wl / 2f, bt ? t : t - wt);
+            lineTo(l + wl / 2f, bb ? b : b + wb);
+            stroke();
+            if (!bt || !bb) {
+                if (!cdefi || !compareColors(cfil, cl)) {
+                    if (cl == null)
                 resetRGBColorFill();
             else
-                setColorFill(rect.getBorderColorTop());
-            // DRAW LONG EDGE.
-            lineTo(startX - rect.width(), startY);
-            // DRAW LEFT EDGE.
-            lineTo(startX - rect.width() + rect.getBorderWidthLeft(), startY - rect.getBorderWidthTop());
-            //DRAW SHORT EDGE.
-            lineTo(startX - rect.getBorderWidthRight(), startY - rect.getBorderWidthTop());
-
-            lineTo(startX, startY);
+                        setColorFill(cl);
+                }
+                if (!bt) {
+                    moveTo(l, t);
+                    lineTo(l, t - wt);
+                    lineTo(l + wl, t - wt);
             fill();
         }
-
-        // Draw Right
-        if (rect.getBorderWidthRight() > limit) {
-            moveTo(startX, startY);
-            if (rect.getBorderColorRight() == null)
-                resetRGBColorFill();
-            else
-                setColorFill(rect.getBorderColorRight());
-            // DRAW LONG EDGE.
-            lineTo(startX, startY - rect.height());
-            // DRAW LEFT EDGE.
-            lineTo(startX - rect.getBorderWidthRight(), startY - rect.height() + rect.getBorderWidthBottom());
-            //DRAW SHORT EDGE.
-            lineTo(startX - rect.getBorderWidthRight(), startY - rect.getBorderWidthTop());
-
-            lineTo(startX, startY);
-            fill();
+                if (!bb) {
+                    moveTo(l, b);
+                    lineTo(l, b + wb);
+                    lineTo(l + wl, b + wb);
+                    fill();
+                }
+            }
         }
-        resetRGBColorFill();
+        restoreState();
     }
 
     /**
@@ -866,26 +948,20 @@ public class PdfContentByte {
     
     public void rectangle(Rectangle rectangle) {
         // the coordinates of the border are retrieved
-        float x1 = rectangle.left();
-        float y1 = rectangle.bottom();
-        float x2 = rectangle.right();
-        float y2 = rectangle.top();
+        float x1 = rectangle.getLeft();
+        float y1 = rectangle.getBottom();
+        float x2 = rectangle.getRight();
+        float y2 = rectangle.getTop();
 
         // the backgroundcolor is set
-        Color background = rectangle.backgroundColor();
+        Color background = rectangle.getBackgroundColor();
         if (background != null) {
+        	saveState();
             setColorFill(background);
             rectangle(x1, y1, x2 - x1, y2 - y1);
             fill();
-            resetRGBColorFill();
+            restoreState();
         }
-        else if (rectangle.grayFill() > 0.0) {
-            setGrayFill(rectangle.grayFill());
-            rectangle(x1, y1, x2 - x1, y2 - y1);
-            fill();
-            resetGrayFill();
-        }
-
 
         // if the element hasn't got any borders, nothing is added
         if (! rectangle.hasBorders()) {
@@ -900,12 +976,12 @@ public class PdfContentByte {
         }
         else {
             // the width is set to the width of the element
-            if (rectangle.borderWidth() != Rectangle.UNDEFINED) {
-                setLineWidth(rectangle.borderWidth());
+            if (rectangle.getBorderWidth() != Rectangle.UNDEFINED) {
+                setLineWidth(rectangle.getBorderWidth());
             }
 
             // the color is set to the color of the element
-            Color color = rectangle.borderColor();
+            Color color = rectangle.getBorderColor();
             if (color != null) {
                 setColorStroke(color);
             }
@@ -1044,11 +1120,11 @@ public class PdfContentByte {
      */
     /* ssteward: dropped in 1.44
     public void addImage(Image image, boolean inlineImage) throws DocumentException {
-        if (!image.hasAbsolutePosition())
-            throw new DocumentException("The image must have absolute positioning.");
+        if (!image.hasAbsoluteY())
+            throw new DocumentException(MessageLocalization.getComposedMessage("the.image.must.have.absolute.positioning"));
         float matrix[] = image.matrix();
-        matrix[Image.CX] = image.absoluteX() - matrix[Image.CX];
-        matrix[Image.CY] = image.absoluteY() - matrix[Image.CY];
+        matrix[Image.CX] = image.getAbsoluteX() - matrix[Image.CX];
+        matrix[Image.CY] = image.getAbsoluteY() - matrix[Image.CY];
         addImage(image, matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], inlineImage);
     }
     */
@@ -1093,7 +1169,7 @@ public class PdfContentByte {
                 beginLayer(image.getLayer());
             if (image.isImgTemplate()) {
                 writer.addDirectImageSimple(image);
-                PdfTemplate template = image.templateData();
+                PdfTemplate template = image.getTemplateData();
                 float w = template.getWidth();
                 float h = template.getHeight();
                 addTemplate(template, a / w, b / w, c / h, d / h, e, f);
@@ -1109,6 +1185,14 @@ public class PdfContentByte {
                 if (inlineImage) {
                     content.append("\nBI\n");
                     PdfImage pimage = new PdfImage(image, "", null);
+                    if (image instanceof ImgJBIG2) {
+                    	byte[] globals = ((ImgJBIG2)image).getGlobalBytes();
+                    	if (globals != null) {
+                    		PdfDictionary decodeparms = new PdfDictionary();
+                    		decodeparms.put(PdfName.JBIG2GLOBALS, writer.getReferenceJBIG2Globals(globals));
+                    		pimage.put(PdfName.DECODEPARMS, decodeparms);
+                    	}
+                    }
                     for (Iterator it = pimage.getKeys().iterator(); it.hasNext();) {
                         PdfName key = (PdfName)it.next();
                         PdfObject value = pimage.get(key);
@@ -1118,12 +1202,12 @@ public class PdfContentByte {
                         content.append(s);
                         boolean check = true;
                         if (key.equals(PdfName.COLORSPACE) && value.isArray()) {
-                            ArrayList ar = ((PdfArray)value).getArrayList();
+                            PdfArray ar = (PdfArray)value;
                             if (ar.size() == 4 
-                                && PdfName.INDEXED.equals(ar.get(0)) 
-                                && ((PdfObject)ar.get(1)).isName()
-                                && ((PdfObject)ar.get(2)).isNumber()
-                                && ((PdfObject)ar.get(3)).isString()
+                                && PdfName.INDEXED.equals(ar.getAsName(0)) 
+                                && ar.getPdfObject(1).isName()
+                                && ar.getPdfObject(2).isNumber()
+                                && ar.getPdfObject(3).isString()
                             ) {
                                 check = false;
                             }
@@ -1157,15 +1241,15 @@ public class PdfContentByte {
             }
             if (image.hasBorders()) {
                 saveState();
-                float w = image.width();
-                float h = image.height();
+                float w = image.getWidth();
+                float h = image.getHeight();
                 concatCTM(a / w, b / w, c / h, d / h, e, f);
                 rectangle(image);
                 restoreState();
             }
             if (image.getLayer() != null)
                 endLayer();
-            Annotation annot = image.annotation();
+            Annotation annot = image.getAnnotation();
             if (annot == null)
                 return;
             float[] r = new float[unitRect.length];
@@ -1185,7 +1269,7 @@ public class PdfContentByte {
             }
             annot = new Annotation(annot);
             annot.setDimensions(llx, lly, urx, ury);
-            PdfAnnotation an = PdfDocument.convertAnnotation(writer, annot);
+            PdfAnnotation an = PdfAnnotationsImp.convertAnnotation(writer, annot, new Rectangle(llx, lly, urx, ury));
             if (an == null)
                 return;
             addAnnotation(an);
@@ -1195,20 +1279,37 @@ public class PdfContentByte {
         }
     }
     */
-    
+
     /**
      * Makes this <CODE>PdfContentByte</CODE> empty.
+     * Calls <code>reset( true )</code>
      */
     public void reset() {
+        reset( true );
+    }
+
+    /**
+     * Makes this <CODE>PdfContentByte</CODE> empty.
+     * @param validateContent will call <code>sanityCheck()</code> if true.
+     * @since 2.1.6
+     */
+    public void reset( boolean validateContent ) {
         content.reset();
-        stateList.clear();
+        if (validateContent) {
+        	sanityCheck();
+        }
         state = new GraphicState();
     }
+    
     
     /**
      * Starts the writing of text.
      */
     public void beginText() {
+    	if (inText) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.begin.end.text.operators"));
+    	}
+    	inText = true;
         state.xTLM = 0;
         state.yTLM = 0;
         content.append("BT").append_i(separator);
@@ -1218,6 +1319,10 @@ public class PdfContentByte {
      * Ends the writing of text and makes the current font invalid.
      */
     public void endText() {
+    	if (!inText) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.begin.end.text.operators"));
+    	}
+    	inText = false;
         content.append("ET").append_i(separator);
     }
     
@@ -1227,7 +1332,7 @@ public class PdfContentByte {
      */
     public void saveState() {
         content.append("q").append_i(separator);
-        stateList.add(state);
+        stateList.add(new GraphicState(state));
     }
     
     /**
@@ -1238,7 +1343,7 @@ public class PdfContentByte {
         content.append("Q").append_i(separator);
         int idx = stateList.size() - 1;
         if (idx < 0)
-            throw new RuntimeException("Unbalanced save/restore state operators.");
+            throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.save.restore.state.operators"));
         state = (GraphicState)stateList.get(idx);
         stateList.remove(idx);
     }
@@ -1249,6 +1354,7 @@ public class PdfContentByte {
      * @param		charSpace			a parameter
      */
     public void setCharacterSpacing(float charSpace) {
+        state.charSpace = charSpace;
         content.append(charSpace).append(" Tc").append_i(separator);
     }
     
@@ -1258,6 +1364,7 @@ public class PdfContentByte {
      * @param		wordSpace			a parameter
      */
     public void setWordSpacing(float wordSpace) {
+        state.wordSpace = wordSpace;
         content.append(wordSpace).append(" Tw").append_i(separator);
     }
     
@@ -1267,6 +1374,7 @@ public class PdfContentByte {
      * @param		scale				a parameter
      */
     public void setHorizontalScaling(float scale) {
+        state.scale = scale;
         content.append(scale).append(" Tz").append_i(separator);
     }
     
@@ -1291,6 +1399,8 @@ public class PdfContentByte {
      */
     public void setFontAndSize(BaseFont bf, float size) {
         checkWriter();
+        if (size < 0.0001f && size > -0.0001f)
+            throw new IllegalArgumentException(MessageLocalization.getComposedMessage("font.size.too.small.1", String.valueOf(size)));
         state.size = size;
         state.fontDetails = writer.addSimple(bf);
         PageResources prs = getPageResources();
@@ -1327,7 +1437,7 @@ public class PdfContentByte {
      */
     private void showText2(String text) {
         if (state.fontDetails == null)
-            throw new NullPointerException("Font and size must be set before writing any text");
+            throw new NullPointerException(MessageLocalization.getComposedMessage("font.and.size.must.be.set.before.writing.any.text"));
         byte b[] = state.fontDetails.convertToBytes(text);
         escapeString(b, content);
     }
@@ -1379,7 +1489,7 @@ public class PdfContentByte {
      */
     public void showTextKerned(String text) {
         if (state.fontDetails == null)
-            throw new NullPointerException("Font and size must be set before writing any text");
+            throw new NullPointerException(MessageLocalization.getComposedMessage("font.and.size.must.be.set.before.writing.any.text"));
         BaseFont bf = state.fontDetails.getBaseFont();
         if (bf.hasKernPairs())
             showText(getKernArray(text, bf));
@@ -1410,6 +1520,11 @@ public class PdfContentByte {
         content.append(wordSpacing).append(' ').append(charSpacing);
         showText2(text);
         content.append("\"").append_i(separator);
+
+        // The " operator sets charSpace and wordSpace into graphics state
+        // (cfr PDF reference v1.6, table 5.6)
+        state.charSpace = charSpacing;
+        state.wordSpace = wordSpacing;
     }
     
     /**
@@ -1539,16 +1654,6 @@ public class PdfContentByte {
     }
     
     /**
-     * Adds an outline to the document.
-     *
-     * @param outline the outline
-     * @deprecated not needed anymore. The outlines are extracted
-     * from the root outline
-     */
-    public void addOutline(PdfOutline outline) {
-        // for compatibility
-    }
-    /**
      * Adds a named outline to the document.
      *
      * @param outline the outline
@@ -1567,6 +1672,44 @@ public class PdfContentByte {
         checkWriter();
         return pdf.getRootOutline();
     }
+
+    /**
+     * Computes the width of the given string taking in account
+     * the current values of "Character spacing", "Word Spacing"
+     * and "Horizontal Scaling".
+     * The additional spacing is not computed for the last character
+     * of the string.
+     * @param text the string to get width of
+     * @param kerned the kerning option
+     * @return the width
+     */
+
+    public float getEffectiveStringWidth(String text, boolean kerned) {
+        BaseFont bf = state.fontDetails.getBaseFont();
+
+        float w;
+        if (kerned)
+            w = bf.getWidthPointKerned(text, state.size);
+        else
+            w = bf.getWidthPoint(text, state.size);
+
+        if (state.charSpace != 0.0f && text.length() > 1) {
+            w += state.charSpace * (text.length() -1);
+        }
+
+        int ft = bf.getFontType();
+        if (state.wordSpace != 0.0f && (ft == BaseFont.FONT_TYPE_T1 || ft == BaseFont.FONT_TYPE_TT || ft == BaseFont.FONT_TYPE_T3)) {
+            for (int i = 0; i < (text.length() -1); i++) {
+                if (text.charAt(i) == ' ')
+                    w += state.wordSpace;
+            }
+        }
+        if (state.scale != 100.0)
+            w = (w * state.scale) / 100.0f;
+
+        //System.out.println("String width = " + Float.toString(w));
+        return w;
+    }
     
     /**
      * Shows text right, left or center aligned with rotation.
@@ -1577,19 +1720,25 @@ public class PdfContentByte {
      * @param rotation the rotation to be applied in degrees counterclockwise
      */
     public void showTextAligned(int alignment, String text, float x, float y, float rotation) {
+        showTextAligned(alignment, text, x, y, rotation, false);
+    }
+
+    private void showTextAligned(int alignment, String text, float x, float y, float rotation, boolean kerned) {
         if (state.fontDetails == null)
-            throw new NullPointerException("Font and size must be set before writing any text");
-        BaseFont bf = state.fontDetails.getBaseFont();
+            throw new NullPointerException(MessageLocalization.getComposedMessage("font.and.size.must.be.set.before.writing.any.text"));
         if (rotation == 0) {
             switch (alignment) {
                 case ALIGN_CENTER:
-                    x -= bf.getWidthPoint(text, state.size) / 2;
+                    x -= getEffectiveStringWidth(text, kerned) / 2;
                     break;
                 case ALIGN_RIGHT:
-                    x -= bf.getWidthPoint(text, state.size);
+                    x -= getEffectiveStringWidth(text, kerned);
                     break;
             }
             setTextMatrix(x, y);
+            if (kerned)
+                showTextKerned(text);
+            else
             showText(text);
         }
         else {
@@ -1599,17 +1748,20 @@ public class PdfContentByte {
             float len;
             switch (alignment) {
                 case ALIGN_CENTER:
-                    len = bf.getWidthPoint(text, state.size) / 2;
+                    len = getEffectiveStringWidth(text, kerned) / 2;
                     x -=  len * cos;
                     y -=  len * sin;
                     break;
                 case ALIGN_RIGHT:
-                    len = bf.getWidthPoint(text, state.size);
+                    len = getEffectiveStringWidth(text, kerned);
                     x -=  len * cos;
                     y -=  len * sin;
                     break;
             }
             setTextMatrix(cos, sin, -sin, cos, x, y);
+            if (kerned)
+                showTextKerned(text);
+            else
             showText(text);
             setTextMatrix(0f, 0f);
         }
@@ -1617,49 +1769,14 @@ public class PdfContentByte {
     
     /**
      * Shows text kerned right, left or center aligned with rotation.
-     * @param alignement the alignment can be ALIGN_CENTER, ALIGN_RIGHT or ALIGN_LEFT
+     * @param alignment the alignment can be ALIGN_CENTER, ALIGN_RIGHT or ALIGN_LEFT
      * @param text the text to show
      * @param x the x pivot position
      * @param y the y pivot position
      * @param rotation the rotation to be applied in degrees counterclockwise
      */
-    public void showTextAlignedKerned(int alignement, String text, float x, float y, float rotation) {
-        if (state.fontDetails == null)
-            throw new NullPointerException("Font and size must be set before writing any text");
-        BaseFont bf = state.fontDetails.getBaseFont();
-        if (rotation == 0) {
-            switch (alignement) {
-                case ALIGN_CENTER:
-                    x -= bf.getWidthPointKerned(text, state.size) / 2;
-                    break;
-                case ALIGN_RIGHT:
-                    x -= bf.getWidthPointKerned(text, state.size);
-                    break;
-            }
-            setTextMatrix(x, y);
-            showTextKerned(text);
-        }
-        else {
-            double alpha = rotation * Math.PI / 180.0;
-            float cos = (float)Math.cos(alpha);
-            float sin = (float)Math.sin(alpha);
-            float len;
-            switch (alignement) {
-                case ALIGN_CENTER:
-                    len = bf.getWidthPointKerned(text, state.size) / 2;
-                    x -=  len * cos;
-                    y -=  len * sin;
-                    break;
-                case ALIGN_RIGHT:
-                    len = bf.getWidthPointKerned(text, state.size);
-                    x -=  len * cos;
-                    y -=  len * sin;
-                    break;
-            }
-            setTextMatrix(cos, sin, -sin, cos, x, y);
-            showTextKerned(text);
-            setTextMatrix(0f, 0f);
-        }
+    public void showTextAlignedKerned(int alignment, String text, float x, float y, float rotation) {
+        showTextAligned(alignment, text, x, y, rotation, true);
     }
     
     /**
@@ -1689,8 +1806,8 @@ public class PdfContentByte {
      * such that the curve goes from (x1, y1) to (x4, y4) with (x2, y2) and
      * (x3, y3) as their respective Bezier control points.
      * <P>
-     * Note: this code was taken from ReportLab (www.reportlab.com), an excelent
-     * PDF generator for Python.
+     * Note: this code was taken from ReportLab (www.reportlab.org), an excellent
+     * PDF generator for Python (BSD license: http://www.reportlab.org/devfaq.html#1.3 ).
      *
      * @param x1 a corner of the enclosing rectangle
      * @param y1 a corner of the enclosing rectangle
@@ -1775,7 +1892,7 @@ public class PdfContentByte {
      */
     public void arc(float x1, float y1, float x2, float y2, float startAng, float extent) {
         ArrayList ar = bezierArc(x1, y1, x2, y2, startAng, extent);
-        if (ar.size() == 0)
+        if (ar.isEmpty())
             return;
         float pt[] = (float [])ar.get(0);
         moveTo(pt[0], pt[1]);
@@ -1808,11 +1925,10 @@ public class PdfContentByte {
      * May be either positive or negative, but not zero.
      * @return the <CODE>PdfPatternPainter</CODE> where the pattern will be created
      */
-
     public PdfPatternPainter createPattern(float width, float height, float xstep, float ystep) {
         checkWriter();
         if ( xstep == 0.0f || ystep == 0.0f )
-            throw new RuntimeException("XStep or YStep can not be ZERO.");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("xstep.or.ystep.can.not.be.zero"));
         PdfPatternPainter painter = new PdfPatternPainter(writer);
         painter.setWidth(width);
         painter.setHeight(height);
@@ -1848,7 +1964,7 @@ public class PdfContentByte {
     public PdfPatternPainter createPattern(float width, float height, float xstep, float ystep, Color color) {
         checkWriter();
         if ( xstep == 0.0f || ystep == 0.0f )
-            throw new RuntimeException("XStep or YStep can not be ZERO.");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("xstep.or.ystep.can.not.be.zero"));
         PdfPatternPainter painter = new PdfPatternPainter(writer, color);
         painter.setWidth(width);
         painter.setHeight(height);
@@ -1881,7 +1997,7 @@ public class PdfContentByte {
      *
      * @param width the bounding box width
      * @param height the bounding box height
-     * @return the templated created
+     * @return the created template
      */
     public PdfTemplate createTemplate(float width, float height) {
         return createTemplate(width, height, null);
@@ -1955,6 +2071,20 @@ public class PdfContentByte {
         content.append(f).append(" cm ");
         content.append(name.getBytes()).append(" Do Q").append_i(separator);
     }
+
+    void addTemplateReference(PdfIndirectReference template, PdfName name, float a, float b, float c, float d, float e, float f) {
+        checkWriter();
+        PageResources prs = getPageResources();
+        name = prs.addXObject(name, template);
+        content.append("q ");
+        content.append(a).append(' ');
+        content.append(b).append(' ');
+        content.append(c).append(' ');
+        content.append(d).append(' ');
+        content.append(e).append(' ');
+        content.append(f).append(" cm ");
+        content.append(name.getBytes()).append(" Do Q").append_i(separator);
+    }
     
     /**
      * Adds a template to this content.
@@ -2003,7 +2133,7 @@ public class PdfContentByte {
      * <P>
      * This method is described in the 'Portable Document Format Reference Manual version 1.3'
      * section 8.5.2.1 (page 331).</P>
-     * Following the PDF manual, each operand must be a number between 0 (miniumum intensity) and
+     * Following the PDF manual, each operand must be a number between 0 (minimum intensity) and
      * 1 (maximum intensity). This method however accepts only integers between 0x00 and 0xFF.
      *
      * @param cyan the intensity of red
@@ -2032,7 +2162,7 @@ public class PdfContentByte {
      * This method is described in the 'Portable Document Format Reference Manual version 1.3'
      * section 8.5.2.1 (page 331).</P>
      * <P>
-     * Following the PDF manual, each operand must be a number between 0 (miniumum intensity) and
+     * Following the PDF manual, each operand must be a number between 0 (minimum intensity) and
      * 1 (maximum intensity). This method however accepts only integers between 0x00 and 0xFF.</P>
      *
      * @param red the intensity of red
@@ -2053,7 +2183,7 @@ public class PdfContentByte {
      * <P>
      * This method is described in the 'Portable Document Format Reference Manual version 1.3'
      * section 8.5.2.1 (page 331).</P>
-     * Following the PDF manual, each operand must be a number between 0 (miniumum intensity) and
+     * Following the PDF manual, each operand must be a number between 0 (minimum intensity) and
      * 1 (maximum intensity). This method however accepts only integers between 0x00 and 0xFF.
      *
      * @param red the intensity of red
@@ -2212,7 +2342,7 @@ public class PdfContentByte {
                 content.append(tint);
                 break;
             default:
-                throw new RuntimeException("Invalid color type.");
+                throw new RuntimeException(MessageLocalization.getComposedMessage("invalid.color.type"));
         }
     }
     
@@ -2235,7 +2365,7 @@ public class PdfContentByte {
     public void setPatternFill(PdfPatternPainter p, Color color, float tint) {
         checkWriter();
         if (!p.isStencil())
-            throw new RuntimeException("An uncolored pattern was expected.");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("an.uncolored.pattern.was.expected"));
         PageResources prs = getPageResources();
         PdfName name = writer.addSimplePattern(p);
         name = prs.addPattern(name, p.getIndirectReference());
@@ -2265,7 +2395,7 @@ public class PdfContentByte {
     public void setPatternStroke(PdfPatternPainter p, Color color, float tint) {
         checkWriter();
         if (!p.isStencil())
-            throw new RuntimeException("An uncolored pattern was expected.");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("an.uncolored.pattern.was.expected"));
         PageResources prs = getPageResources();
         PdfName name = writer.addSimplePattern(p);
         name = prs.addPattern(name, p.getIndirectReference());
@@ -2347,7 +2477,7 @@ public class PdfContentByte {
      */
     protected void checkWriter() {
         if (writer == null)
-            throw new NullPointerException("The writer in PdfContentByte is null.");
+            throw new NullPointerException(MessageLocalization.getComposedMessage("the.writer.in.pdfcontentbyte.is.null"));
     }
     
     /**
@@ -2356,7 +2486,7 @@ public class PdfContentByte {
      */
     public void showText(PdfTextArray text) {
         if (state.fontDetails == null)
-            throw new NullPointerException("Font and size must be set before writing any text");
+            throw new NullPointerException(MessageLocalization.getComposedMessage("font.and.size.must.be.set.before.writing.any.text"));
         content.append("[");
         ArrayList arrayList = text.getArrayList();
         boolean lastWasNumber = false;
@@ -2523,7 +2653,7 @@ public class PdfContentByte {
      */
     void checkNoPattern(PdfTemplate t) {
         if (t.getType() == PdfTemplate.TYPE_PATTERN)
-            throw new RuntimeException("Invalid use of a pattern. A template was expected.");
+            throw new RuntimeException(MessageLocalization.getComposedMessage("invalid.use.of.a.pattern.a.template.was.expected"));
     }
     
     /**
@@ -2843,7 +2973,7 @@ public class PdfContentByte {
     }
     
     /**
-     * Begins a graphic block whose visibility is controled by the <CODE>layer</CODE>.
+     * Begins a graphic block whose visibility is controlled by the <CODE>layer</CODE>.
      * Blocks can be nested. Each block must be terminated by an {@link #endLayer()}.<p>
      * Note that nested layers with {@link PdfLayer#addChild(PdfLayer)} only require a single
      * call to this method and a single call to {@link #endLayer()}; all the nesting control
@@ -2852,7 +2982,7 @@ public class PdfContentByte {
      */    
     public void beginLayer(PdfOCG layer) {
         if ((layer instanceof PdfLayer) && ((PdfLayer)layer).getTitle() != null)
-            throw new IllegalArgumentException("A title is not a layer");
+            throw new IllegalArgumentException(MessageLocalization.getComposedMessage("a.title.is.not.a.layer"));
         if (layerDepth == null)
             layerDepth = new ArrayList();
         if (layer instanceof PdfLayerMembership) {
@@ -2880,13 +3010,15 @@ public class PdfContentByte {
     }
     
     /**
-     * Ends a layer controled graphic block. It will end the most recent open block.
+     * Ends a layer controlled graphic block. It will end the most recent open block.
      */    
     public void endLayer() {
         int n = 1;
-        if (layerDepth != null && layerDepth.size() > 0) {
+        if (layerDepth != null && !layerDepth.isEmpty()) {
             n = ((Integer)layerDepth.get(layerDepth.size() - 1)).intValue();
             layerDepth.remove(layerDepth.size() - 1);
+        } else {
+        	throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.layer.operators"));
         }
         while (n-- > 0)
             content.append("EMC").append_i(separator);
@@ -2936,11 +3068,11 @@ public class PdfContentByte {
             }
             else if (obj.isArray()) {
                 ar = (PdfArray)obj;
-                if (!((PdfObject)ar.getArrayList().get(0)).isNumber())
-                    throw new IllegalArgumentException("The structure has kids.");
+                if (!(ar.getPdfObject(0)).isNumber())
+                    throw new IllegalArgumentException(MessageLocalization.getComposedMessage("the.structure.has.kids"));
             }
             else
-                throw new IllegalArgumentException("Unknown object at /K " + obj.getClass().toString());
+                throw new IllegalArgumentException(MessageLocalization.getComposedMessage("unknown.object.at.k.1", obj.getClass().toString()));
             PdfDictionary dic = new PdfDictionary(PdfName.MCR);
             dic.put(PdfName.PG, writer.getCurrentPage());
             dic.put(PdfName.MCID, new PdfNumber(mark));
@@ -2952,6 +3084,7 @@ public class PdfContentByte {
             struc.put(PdfName.PG, writer.getCurrentPage());
         }
         pdf.incMarkPoint();
+        mcDepth++;
         content.append(struc.get(PdfName.S).getBytes()).append(" <</MCID ").append(mark).append(">> BDC").append_i(separator);
     }
     
@@ -2959,6 +3092,10 @@ public class PdfContentByte {
      * Ends a marked content sequence
      */    
     public void endMarkedContentSequence() {
+    	if (mcDepth == 0) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.begin.end.marked.content.operators"));
+    	}
+    	--mcDepth;
         content.append("EMC").append_i(separator);
     }
     
@@ -2995,6 +3132,7 @@ public class PdfContentByte {
             content.append(name.getBytes());
         }
         content.append(" BDC").append_i(separator);
+        ++mcDepth;
     }
     
     /**
@@ -3003,5 +3141,31 @@ public class PdfContentByte {
      */    
     public void beginMarkedContentSequence(PdfName tag) {
         beginMarkedContentSequence(tag, null, false);
+    }
+    
+    /**
+     * Checks for any dangling state: Mismatched save/restore state, begin/end text,
+     * begin/end layer, or begin/end marked content sequence.
+     * If found, this function will throw.  This function is called automatically
+     * during a reset() (from Document.newPage() for example), and before writing 
+     * itself out in toPdf().
+     * One possible cause: not calling myPdfGraphics2D.dispose() will leave dangling
+     *                     saveState() calls.
+     * @since 2.1.6
+     * @throws IllegalPdfSyntaxException (a runtime exception)
+     */
+    public void sanityCheck() {
+    	if (mcDepth != 0) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.marked.content.operators"));
+    	}
+    	if (inText) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.begin.end.text.operators"));
+    	}
+    	if (layerDepth != null && !layerDepth.isEmpty()) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.layer.operators"));
+    	}
+    	if (!stateList.isEmpty()) {
+    		throw new IllegalPdfSyntaxException(MessageLocalization.getComposedMessage("unbalanced.save.restore.state.operators"));
+    	}
     }
 }
