@@ -10,7 +10,7 @@ java/TAGS
 /gradle
 /gradlew
 /bin
-
+/reference
 # TeX auxiliary files
 test/files/*.aux
 test/files/*.gz
