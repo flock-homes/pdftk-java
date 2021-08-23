@@ -1,3 +1,10 @@
+## [3.3.1] - 2021-08-23
+
+### Fixed
+ - Crash when using OpenType fonts as replacements
+ - Detect forms that contain null pointers
+ - Regression: include fonts in native image build
+
 ## [3.3.0] - 2021-08-16
 
 ### Added
