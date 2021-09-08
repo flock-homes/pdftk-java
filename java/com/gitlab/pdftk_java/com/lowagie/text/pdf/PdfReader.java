@@ -3443,7 +3443,11 @@ public class PdfReader implements PdfViewerPreferences {
         }
 
         private void iteratePages(PRIndirectReference rpage) throws IOException {
-			PdfDictionary page = (PdfDictionary)getPdfObject(rpage);
+            // pageobj might be a PdfNull in the wild.
+            // https://gitlab.com/pdftk-java/pdftk/-/issues/110
+            PdfObject pageobj = getPdfObject(rpage);
+            if (!pageobj.isDictionary()) return;
+            PdfDictionary page = (PdfDictionary)pageobj;
 			PdfArray kidsPR = page.getAsArray(PdfName.KIDS);
 			// reference to a leaf
 			if (kidsPR == null) {
