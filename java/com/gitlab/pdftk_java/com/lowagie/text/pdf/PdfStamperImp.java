@@ -823,21 +823,19 @@ public class PdfStamperImp extends PdfWriter {
         if (!fieldsAdded && partialFlattening.isEmpty()) {
             for (int page = 1; page <= reader.getNumberOfPages(); ++page) {
                 PdfDictionary pageDic = reader.getPageN(page);
-                PdfArray annots = (PdfArray)PdfReader.getPdfObject(pageDic.get(PdfName.ANNOTS));
+                PdfArray annots = pageDic.getAsArray(PdfName.ANNOTS);
                 if (annots == null)
                     continue;
-                ArrayList ar = annots.getArrayList();
-                for (int idx = 0; idx < ar.size(); ++idx) {
-                    PdfObject annoto = PdfReader.getPdfObject((PdfObject)ar.get(idx));
+                for (int idx = 0; idx < annots.size(); ++idx) {
+                    PdfObject annoto = annots.getDirectObject(idx);
                         if ((annoto instanceof PdfIndirectReference) && !annoto.isIndirect())
                             continue;
-                    PdfDictionary annot = (PdfDictionary)annoto;
-                    if (PdfName.WIDGET.equals(annot.get(PdfName.SUBTYPE))) {
-                        ar.remove(idx);
+                    if (!annoto.isDictionary() || PdfName.WIDGET.equals(((PdfDictionary)annoto).get(PdfName.SUBTYPE))) {
+                        annots.remove(idx);
                         --idx;
                     }
                 }
-                if (ar.size() == 0) {
+                if (annots.isEmpty()) {
                     PdfReader.killIndirect(pageDic.get(PdfName.ANNOTS));
                     pageDic.remove(PdfName.ANNOTS);
                 }
