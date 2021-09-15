@@ -95,6 +95,7 @@ nativeimage:
   # cf https://gitlab.com/pdftk-java/pdftk/-/issues/68 before updating
   image: ghcr.io/graalvm/graalvm-ce:21.0.0
   before_script:
+    - export LANG=en_US.UTF-8
     - gu install native-image
     - microdnf install wget unzip
     - wget https://services.gradle.org/distributions/gradle-6.7.1-bin.zip
