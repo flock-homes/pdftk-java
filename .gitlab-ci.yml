@@ -101,12 +101,13 @@ nativeimage:
   only:
     - tags
   stage: deploy
-  # cf https://gitlab.com/pdftk-java/pdftk/-/issues/68 before updating
-  image: ghcr.io/graalvm/graalvm-ce:21.0.0
+  # cf https://gitlab.com/pdftk-java/pdftk/-/issues/68 before updating GraalVM
+  # cf https://gitlab.com/pdftk-java/pdftk/-/issues/113 before updating OracleLinux
+  image: ghcr.io/graalvm/graalvm-ce:ol7-java11-21.0.0
   before_script:
     - gu install native-image
-    - microdnf install wget unzip
-    - wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip
+    - yum install -y wget unzip
+    - wget https://services.gradle.org/distributions/gradle-6.7.1-bin.zip
     - unzip gradle-$GRADLE_VERSION-bin.zip
   script:
     - ./gradle-$GRADLE_VERSION/bin/gradle nativeImage
@@ -124,7 +125,7 @@ nativeimage-web:
     variables:
       - $CI_PIPELINE_SOURCE == "web" && $WEB_JOB == "nativeimage"
   script:
-    - ./gradle-$GRADLE_VERSION/bin/gradle -Pgeneratedebuginfo=1 nativeImage
+    - ./gradle-$GRADLE_VERSION/bin/gradle --warning-mode all -Pgeneratedebuginfo=1 nativeImage
     - ./build/native-image/pdftk --version
   artifacts:
     paths:

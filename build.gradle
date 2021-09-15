@@ -27,7 +27,7 @@ sourceSets {
 mainClassName = 'com.gitlab.pdftk_java.pdftk'
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
