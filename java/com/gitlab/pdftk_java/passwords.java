@@ -334,6 +334,8 @@ class passwords {
     int ss_size = ss.length;
     ArrayList<Byte> bb = new ArrayList<Byte>(ss_size);
 
+    System.err.println("encoding password '" + ss_ + "'");
+
     for (int ii = 0; ii < ss_size; ) {
 
       // decode UTF-8
@@ -365,9 +367,13 @@ class passwords {
         return null;
       }
 
+      System.err.println(data);
+
       if (0x20 <= data && data < 0x7f || 0xa0 <= data && data <= 0xff) {
         // data point good
       } else { // convert some unicode points to PDFDocEncoding
+
+          System.err.println("suspicious?");
 
         switch (data) {
           case 0x0152: // OE ligature
@@ -396,6 +402,7 @@ class passwords {
             break;
           default:
             if (encrypt_b) { // data point out of bounds
+                System.err.println("out of bounds");
               return null;
             } else {
               // password is being used to decrypt, so test for more mappings to PDFDocEncoding;
