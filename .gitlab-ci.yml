@@ -1,6 +1,6 @@
 variables:
   PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/pdftk-java"
-  GRADLE_VERSION: "7.1"
+  GRADLE_VERSION: "7.2"
 
 .ant-job:
   stage: test
@@ -58,7 +58,7 @@ pages:
   only:
     - tags
   stage: deploy
-  image: gradle:latest
+  image: gradle:jdk11
   script:
     - *grade-job-script
 
