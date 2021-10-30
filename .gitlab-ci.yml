@@ -58,7 +58,7 @@ pages:
   only:
     - tags
   stage: deploy
-  image: gradle:jdk11
+  image: gradle:latest
   script:
     - *grade-job-script
 
@@ -93,7 +93,7 @@ spotless:
   except:
     variables:
       - $WEB_JOB != null
-  image: gradle:latest
+  image: gradle:jdk11
   script:
     - gradle spotlessCheck
 
@@ -107,7 +107,7 @@ nativeimage:
   before_script:
     - gu install native-image
     - yum install -y wget unzip
-    - wget https://services.gradle.org/distributions/gradle-6.7.1-bin.zip
+    - wget https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip
     - unzip gradle-$GRADLE_VERSION-bin.zip
   script:
     - ./gradle-$GRADLE_VERSION/bin/gradle nativeImage
