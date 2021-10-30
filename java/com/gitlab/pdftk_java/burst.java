@@ -93,7 +93,7 @@ class burst {
 
       // the filename
       String output_filename_p = String.format(m_output_filename, ii + 1);
-      OutputStream ofs_p = pdftk.get_output_stream_file(output_filename_p);
+      OutputStream ofs_p = pdftk.get_output_stream_file(output_filename_p, false, false);
       if (ofs_p == null) {
         ret_val = ErrorCode.PARTIAL;
         continue;
