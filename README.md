@@ -21,9 +21,9 @@ will be appreciated.
 
 There are pdftk-java packages available in a few
 [repositories](https://repology.org/project/pdftk-java/versions),
-including Arch, Debian / Ubuntu, Gentoo, Homebrew, MacPorts, and
-SUSE. Please refer to the documentation of your package manager for
-instructions.
+including Arch, Debian / Ubuntu, Fedora / EPEL (for CentOS, RHEL,
+Rocky), Gentoo, Homebrew, MacPorts, Mageia, and SUSE. Please refer
+to the documentation of your package manager for instructions.
 
 :warning: Some distributions provide stable packages that
 are older than 3.0.4, which fixed many crashes. Consider
