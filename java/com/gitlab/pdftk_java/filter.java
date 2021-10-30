@@ -37,6 +37,7 @@ import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfObject;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfStamperImp;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.XfdfReader;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -128,19 +129,17 @@ class filter {
     }
     if (!m_form_data_filename.isEmpty()) { // we have form data to process
       if (m_form_data_filename.equals("-")) { // form data on stdin
-        // JArray<jbyte>* in_arr= itext::RandomAccessFileOrArray::InputStreamToArray(
-        // java::System::in );
 
+        byte[] buffer = pdftk.readAllBytes(System.in);
         // first try fdf
         try {
-          fdf_reader_p = new FdfReader(System.in);
+          fdf_reader_p = new FdfReader(new ByteArrayInputStream(buffer));
         } catch (IOException ioe_p) { // file open error
           // maybe it's xfdf?
           try {
-            xfdf_reader_p = new XfdfReader(System.in);
+            xfdf_reader_p = new XfdfReader(new ByteArrayInputStream(buffer));
           } catch (IOException ioe2_p) { // file open error
             System.err.println("Error: Failed read form data on stdin.");
-            // ioe_p->printStackTrace(); // debug
             return ErrorCode.ERROR;
           }
         }
