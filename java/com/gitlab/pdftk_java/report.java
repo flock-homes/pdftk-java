@@ -195,7 +195,7 @@ class report {
             for (int i = 0; i <= option_index; ++i) ret = it.next();
             return ret;
           }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
         }
       }
       return v;

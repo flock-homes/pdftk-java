@@ -23,15 +23,18 @@
 package com.gitlab.pdftk_java;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Scanner;
 
 public class pdftk {
@@ -102,15 +105,6 @@ public class pdftk {
     return buff.startsWith("y") || buff.startsWith("Y");
   }
 
-  static boolean file_exists(String filename) {
-    try {
-      FileInputStream fp = new FileInputStream(filename);
-      return true;
-    } catch (FileNotFoundException e) {
-      return false;
-    }
-  }
-
   static OutputStream get_output_stream(String output_filename, boolean ask_about_warnings_b) {
     if (output_filename.isEmpty() || output_filename.equals("PROMPT")) {
       output_filename = prompt_for_filename("Please enter a name for the output:");
@@ -121,32 +115,36 @@ public class pdftk {
       return System.out;
     }
 
-    if (ask_about_warnings_b) {
-      // test for existing file by this name
-      boolean output_exists_b = false;
-      if (file_exists(output_filename)) {
-        if (!confirm_overwrite(output_filename)) {
-          // recurse; try again
-          return get_output_stream("PROMPT", ask_about_warnings_b);
-        }
-      }
-    }
-
-    return get_output_stream_file(output_filename);
+    return get_output_stream_file(output_filename, ask_about_warnings_b, true);
   }
 
-  static OutputStream get_output_stream_file(String output_filename) {
-    OutputStream os_p = null;
-    // attempt to open the stream
+  static OutputStream get_output_stream_file(
+      String output_filename, boolean check_overwrite, boolean required) {
     try {
-      os_p = new FileOutputStream(output_filename);
-    } catch (IOException ioe_p) { // file open error
+      Path p = FileSystems.getDefault().getPath(output_filename);
+      if (check_overwrite) {
+        return Files.newOutputStream(p, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
+      } else {
+        return Files.newOutputStream(p);
+      }
+    } catch (FileAlreadyExistsException e) {
+      if (!confirm_overwrite(output_filename)) {
+        if (required) {
+          return get_output_stream("PROMPT", check_overwrite);
+        } else {
+          System.err.println("   Skipping: " + output_filename);
+        }
+      }
+    } catch (IOException | InvalidPathException e) {
       System.err.println("Error: Failed to open output file: ");
       System.err.println("   " + output_filename);
-      System.err.println("   No output created.");
-      os_p = null;
+      if (required) {
+        System.err.println("   No output created.");
+      } else {
+        System.err.println("   Skipping.");
+      }
     }
-    return os_p;
+    return null;
   }
 
   static PrintStream get_print_stream(String output_filename, boolean output_utf8_b)

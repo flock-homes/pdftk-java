@@ -37,8 +37,8 @@ import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfReader;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfString;
 import com.gitlab.pdftk_java.com.lowagie.text.pdf.PdfWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -72,7 +72,7 @@ class attachments {
   }
 
   static String normalize_pathname(String output_pathname) {
-    if (output_pathname == "PROMPT") {
+    if (output_pathname.equals("PROMPT")) {
       output_pathname =
           pdftk.prompt_for_filename(
               "Please enter the directory where you want attachments unpacked:");
@@ -119,21 +119,13 @@ class attachments {
 
             try {
               byte[] bytes_p = input_reader_p.getStreamBytes((PRStream) f_p);
-
-              if (ask_about_warnings_b) {
-                // test for existing file by this name
-                if (pdftk.file_exists(fn)) {
-                  if (!pdftk.confirm_overwrite(fn)) {
-                    System.out.println("   Skipping: " + fn);
-                    return; // <--- return
-                  }
-                }
+              OutputStream os = pdftk.get_output_stream_file(fn, ask_about_warnings_b, false);
+              if (os != null) {
+                os.write(bytes_p);
+                os.close();
               }
-              FileOutputStream ofs = new FileOutputStream(fn);
-              ofs.write(bytes_p);
-              ofs.close();
-            } catch (IOException e) { // error
-              System.err.println("Error: unable to create the file:");
+            } catch (IOException e) {
+              System.err.println("Error: failed to write attachment file: ");
               System.err.println("   " + fn);
               System.err.println("   Skipping.");
             }
@@ -163,7 +155,7 @@ class attachments {
           Matcher m = p.matcher(buff);
           m.matches();
           try {
-            m_input_attach_file_pagenum = Integer.valueOf(m.group(1));
+            m_input_attach_file_pagenum = Integer.parseInt(m.group(1));
           } catch (NumberFormatException e) {
             m_input_attach_file_pagenum = 0;
           }

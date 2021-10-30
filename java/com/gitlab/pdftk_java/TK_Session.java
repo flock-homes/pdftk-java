@@ -1369,8 +1369,6 @@ class TK_Session {
       if (m_output_encryption_strength == encryption_strength.none_enc) {
         m_output_encryption_strength = encryption_strength.aes128_enc;
       }
-      int encryption_type = m_output_encryption_strength.value;
-
       writer_p.setEncryption(
           m_output_user_pw_pdfdoc,
           m_output_owner_pw_pdfdoc,
@@ -1551,7 +1549,7 @@ class TK_Session {
     done_e
   };
 
-  class ArgStateMutable {
+  static class ArgStateMutable {
     ArgState value;
   }
 
@@ -1589,6 +1587,7 @@ class TK_Session {
         break;
       case encrypt_aes128_k:
         m_output_encryption_strength = encryption_strength.aes128_enc;
+        break;
       case filt_uncompress_k:
         m_output_uncompress_b = true;
         break;
