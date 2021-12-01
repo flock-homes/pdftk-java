@@ -921,6 +921,9 @@ public class PdfReader implements PdfViewerPreferences {
 
     protected void readPages() throws IOException {
         catalog = trailer.getAsDict(PdfName.ROOT);
+        if (catalog == null) {
+            throw new InvalidPdfException("catalog not found");
+        }
         rootPages = catalog.getAsDict(PdfName.PAGES);
         if (rootPages == null) {
             System.err.println("Warning: failed to read page tree. Corrupt input.");

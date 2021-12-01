@@ -43,6 +43,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import com.gitlab.pdftk_java.com.lowagie.text.exceptions.InvalidPdfException;
+
 /** Reads an FDF form and makes the fields available
  * @author Paulo Soares (psoares@consiste.pt)
  */
@@ -150,11 +153,15 @@ public class FdfReader extends PdfReader {
         }
     }
     
-    protected void readFields() {
+    protected void readFields() throws IOException {
+        PdfDictionary fdf = null;
         catalog = trailer.getAsDict(PdfName.ROOT);
-        PdfDictionary fdf = catalog.getAsDict(PdfName.FDF);
-        if (fdf == null)
-            return;
+        if (catalog != null) {
+            fdf = catalog.getAsDict(PdfName.FDF);
+        }
+        if (fdf == null) {
+            throw new InvalidPdfException("Invalid FDF catalog.");
+        }
         readFileSpecification(fdf);
         PdfArray fld = fdf.getAsArray(PdfName.FIELDS);
         if (fld == null)
