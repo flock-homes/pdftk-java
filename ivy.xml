@@ -6,7 +6,7 @@
     <conf name="test" extends="build"/>
   </configurations>
   <dependencies>
-    <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.69"/>
+    <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.70"/>
     <dependency org="org.apache.commons" name="commons-lang3" rev="3.12.0"/>
     <dependency org="junit" name="junit" rev="4.12" conf="test"/>
     <dependency org="com.github.stefanbirkner" name="system-rules" rev="1.19.0" conf="test"/>
