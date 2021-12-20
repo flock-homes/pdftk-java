@@ -72,10 +72,10 @@ gradle:
     paths:
       - build/libs/pdftk-all.jar
 
-gradle-6.1:
+gradle-7.2:
   extends: .gradle-job
   variables:
-    GRADLE_VERSION: "6.1"
+    GRADLE_VERSION: "7.2"
 
 gradle-web:
   extends: .gradle-job
