@@ -7,6 +7,11 @@ import java.io.IOException;
 
 public class CryptoTest extends BlackBox {
   @Test
+  public void set_password() {
+    pdftk("test/files/blank.pdf", "output", "/dev/null", "owner_pw", "\"'**", "user_pw", "**\"'");
+  }
+
+  @Test
   public void idempotent_aes() throws IOException {
     byte[] expected = slurpBytes("test/files/blank.pdf");
     String encrypted = tmpDirectory.getRoot().getPath()+"/encrypted.pdf";
@@ -39,5 +44,4 @@ public class CryptoTest extends BlackBox {
     pdftk_error(1, encrypted, "input_pw", "Tr0ub4dor&3", "output", "-");
     assertThat(systemErr.getLog(), containsString("OWNER OR USER PASSWORD REQUIRED, but incorrect"));
   }
-
 };
