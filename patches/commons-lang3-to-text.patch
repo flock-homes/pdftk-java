@@ -1,0 +1,97 @@
+diff --git a/build.gradle b/build.gradle
+index 59ad719..2020d69 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -31,7 +31,7 @@ repositories {
+ }
+ 
+ dependencies {
+-    implementation 'org.apache.commons:commons-lang3:3.12.0'
++    implementation 'org.apache.commons:commons-text:1.9'
+     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+ }
+ 
+diff --git a/ivy.xml b/ivy.xml
+index 7682148..50f03a5 100644
+--- a/ivy.xml
++++ b/ivy.xml
+@@ -7,7 +7,7 @@
+   </configurations>
+   <dependencies>
+     <dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.70"/>
+-    <dependency org="org.apache.commons" name="commons-lang3" rev="3.12.0"/>
++    <dependency org="org.apache.commons" name="commons-text" rev="1.9"/>
+     <dependency org="junit" name="junit" rev="4.12" conf="test"/>
+     <dependency org="com.github.stefanbirkner" name="system-rules" rev="1.19.0" conf="test"/>
+     <dependency org="org.jacoco" name="org.jacoco.ant" rev="0.8.4" conf="test"/>
+diff --git a/java/com/gitlab/pdftk_java/TK_Session.java b/java/com/gitlab/pdftk_java/TK_Session.java
+index 8248743..3753b4f 100644
+--- a/java/com/gitlab/pdftk_java/TK_Session.java
++++ b/java/com/gitlab/pdftk_java/TK_Session.java
+@@ -38,7 +38,7 @@ import java.util.HashMap;
+ import java.util.HashSet;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+-import org.apache.commons.lang3.text.WordUtils;
++import org.apache.commons.text.WordUtils;
+ 
+ class TK_Session {
+ 
+diff --git a/java/com/gitlab/pdftk_java/data_import.java b/java/com/gitlab/pdftk_java/data_import.java
+index c2fb639..01af277 100644
+--- a/java/com/gitlab/pdftk_java/data_import.java
++++ b/java/com/gitlab/pdftk_java/data_import.java
+@@ -34,7 +34,7 @@ import java.io.InputStream;
+ import java.util.ArrayList;
+ import java.util.HashMap;
+ import java.util.Scanner;
+-import org.apache.commons.lang3.StringEscapeUtils;
++import org.apache.commons.text.StringEscapeUtils;
+ 
+ class data_import {
+ 
+diff --git a/java/com/gitlab/pdftk_java/pdftk.java b/java/com/gitlab/pdftk_java/pdftk.java
+index fdffdc5..489d49f 100644
+--- a/java/com/gitlab/pdftk_java/pdftk.java
++++ b/java/com/gitlab/pdftk_java/pdftk.java
+@@ -279,7 +279,7 @@ public class pdftk {
+   static void describe_missing_library(Throwable error) {
+     System.err.println("Error: could not load a required library for this operation.");
+     System.err.println(error);
+-    System.err.println("Make sure that bcprov and commons-lang3 are installed and included in the");
++    System.err.println("Make sure that bcprov and commons-text are installed and included in the");
+     System.err.println("classpath. See also https://gitlab.com/pdftk-java/pdftk/issues/2.");
+   }
+ }
+diff --git a/java/com/gitlab/pdftk_java/report.java b/java/com/gitlab/pdftk_java/report.java
+index 182f05a..5c9ad94 100644
+--- a/java/com/gitlab/pdftk_java/report.java
++++ b/java/com/gitlab/pdftk_java/report.java
+@@ -41,9 +41,9 @@ import java.util.Iterator;
+ import java.util.LinkedHashSet;
+ import java.util.List;
+ import java.util.Set;
+-import org.apache.commons.lang3.StringEscapeUtils;
+-import org.apache.commons.lang3.text.translate.CharSequenceTranslator;
+-import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
++import org.apache.commons.text.StringEscapeUtils;
++import org.apache.commons.text.translate.CharSequenceTranslator;
++import org.apache.commons.text.translate.NumericEntityEscaper;
+ 
+ class report {
+ 
+diff --git a/pom.xml b/pom.xml
+index 19b9f04..621f520 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -14,8 +14,8 @@
+     </dependency>
+     <dependency>
+       <groupId>org.apache.commons</groupId>
+-      <artifactId>commons-lang3</artifactId>
+-      <version>3.12.0</version>
++      <artifactId>commons-text</artifactId>
++      <version>1.9</version>
+     </dependency>
+     <dependency>
+       <groupId>junit</groupId>
