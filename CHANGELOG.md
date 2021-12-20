@@ -1,3 +1,12 @@
+## [3.3.2] - 2021-12-20
+
+### Fixed
+ - Crash with inputs that contain null pointers
+ - Support reading xfdf forms from stdin
+ - Crash with xdf forms with no catalog
+ - Compatibility with bcprov 1.70
+ - Crash with non-conforming inputs
+
 ## [3.3.1] - 2021-08-23
 
 ### Fixed

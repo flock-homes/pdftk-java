@@ -3,7 +3,7 @@
 
   <!-- The Basics -->
   <groupId>com.gitlab.pdftk-java</groupId>
-  <version>3.3.1</version>
+  <version>3.3.2</version>
   <artifactId>pdftk-java</artifactId>
   <packaging>jar</packaging>
   <dependencies>
