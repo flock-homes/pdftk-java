@@ -2826,7 +2826,11 @@ public class PdfReader implements PdfViewerPreferences {
         for (int k = 1; k <= pageRefs.size(); ++k) {
             PdfDictionary page = pageRefs.getPageN(k);
             PdfObject annotsRef;
-            PdfArray annots = (PdfArray)getPdfObject(annotsRef = page.get(PdfName.ANNOTS));
+            PdfObject annotsObj = getPdfObject(annotsRef = page.get(PdfName.ANNOTS));
+            PdfArray annots = null;
+            if (annotsObj != null && annotsObj.isArray()) {
+                annots = (PdfArray)annotsObj;
+            }
             int annotIdx = lastXrefPartial;
             releaseLastXrefPartial();
             if (annots == null) {
@@ -2844,7 +2848,11 @@ public class PdfReader implements PdfViewerPreferences {
             if (!commitAnnots || annotsRef.isIndirect())
                 pageRefs.releasePage(k);
         }
-        PdfDictionary outlines = (PdfDictionary)getPdfObjectRelease(catalog.get(PdfName.OUTLINES));
+        PdfObject outlinesObj = getPdfObjectRelease(catalog.get(PdfName.OUTLINES));
+        PdfDictionary outlines = null;
+        if (outlinesObj != null && outlinesObj.isDictionary()) {
+            outlines = (PdfDictionary)outlinesObj;
+        }
         if (outlines == null)
             return;
         iterateBookmarks(outlines.get(PdfName.FIRST), names);
