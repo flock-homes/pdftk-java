@@ -49,8 +49,8 @@ available:
 ## Dependencies
 
  - jdk >= 1.8
- - commons-lang3
- - bcprov >= 1.63
+ - commons-lang3 (or apply a [patch for compatibility with commons-text](patches/commons-lang3-to-text.patch))
+ - bcprov >= 1.63 (or apply a [patch for compatibility with bcprov < 1.63](patches/bcprov-lt-163.patch))
  - gradle >= 7.3 or ant (build time)
  - ivy (optionally for ant, for resolving dependencies at build time)
 
